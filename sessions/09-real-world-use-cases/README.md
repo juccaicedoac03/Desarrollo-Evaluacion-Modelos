@@ -1,7 +1,7 @@
 # Sesión 09 — Use Cases: Generative Models in Real Contexts
 *Casos de uso: modelos generativos en contexto real*
 
-**RAE asociados:** RAE 4, RAE 5, RAE 6 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 4, RAE 5, RAE 6 · **Duración:** 3 horas (virtual) · **Fecha:** sábado 17 de octubre de 2026, 10:00–13:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -26,6 +26,8 @@ Al terminar la sesión podrás:
 **Hito del proyecto (formativo):** hoy cada grupo entrega el **canvas de caso de uso (H3)**: Parte A actualizada + Parte B de la [plantilla de propuesta](../../proyecto-final/plantillas/propuesta.md) (valor × factibilidad, KPI, ROI base y pesimista, riesgos y decisión). Una persona del grupo lo sube a e-Aulas como `PF_G<NN>_H3_canvas` antes de las **23:59**. Es formativo: recibirán comentarios antes de la S10 ([detalles del proyecto](../../proyecto-final/README.md)).
 
 ## Antes de la clase (≈2 h)
+
+Esta sesión va justo después de la S08 (7:00–10:00), así que esta preparación se hace **antes del sábado a las 7:00**, junto con la de la S08.
 
 - [ ] Lee el resumen y la introducción de Brynjolfsson, Li y Raymond, *Generative AI at Work* ([NBER w31161](https://www.nber.org/papers/w31161)) (≈30 min). Fíjate en **quiénes** ganan más con el asistente.
 - [ ] Lee el resumen de Dell'Acqua et al. (2023), *Navigating the Jagged Technological Frontier* (HBS Working Paper 24-013) (≈20 min).
@@ -70,7 +72,7 @@ Tu código estudiantil te asigna un **sector** (salud, finanzas o educación), u
 - [ ] **Proyecto (≈4 h):** terminen y entreguen en grupo el **canvas de caso de uso (H3)** antes de las 23:59: línea base medida (B2), valor × factibilidad con evidencia (B3), KPI y *guardrail* (B4), ROI base y pesimista con la fórmula de la sesión y supuestos explícitos (B5), riesgos (B6) y decisión (B7). **No inventen cifras:** si un valor es una estimación, díganlo y expliquen de dónde sale.
 - [ ] Aplica las cuatro preguntas de transferencia (¿misma tarea, mismos usuarios, misma medida de calidad, mismo contexto?) a la fuente principal que cite tu grupo.
 - [ ] Practica con los ejercicios 🧪 del lab: cambia el verbalizador, el número de vecinos *k*, el nivel de las preguntas y el umbral de similitud del agente.
-- [ ] Lectura para la S10: Bender, Gebru et al. (2021), *On the Dangers of Stochastic Parrots* (resumen y secciones 4–6).
+- [ ] Lectura para la S10 (viernes 23 de octubre, 18:00): Bender, Gebru et al. (2021), *On the Dangers of Stochastic Parrots* (resumen y secciones 4–6).
 
 ## Lecturas y recursos
 

@@ -1,7 +1,7 @@
 # Sesión 07 — Implementing Basic Chatbots and Agents
 *Implementación de chatbots y agentes básicos*
 
-**RAE asociados:** RAE 3, RAE 4, RAE 6 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 3, RAE 4, RAE 6 · **Duración:** 3 horas (virtual) · **Fecha:** viernes 16 de octubre de 2026, 18:00–21:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -22,6 +22,8 @@ Al terminar la sesión podrás:
 | Descanso | 10' | — |
 | Lab guiado | 60' | Bot en Python "por dentro" (Banking77, *slots*, estado, *fallback* con SmolLM2 y chat en Gradio), agente de Startti con la base de conocimiento de Andes Bank y un arnés de evaluación que prueba ambos |
 | Challenge | 40' | Dominio personal: agente v1, set de 12 conversaciones, análisis de fallas, crítica de un prompt escrito por IA, v2 y decisión de salida a producción |
+
+**Proyecto · retroalimentación del H2 (diálogo formativo):** hoy cada grupo recibe en e-Aulas la **retroalimentación escrita de su propuesta (H2)**, entregada el miércoles 14 de octubre. Es parte del diálogo formativo de las sesiones 4 a 7: léanla en grupo, decidan qué ajustan en la Parte A del canvas antes del H3 (sábado 17 de octubre, 23:59) y, si quieren conversarla, pidan una cita en el horario de atención (virtual, con cita previa al correo institucional del profesor).
 
 ## Antes de la clase (≈2 h)
 
@@ -63,7 +65,8 @@ Cada estudiante recibe, a partir de su código, un **dominio** (una de 8 empresa
 - [ ] **Proyecto (≈3 h):** si la demo de tu grupo es un chatbot o un agente, escriban su propio set de 12 conversaciones de prueba (con al menos 2 adversariales) y córranlo con el arnés del lab. Si es una app de clasificación, definan qué pasa cuando el modelo no está seguro.
 - [ ] Practica con los ejercicios 🧪 del lab: agrega un *slot* al flujo de bloqueo, un caso de varios turnos al set y compara el recuperador TF-IDF con el de *embeddings*.
 - [ ] Opcional: en tu agente de Startti, prueba una herramienta adicional o una pregunta al usuario antes de una acción (humano en el ciclo) y vuelve a correr el arnés.
-- [ ] Prepara la S08: repasa Naive Bayes y regresión logística (modelos generativos vs. discriminativos) y los *embeddings* de la S03.
+- [ ] **Prepara la S08 y la S09 antes del sábado 17 de octubre a las 7:00:** son seguidas (7:00–10:00 y 10:00–13:00), así que las lecturas de ambas se hacen antes del sábado. Para la S08, repasa Naive Bayes y regresión logística (modelos generativos vs. discriminativos) y los *embeddings* de la S03; para la S09, revisa la sección «Antes de la clase» de su [guía](../09-real-world-use-cases/README.md).
+- [ ] **Proyecto:** apliquen la retroalimentación del H2 a la Parte A del canvas; el canvas de caso de uso (H3) se entrega el sábado 17 de octubre a las 23:59.
 
 ## Lecturas y recursos
 

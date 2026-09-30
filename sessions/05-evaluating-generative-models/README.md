@@ -1,7 +1,7 @@
 # Sesión 05 — Evaluating Generative Models
 *Evaluación de modelos generativos*
 
-**RAE asociados:** RAE 2 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 2 · **Duración:** 3 horas (virtual) · **Fecha:** sábado 10 de octubre de 2026, 7:00–10:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -25,10 +25,13 @@ Al terminar la sesión podrás:
 
 ## Antes de la clase (≈2 h)
 
+La S05 y la S06 son seguidas (sábado 10 de octubre, 7:00 y 10:00): haz la preparación de ambas antes del sábado.
+
 - Lee en Jurafsky y Martin (2023), *Speech and Language Processing* (3.ª ed., borrador), la sección del capítulo 3 sobre evaluación de modelos de lenguaje y perplejidad.
 - Repasa el módulo de clasificación del *Machine Learning Crash Course* de Google (exactitud, precisión, recall y umbrales). Está disponible en español.
 - Vuelve a tu challenge de la S04: ¿cómo elegiste la mejor configuración y con qué datos? Trae esa respuesta al calentamiento.
 - Con tu grupo, adelanten el bloque 6 del canvas de propuesta (*Métrica de éxito*): hoy verás cómo elegirla.
+- **Activa tu licencia de Startti antes del sábado 10 de octubre** y deja listo tu workspace siguiendo la [guía de configuración de Startti](../../docs/configuracion-startti.md): en la S06, a las 10:00, construiremos el primer agente.
 
 ## Materiales
 
@@ -59,15 +62,15 @@ Challenge **individual** con configuración personal: a partir de tu código est
 
 ## Proyecto final · Hito H2: propuesta (canvas)
 
-- Cada grupo entrega la **Parte A del [canvas de propuesta](../../proyecto-final/plantillas/propuesta.md)** (máximo 1 página) **antes de la Sesión 06**, hasta las 23:59 del día anterior, en e-Aulas como `PF_G<NN>_H2_propuesta`.
+- Cada grupo entrega la **Parte A del [canvas de propuesta](../../proyecto-final/plantillas/propuesta.md)** (máximo 1 página) hasta el **miércoles 14 de octubre a las 23:59**, en e-Aulas como `PF_G<NN>_H2_propuesta`.
 - Usen lo de hoy en el bloque 6 (*Métrica de éxito*): al menos una métrica técnica y una de negocio o de riesgo, con un umbral justificado y una línea base.
-- La **retroalimentación escrita** del profesor se devuelve en la **Sesión 06**. El hito no tiene nota propia, pero no entregarlo descuenta 0.3 de la nota del entregable técnico ([enunciado del proyecto](../../proyecto-final/README.md)).
+- La **retroalimentación escrita** del profesor se devuelve en la **Sesión 07** (viernes 16 de octubre). El hito no tiene nota propia, pero no entregarlo descuenta 0.3 de la nota del entregable técnico ([enunciado del proyecto](../../proyecto-final/README.md)).
 
 ## Después de la clase (trabajo independiente ≈7 h)
 
 - Termina y entrega el challenge (23:59 de hoy).
-- Entrega con tu grupo el canvas de propuesta (H2) antes de la S06.
-- **Activa tu licencia de Startti antes de la S06** y deja listo tu workspace siguiendo la [guía de configuración de Startti](../../docs/configuracion-startti.md): en la próxima sesión construiremos el primer agente.
+- La **Sesión 06** empieza hoy a las 10:00, después de un breve descanso; su preparación (incluida la licencia de Startti) ya debía quedar lista antes del sábado.
+- Con tu grupo, terminen el canvas de propuesta (H2): se entrega hasta el miércoles 14 de octubre a las 23:59.
 - Repite la Parte 4 del lab con otras 10 intenciones de Banking77 o con otro `k`, y compara la dispersión entre *folds*.
 - Prueba el prompt de "LLM como juez" del lab con un asistente: intercambia el orden de los resúmenes A y B y anota si el veredicto cambia.
 

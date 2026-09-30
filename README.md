@@ -3,7 +3,7 @@
 **Especialización en Inteligencia Artificial Generativa y Desarrollo de Negocios**
 Escuela de Administración (Rosario GSB) · Universidad del Rosario
 
-**Profesor:** Julian Caicedo · **Modalidad:** virtual, 12 sesiones sincrónicas de 3 horas · **Créditos:** 3 (36 h con el profesor + 108 h de trabajo independiente)
+**Profesor:** Julian Caicedo · **Modalidad:** virtual, 12 sesiones sincrónicas de 3 horas, del 2 al 24 de octubre de 2026 · **Créditos:** 3 (36 h con el profesor + 108 h de trabajo independiente)
 
 🌐 **Portal del curso:** <https://juccaicedoac03.github.io/Desarrollo-Evaluacion-Modelos/>
 
@@ -25,6 +25,24 @@ Al finalizar el curso serás capaz de:
 4. **Integrar modelos en escenarios reales**, analizando casos de uso con sus factores sociales, económicos y tecnológicos.
 5. **Fomentar la innovación** identificando oportunidades para incorporar modelos generativos en contextos empresariales y sociales.
 6. **Gestionar riesgos y asegurar la calidad**, anticipando y mitigando riesgos para garantizar sostenibilidad, escalabilidad y cumplimiento regulatorio.
+
+## Calendario
+
+Todas las horas son de Colombia. Los viernes hay una sesión (18:00–21:00) y los sábados, dos sesiones seguidas (7:00–10:00 y 10:00–13:00).
+
+| Encuentro | Sesiones | Hora | Hitos del proyecto |
+|---|---|---|---|
+| Viernes 2 oct. | S01 | 18:00–21:00 | — |
+| Sábado 3 oct. | S02 · S03 | 7:00–10:00 · 10:00–13:00 | H1 · Grupos (23:59) |
+| Viernes 9 oct. | S04 | 18:00–21:00 | — |
+| Sábado 10 oct. | S05 · S06 | 7:00–10:00 · 10:00–13:00 | — |
+| Miércoles 14 oct. | — | — | H2 · Propuesta (23:59) |
+| Viernes 16 oct. | S07 | 18:00–21:00 | Retroalimentación del H2 |
+| Sábado 17 oct. | S08 · S09 | 7:00–10:00 · 10:00–13:00 | H3 · Canvas de caso de uso (23:59) |
+| Viernes 23 oct. | S10 | 18:00–21:00 | Entrega final, con el H4 en el §5 del informe (23:59) |
+| Sábado 24 oct. | S11 · S12 | 7:00–10:00 · 10:00–13:00 | Socialización y defensa (S12) |
+
+Como las dos sesiones del sábado van seguidas, haz la preparación de ambas antes del sábado a las 7:00.
 
 ## Sesiones
 
@@ -72,11 +90,11 @@ LICENSE                       Licencia MIT
 ### Si eres estudiante
 
 1. **Antes de la Sesión 01:** crea y verifica tu cuenta de Kaggle siguiendo la [guía de configuración de Kaggle](docs/configuracion-kaggle.md). Lee la [metodología](docs/metodologia.md), la [evaluación](docs/evaluacion.md) y la [política de uso de IA](docs/politica-uso-ia.md).
-2. **Antes de cada sesión (≈2 h):** abre la guía de la sesión (`sessions/NN-<tema>/README.md`) y haz la preparación previa que indica.
+2. **Antes de cada sesión (≈2 h):** abre la guía de la sesión (`sessions/NN-<tema>/README.md`) y haz la preparación previa que indica. La de las dos sesiones del sábado debe estar lista antes de las 7:00 de ese día.
 3. **Durante la sesión:** sigue las slides desde el [portal](https://juccaicedoac03.github.io/Desarrollo-Evaluacion-Modelos/), participa en quizzes y salas de grupo, abre el lab con el botón **Lab en Kaggle** del portal y, en el último bloque, el challenge con **Challenge en Kaggle**. En la tabla de sesiones de este README y en las guías de sesión, esos enlaces se llaman simplemente **Kaggle**.
 4. **Entrega del challenge:** ejecuta todo, descarga el notebook (`File → Download notebook`) y súbelo a e-Aulas como `S<NN>_<codigo>.ipynb` antes de las 23:59 del mismo día.
-5. **Antes de la Sesión 06:** activa tu licencia de Startti con la [guía de configuración de Startti](docs/configuracion-startti.md). En la S06 creas tu API key y, antes de la S07, la guardas en Kaggle Secrets. Si prefieres no crear cuenta, los labs incluyen una alternativa en Python.
-6. **Proyecto final:** revisa el [enunciado del proyecto](proyecto-final/README.md) desde la Sesión 03, cuando se conforman los grupos.
+5. **Antes del sábado 10 de octubre (S05 y S06):** activa tu licencia de Startti con la [guía de configuración de Startti](docs/configuracion-startti.md). En la S06 creas tu API key y, antes de la S07 (viernes 16 de octubre), la guardas en Kaggle Secrets. Si prefieres no crear cuenta, los labs incluyen una alternativa en Python.
+6. **Proyecto final:** revisa el [enunciado del proyecto](proyecto-final/README.md) desde la Sesión 03 (sábado 3 de octubre), cuando se conforman los grupos. La entrega final es el viernes 23 de octubre a las 23:59 y la socialización, en la S12 (sábado 24 de octubre).
 
 ### Si eres profesor(a) o reutilizas el curso
 

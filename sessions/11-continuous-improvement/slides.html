@@ -28,10 +28,12 @@
     </div>
     <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
     <aside class="notes">
-      [0:00 · 1 min] Welcome to the last regular session before the project showcase. Today's
-      message: a model is never finished. We learn a disciplined loop to make it better, and to
-      prove that it got better. Today is also milestone H4 for the final project, so everything we
-      practise applies directly to your group's model. Keys: S speaker view, F fullscreen, Esc overview.
+      [0:00 · 1 min] Welcome to the last regular session: the project showcase (S12) starts at 10:00
+      today, right after this one. Today's message: a model is never finished. We learn a disciplined
+      loop to make it better, and to prove that it got better. Groups submitted their improvement
+      iteration (H4, §5 of the technical report) with the final deliverable last night at 23:59, so
+      today we look at that iteration with a critical eye and decide how to present it in the pitch.
+      Keys: S speaker view, F fullscreen, Esc overview.
     </aside>
   </section>
 
@@ -46,10 +48,11 @@
       <li data-block="lab">Guided lab: one full turn of the loop on Banking77 <span class="time">60'</span></li>
       <li data-block="challenge">Session challenge (graded, individual) <span class="time">40'</span></li>
     </ol>
-    <p class="small muted" style="margin-top: 18px">Project milestone H4 (improvement iteration) is due tonight at 23:59.</p>
+    <p class="small muted" style="margin-top: 18px">Project: your improvement iteration (H4) went in with the final deliverable on Friday 23 Oct. Today you review it; nothing project-related is due.</p>
     <aside class="notes">
       [0:01 · 1 min] Walk through the blocks. The theory has four parts; the breakout at the end
-      of the theory block is where groups plan the H4 iteration of their project.
+      of the theory block is where groups review the H4 iteration they already submitted and plan
+      what to say about it in the S12 pitch. The only deliverable today is the individual challenge.
     </aside>
   </section>
 
@@ -120,7 +123,7 @@
         Today we apply the same idea to typos, casing and irrelevant sentences, and report pass rates.</div>
     </div>
     <aside class="notes">
-      [0:07 · 2 min] This is the bridge: last week's bias audit was already a behavioural test.
+      [0:07 · 2 min] This is the bridge: last night's bias audit (S10) was already a behavioural test.
       Today it becomes one tool in a larger testing and improvement toolbox.
     </aside>
   </section>
@@ -751,7 +754,7 @@ study.optimize(objective, n_trials=20)
   <section class="section-slide" data-block="theory">
     <p class="kicker">Part 4</p>
     <h2>Improving in production</h2>
-    <p>Monitoring, safe rollouts and LLMOps, then your project's roadmap.</p>
+    <p>Monitoring, safe rollouts and LLMOps, then a review of your project's iteration.</p>
     <aside class="notes">
       [0:55] Part 4: about 6 minutes of content, then the breakout.
     </aside>
@@ -857,21 +860,21 @@ def test_router_does_not_regress():
     </aside>
   </section>
 
-  <!-- 36 · Breakout: project roadmap -->
+  <!-- 36 · Breakout: review of the project iteration -->
   <section>
     <p class="kicker">Your project</p>
-    <h2>Plan your improvement roadmap</h2>
+    <h2>Review your improvement iteration</h2>
     <div class="cols" style="grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr)">
       <div class="prompt-card" data-kind="breakout">
         <h4>Project groups · 8 min</h4>
         <ol class="small" style="margin-bottom: 8px">
-          <li>Your model's largest error category, with a count from your baseline.</li>
-          <li>One hypothesis and <strong>one</strong> change: data-centric or model-centric?</li>
-          <li>Metric and decision rule, written now (e.g., keep if validation macro-F1 +1 point).</li>
+          <li>The error category your iteration targeted, with a count from your baseline.</li>
+          <li>Your hypothesis and the change: was it <strong>one</strong> change, data-centric or model-centric?</li>
+          <li>Decision rule: written before the experiment? Decided on validation? Is the gain above the noise?</li>
           <li>One behavioural test and one efficiency constraint for your demo.</li>
-          <li>One signal you would monitor after launch.</li>
+          <li>The next iteration you would run, and one signal you would monitor after launch.</li>
         </ol>
-        <p class="small muted" style="margin: 0">This is the first row of your H4 experiment log.</p>
+        <p class="small muted" style="margin: 0">Nothing to resubmit: this becomes the “iteration” minute of your S12 pitch.</p>
       </div>
       <div class="center">
         <div class="timer" data-minutes="8" data-label="Breakout rooms"></div>
@@ -879,34 +882,37 @@ def test_router_does_not_regress():
       </div>
     </div>
     <aside class="notes">
-      [1:01 · 8 min] Open breakout rooms by project group, then press Start. Visit two or three
-      rooms. Common problems: hypotheses without evidence ("more data will help"), changing several
-      things at once, or deciding on the test set. Debrief with two groups if time allows.
+      [1:01 · 8 min] Open breakout rooms by project group, then press Start. Groups review the
+      iteration they submitted last night in §5 of the report; the deliverable is closed, so the
+      output is what they will say about it in the S12 pitch and defence. Visit two or three rooms.
+      Common problems: hypotheses without evidence ("more data will help"), changing several things
+      at once, or deciding on the test set. Debrief with two groups if time allows.
     </aside>
   </section>
 
   <!-- 37 · H4 milestone -->
   <section>
     <p class="kicker">Final project · milestone H4</p>
-    <h2>Document one improvement iteration</h2>
+    <h2>Your improvement iteration, already submitted</h2>
     <div class="cols">
       <div>
         <ul class="small">
-          <li><strong>What:</strong> draft of §5 of the technical report: an experiment log with at least one iteration (hypothesis → change → result → decision) and a link to the code.</li>
+          <li><strong>What:</strong> §5 of the technical report: an experiment log with at least one iteration (hypothesis → change → result → decision) and a link to the code.</li>
           <li><strong>Rule:</strong> decide with validation; at the end, report every version on the same test set without tuning anything on it.</li>
-          <li><strong>When:</strong> today, 23:59, uploaded to e-Aulas as <code>PF_G&lt;NN&gt;_H4</code> (e.g., <code>PF_G03_H4_bitacora.pdf</code>).</li>
-          <li><strong>Why it matters:</strong> formative, but a missing milestone subtracts 0.3 from the technical deliverable.</li>
+          <li><strong>When:</strong> submitted with the final deliverable on Friday 23 Oct at 23:59, inside <code>PF_G&lt;NN&gt;_informe.pdf</code>.</li>
+          <li><strong>Why it matters:</strong> a missing iteration subtracts 0.3 from the technical deliverable; in S12 you defend it with your numbers.</li>
         </ul>
       </div>
       <div class="card">
         <h4>Log columns (report template §5)</h4>
         <p class="small" style="line-height: 1.8"><span class="tag">#</span> <span class="tag">date</span> <span class="tag">hypothesis</span> <span class="tag">change</span> <span class="tag">metric 1 (val.)</span> <span class="tag">metric 2 (val.)</span> <span class="tag">decision</span> <span class="tag">commit</span></p>
-        <p class="small muted">Feedback before Session 12.</p>
+        <p class="small muted">Reviewed today; graded with the rubric.</p>
       </div>
     </div>
     <aside class="notes">
-      [1:09 · 1 min] Details are in proyecto-final/README.md and the informe-tecnico template. The
-      lab's experiment log DataFrame has the same columns, so groups can reuse its code.
+      [1:09 · 1 min] Details are in proyecto-final/README.md and the informe-tecnico template. H4 is
+      no longer a separate upload: it is §5 of the report submitted last night. The lab's experiment
+      log DataFrame has the same columns, which makes it a quick checklist for what they submitted.
     </aside>
   </section>
 
@@ -1014,7 +1020,7 @@ def test_router_does_not_regress():
     <aside class="notes">
       [2:20 · 38 min] This briefing slide is in Spanish by course convention. Remind students to
       type their STUDENT_ID in the first cell, then start the 40' timer. Run 3–4 random micro-vivas
-      (2–3 minutes each, screen shared, no AI help). Remind groups that H4 is also due at 23:59.
+      (2–3 minutes each, screen shared, no AI help). The challenge is the only thing due today (23:59).
     </aside>
   </section>
 
@@ -1036,15 +1042,16 @@ def test_router_does_not_regress():
       <div>
         <div class="prompt-card" data-kind="think">
           <h4>Exit question</h4>
-          <p class="small">What is the one change you will try on your project model this week, and what result would make you discard it?</p>
+          <p class="small">What is the next change you would try on your project model, and what result would make you discard it?</p>
         </div>
-        <p class="small"><strong>Next session:</strong> Integrative project: pitches (8'), demos (3') and questions (4').
-          <span class="muted">Pre-work: final deliverables by 23:59 the day before S12; rehearse the pitch and the demo.</span></p>
+        <p class="small"><strong>Next session:</strong> S12 starts at 10:00 today, after a short break: pitches (8'), demos (3') and questions (4').
+          <span class="muted">No pre-work in between: your final deliverables went in on Friday 23 Oct, and the pitch and demo were rehearsed before today.</span></p>
       </div>
     </div>
     <aside class="notes">
-      [2:58 · 2 min] Collect exit answers in the chat. Remind: challenge S11_codigo.ipynb and H4
-      by 23:59 today; final deliverables are due the day before Session 12.
+      [2:58 · 2 min] Collect exit answers in the chat. Remind: challenge S11_codigo.ipynb by 23:59
+      today. S12 starts at 10:00, after the break: groups relaunch their demos and test screen sharing.
+      Final deliverables (with H4) were submitted on Friday 23 Oct at 23:59.
     </aside>
   </section>
 

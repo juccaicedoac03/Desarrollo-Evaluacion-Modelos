@@ -1,7 +1,7 @@
 # Sesión 02 — Training Generative Models
 *Entrenamiento de modelos generativos*
 
-**RAE asociados:** RAE 1, RAE 2 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 1, RAE 2 · **Duración:** 3 horas (virtual) · **Fecha:** sábado 3 de octubre de 2026, 7:00–10:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -24,6 +24,8 @@ Al terminar la sesión podrás:
 | Challenge | 40' | Tu propio VAE con configuración asignada, comparación con una línea base, decisión de negocio y crítica a la IA |
 
 ## Antes de la clase (≈2 h)
+
+La S02 y la S03 son seguidas (sábado 3 de octubre, 7:00 y 10:00): haz la preparación de ambas antes del sábado.
 
 - **Kaggle con GPU:** verifica tu número de celular en Kaggle; sin verificación no puedes activar la GPU ni Internet. El lab y el challenge funcionan en CPU, pero con GPU son más rápidos. Guía: [configuración de Kaggle](../../docs/configuracion-kaggle.md).
 - **Lectura principal:** Goodfellow, Bengio y Courville (2016), [*Deep Learning*](https://www.deeplearningbook.org/), capítulo 8 (optimización: secciones 8.1, 8.3 y 8.5) y capítulo 14 (autoencoders: sección 14.1).
@@ -61,8 +63,8 @@ Individual, 40 minutos en clase y entrega hasta las **23:59 del mismo día**. Tu
 - **Cierra y entrega el challenge** antes de las 23:59.
 - **Repite el lab con otra configuración y compara:** por ejemplo, `LATENT_DIM = 2` (puedes dibujar el espacio latente directamente, sin PCA) o β = 4 en el entrenamiento. Anota cómo cambian la reconstrucción, el KL, las muestras y las dimensiones activas.
 - **Lectura:** Kingma y Welling (2014), secciones 1–3, apoyándote en Kingma y Welling (2019), capítulos 1 y 2, que explican lo mismo con más detalle; y Higgins et al. (2017) sobre β-VAE.
-- **Proyecto final:** busca a tus compañeros de grupo (3 personas; idealmente perfiles de negocio y técnicos). Los grupos se registran en la **Sesión 03** (hito **H1**). Revisa el [enunciado del proyecto final](../../proyecto-final/README.md) y empieza a pensar en qué datos de tu organización podrías usar… sin fugas de datos.
-- **Prepara la Sesión 03** (modelos preentrenados y transferencia de aprendizaje) con la guía de la sesión.
+- **Proyecto final:** busca a tus compañeros de grupo (3 personas; idealmente perfiles de negocio y técnicos). Los grupos se registran hoy mismo en la **Sesión 03** (hito **H1**, hasta las 23:59). Revisa el [enunciado del proyecto final](../../proyecto-final/README.md) y empieza a pensar en qué datos de tu organización podrías usar… sin fugas de datos.
+- **La Sesión 03** (modelos preentrenados y transferencia de aprendizaje) empieza hoy a las 10:00, después de un breve descanso; su preparación ya debía quedar lista antes del sábado.
 
 ## Lecturas y recursos
 

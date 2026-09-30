@@ -1,7 +1,7 @@
 # Sesión 03 — Pretrained Models and Transfer Learning
 *Modelos preentrenados y transferencia de aprendizaje*
 
-**RAE asociados:** RAE 1, RAE 3 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 1, RAE 3 · **Duración:** 3 horas (virtual) · **Fecha:** sábado 3 de octubre de 2026, 10:00–13:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -24,6 +24,8 @@ Al terminar la sesión podrás:
 | Challenge | 40' | ¿Cuántos datos necesitas? (individual, evaluado) |
 
 ## Antes de la clase (≈2 h)
+
+La S02 y la S03 son seguidas (sábado 3 de octubre, 7:00 y 10:00): haz esta preparación antes del sábado.
 
 1. **Lectura 1:** Alammar, J. (2018), [*The Illustrated Transformer*](https://jalammar.github.io/illustrated-transformer/): la explicación visual de la atención que usaremos en clase. *(≈40 min)*
 2. **Lectura 2:** Hugging Face, [*LLM Course*, capítulo 2, en español](https://huggingface.co/learn/llm-course/es/chapter2/1): modelos, tokenizadores y cómo se conectan. *(≈45 min)*
@@ -73,7 +75,7 @@ Modelos y datos de hoy (abiertos, sin registro): `google-bert/bert-base-uncased`
 3. **Mide tu propio texto:** toma 10 frases reales de tu trabajo en español y cuenta sus tokens con los tokenizadores del lab. ¿Cuál es tu razón ES/EN? *(≈30 min)*
 4. **Lecturas de profundización** (elige dos): Vaswani et al. (2017), secciones 3.1–3.3; Devlin et al. (2019), secciones 3 y 5; Cañete et al. (2020); Jurafsky y Martin, capítulos sobre Transformers y modelos de lenguaje grandes. *(≈2.5 h)*
 5. **Proyecto:** reúnanse como grupo, acuerden su idea preliminar y busquen en el Hugging Face Hub dos modelos candidatos (idioma, tamaño y licencia de su *model card*). *(≈1 h)*
-6. **Prepara la S04 (afinamiento):** revisa tu cuota de GPU en Kaggle; el lab de la próxima sesión la necesita.
+6. **Prepara la S04 (afinamiento, viernes 9 de octubre):** revisa tu cuota de GPU en Kaggle; el lab de la próxima sesión la necesita.
 
 ## Lecturas y recursos
 

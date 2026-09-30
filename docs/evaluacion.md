@@ -114,7 +114,7 @@ Las micro-sustentaciones comprueban que **entiendes lo que entregas**, uses o no
 
 **Protocolo**
 
-1. **Selección.** En cada sesión, durante el bloque de challenge, se eligen al azar 3 o 4 estudiantes. En el semestre, **cada estudiante pasa al menos 2 veces**; el sorteo da prioridad a quienes aún no completan sus dos turnos.
+1. **Selección.** En cada sesión, durante el bloque de challenge, se eligen al azar 3 o 4 estudiantes. A lo largo del curso, **cada estudiante pasa al menos 2 veces**; el sorteo da prioridad a quienes aún no completan sus dos turnos.
 2. **Formato.** Compartes pantalla con tu notebook en vivo durante **2–3 minutos**. El profesor señala una celda o una respuesta de tu trabajo y te pregunta, por ejemplo:
    - ¿Qué hace esta celda y por qué la escribiste así?
    - ¿Qué significa este resultado para el caso que te tocó?
@@ -156,7 +156,7 @@ Si al volver a ejecutar tu notebook ves variaciones mínimas en algunos números
 
 ## 7. Proyecto final (30%)
 
-El proyecto final se desarrolla en **grupos de 3** a lo largo del semestre: diseñar, entrenar o afinar, evaluar y mejorar un modelo propio para un problema contextualizado, y exponerlo en una app (Gradio) o un agente (Startti). El enunciado completo está en [proyecto-final/README.md](../proyecto-final/README.md) y los criterios detallados en la [rúbrica del proyecto](../proyecto-final/rubrica.md).
+El proyecto final se desarrolla en **grupos de 3** entre el 3 y el 24 de octubre (de la S03 a la S12): diseñar, entrenar o afinar, evaluar y mejorar un modelo propio para un problema contextualizado, y exponerlo en una app (Gradio) o un agente (Startti). El enunciado completo está en [proyecto-final/README.md](../proyecto-final/README.md) y los criterios detallados en la [rúbrica del proyecto](../proyecto-final/rubrica.md).
 
 | Componente | Peso | Nota |
 |---|---|---|
@@ -174,13 +174,14 @@ El proyecto final se desarrolla en **grupos de 3** a lo largo del semestre: dise
   Con P = 1.0, F = 0.70; con P = 3.0, F = 0.90; con P ≥ 4.0, F = 1.00. F es el único valor intermedio que se redondea (a dos decimales). Las reglas para casos extremos están en la sección 5 de la [rúbrica del proyecto](../proyecto-final/rubrica.md).
 - **Hitos formativos (obligatorios).** No tienen nota propia, pero reciben retroalimentación y su calidad se refleja en la entrega final. **Cada hito (H1–H4) que no se entregue en su plazo descuenta 0.3 de la nota del entregable técnico** (máximo −1.2), salvo excusa válida aceptada por el profesor:
 
-  | Sesión | Hito |
+  | Plazo | Hito |
   |---|---|
-  | S03 | H1 · Grupos conformados |
-  | S05 → S06 | H2 · Propuesta del proyecto ([canvas](../proyecto-final/plantillas/propuesta.md)); la retroalimentación escrita se devuelve en la S06 |
-  | S09 | H3 · Canvas de caso de uso |
-  | S11 | H4 · Iteración de mejora documentada |
-  | S12 | Entrega y socialización |
+  | S03 · sábado 3 oct., 23:59 | H1 · Grupos conformados |
+  | Miércoles 14 oct., 23:59 | H2 · Propuesta del proyecto ([canvas](../proyecto-final/plantillas/propuesta.md)); la retroalimentación escrita se devuelve en la S07 (viernes 16 oct.) |
+  | S09 · sábado 17 oct., 23:59 | H3 · Canvas de caso de uso |
+  | Viernes 23 oct., 23:59 | H4 · Iteración de mejora, documentada en la sección 5 del informe técnico y entregada junto con la entrega final |
+
+  La **entrega final** del proyecto también vence el viernes 23 de octubre a las 23:59, y la socialización es en la S12 (sábado 24 de octubre).
 
 - **Orden de los ajustes del entregable técnico:** primero se aplican los descuentos por hitos (−0.3 por hito, máximo −1.2) y luego los topes (por ejemplo, la nota no puede superar 3.0 si el grupo no afinó ni entrenó un modelo propio y solo hizo *prompting*). Detalle y ejemplo en la sección 2 de la [rúbrica del proyecto](../proyecto-final/rubrica.md).
 - **Socialización en S12.** Cada grupo tiene 8 minutos de pitch, 3 de demo y 4 de preguntas. Se acepta una demo pregrabada como respaldo.
@@ -191,7 +192,7 @@ El proyecto final se desarrolla en **grupos de 3** a lo largo del semestre: dise
 | Tipo | Instrumento | ¿Afecta la nota? |
 |---|---|---|
 | **Diagnóstica** | Quiz de calentamiento al inicio de cada sesión (en S01 incluye un diagnóstico de entrada) | No |
-| **Formativa** | *Checkpoints* del lab, hitos del proyecto con retroalimentación, autoevaluación en las reflexiones | No tienen nota propia y preparan las evaluaciones sumativas; pero cada hito del proyecto (H1–H4) no entregado descuenta 0.3 del entregable técnico |
+| **Formativa** | *Checkpoints* del lab, hitos del proyecto con retroalimentación, autoevaluación en las reflexiones y diálogo formativo de las sesiones 4 a 7 (balance de los challenges S01–S03 en la S04 y retroalimentación de la propuesta en la S07) | No tienen nota propia y preparan las evaluaciones sumativas; pero cada hito del proyecto (H1–H4) no entregado descuenta 0.3 del entregable técnico |
 | **Sumativa** | Challenges de sesión (70%) y proyecto final (30%) | Sí |
 
 | Agente evaluador | Cómo se aplica |

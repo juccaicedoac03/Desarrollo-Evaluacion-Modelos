@@ -6,8 +6,10 @@
 |---|---|
 | **Modalidad** | Grupos de 3 personas (se recomienda mezclar perfiles de negocio y técnicos) |
 | **Peso en la nota final** | 30%: entregable técnico 15% · socialización y demo 10% · defensa individual 5%, multiplicado por el factor de coevaluación (0.7–1.0) |
-| **Hitos formativos (obligatorios)** | S3 · antes de la S6 · S9 · S11 |
-| **Entrega y socialización** | Sesión 12 |
+| **Duración** | Del 3 al 24 de octubre de 2026 (de la S3 a la S12) |
+| **Hitos formativos (obligatorios)** | H1: S3 (sábado 3 oct.) · H2: miércoles 14 oct. · H3: S9 (sábado 17 oct.) · H4: con la entrega final (viernes 23 oct.) |
+| **Entrega final** | Viernes 23 de octubre, 23:59 |
+| **Socialización** | Sesión 12 (sábado 24 de octubre, 10:00–13:00) |
 | **Rúbrica** | [rubrica.md](rubrica.md) |
 | **Plantillas** | [propuesta](plantillas/propuesta.md) · [informe técnico](plantillas/informe-tecnico.md) · [model card](plantillas/model-card.md) · [registro de uso de IA](plantillas/registro-uso-ia.md) · [coevaluación](plantillas/coevaluacion.md) · [retroalimentación entre grupos](plantillas/retroalimentacion-pares.md) |
 
@@ -42,7 +44,7 @@ Todo proyecto debe cumplir estos ocho mínimos. Si falta alguno, el criterio cor
 | 7 | **Model card** | Documento del modelo según Mitchell et al. (2019), con la [plantilla](plantillas/model-card.md). | Repositorio o notebook |
 | 8 | **Demo funcional** | App de Gradio o agente de Startti integrado con el modelo propio (ver §4). El modelo del grupo debe tener un papel verificable en la demo. | Socialización |
 
-**Carga de trabajo.** El proyecto está dimensionado para unas **3 horas semanales por persona** entre la S3 y la S12, dentro de las 9 horas semanales de trabajo independiente del curso. Los ocho mínimos caben en ese presupuesto. Dos elementos del nivel *Excelente* de la [rúbrica](rubrica.md) son **metas de alcance extendido**, para hacer solo si el tiempo les alcanza (sin ellos, esos criterios pueden llegar al nivel *Bueno*):
+**Carga de trabajo.** El proyecto está dimensionado para unas **3 horas por persona por cada sesión** entre la S3 y la S12, dentro de las 9 horas de trabajo independiente que le corresponden a cada sesión del curso. Los ocho mínimos caben en ese presupuesto. Dos elementos del nivel *Excelente* de la [rúbrica](rubrica.md) son **metas de alcance extendido**, para hacer solo si el tiempo les alcanza (sin ellos, esos criterios pueden llegar al nivel *Bueno*):
 
 - la variabilidad de los resultados con varias semillas o intervalos (criterio 4 del entregable técnico);
 - la prueba empírica por subgrupo o contrafactual (criterio 6).
@@ -55,12 +57,12 @@ Los hitos son **formativos y obligatorios**: no tienen nota propia, pero sirven 
 
 | Hito | Sesión | Qué entrega el grupo | Plantilla | Plazo | Retroalimentación |
 |---|---|---|---|---|---|
-| **H1 · Conformación del grupo** | S3 | Registro del grupo (ver el bloque de abajo), como `PF_H1_<codigo>` | — | 23:59 del día de la S3 | Confirmación y número de grupo (`G01`, `G02`…) |
-| **H2 · Propuesta (canvas)** | Antes de la S6 | Parte A de la propuesta: canvas de 1 página | [propuesta.md](plantillas/propuesta.md) | 23:59 del día anterior a la S6 | Retroalimentación escrita en la S6 |
-| **H3 · Canvas de caso de uso** | S9 | Parte A actualizada (1 página) + Parte B (máximo 2 páginas adicionales): valor × factibilidad, KPI, ROI, riesgos, primeros resultados de la línea base | [propuesta.md](plantillas/propuesta.md) (Parte B) | 23:59 del día de la S9 | Comentarios antes de la S10 |
-| **H4 · Iteración de mejora** | S11 | Borrador de la sección 5 del informe (bitácora con al menos una iteración) + enlace al código | [informe-tecnico.md](plantillas/informe-tecnico.md) §5 | 23:59 del día de la S11 | Comentarios antes de la S12 |
-| **Entrega final** | S12 | Todos los entregables de la §4 | Todas | 23:59 del día anterior a la S12 | Calificación con la rúbrica |
-| **Socialización** | S12 | Pitch + demo + preguntas | — | En clase | Retroalimentación del profesor y de los demás grupos |
+| **H1 · Conformación del grupo** | S3 (sábado 3 oct.) | Registro del grupo (ver el bloque de abajo), como `PF_H1_<codigo>` | — | 23:59 del día de la S3 | Confirmación y número de grupo (`G01`, `G02`…) |
+| **H2 · Propuesta (canvas)** | Después de la S6 | Parte A de la propuesta: canvas de 1 página | [propuesta.md](plantillas/propuesta.md) | Miércoles 14 de octubre, 23:59 | Retroalimentación escrita en la S7 (viernes 16 oct.) |
+| **H3 · Canvas de caso de uso** | S9 (sábado 17 oct.) | Parte A actualizada (1 página) + Parte B (máximo 2 páginas adicionales): valor × factibilidad, KPI, ROI, riesgos, primeros resultados de la línea base | [propuesta.md](plantillas/propuesta.md) (Parte B) | 23:59 del día de la S9 | Comentarios antes de la S10 |
+| **H4 · Iteración de mejora** | Día de la S10 (viernes 23 oct.) | Sección 5 del informe técnico (bitácora con al menos una iteración), entregada dentro del informe de la entrega final | [informe-tecnico.md](plantillas/informe-tecnico.md) §5 | Viernes 23 de octubre, 23:59 (con la entrega final) | Revisión en la S11 y calificación con la rúbrica |
+| **Entrega final** | Día de la S10 (viernes 23 oct.) | Todos los entregables de la §4 | Todas | Viernes 23 de octubre, 23:59 | Calificación con la rúbrica |
+| **Socialización** | S12 (sábado 24 oct.) | Pitch + demo + preguntas | — | En clase | Retroalimentación del profesor y de los demás grupos |
 | **Coevaluación** | S12 | Formulario individual y confidencial, como `PF_G<NN>_coev_<codigo>` | [coevaluacion.md](plantillas/coevaluacion.md) | 23:59 del día de la S12 | — |
 | **Retroalimentación entre grupos** | S12 | Formulario individual sobre los grupos que el profesor asigna a cada estudiante, como `PF_retro_<codigo>` | [retroalimentacion-pares.md](plantillas/retroalimentacion-pares.md) | 23:59 del día de la S12 | Consolidada y anónima |
 
@@ -91,13 +93,13 @@ Acuerdos de trabajo:
   - *Producto y negocio:* problema, usuarios, KPI, ROI, pitch.
   - *Datos y evaluación:* datos, particiones, métricas, análisis de errores, ética.
   - *Modelado y demo:* entrenamiento, iteraciones, app de Gradio o agente de Startti.
-- Si hay problemas de participación, háblenlo primero en el grupo según sus acuerdos. Si persisten, informen al profesor **antes de la S11**, con evidencia; no esperen a la coevaluación.
+- Si hay problemas de participación, háblenlo primero en el grupo según sus acuerdos. Si persisten, informen al profesor **antes de la S10** (viernes 23 de octubre), con evidencia, para que haya margen de actuar antes de la entrega final; no esperen a la coevaluación.
 
 ---
 
 ## 4. Entregables finales (Sesión 12)
 
-Plazo: **23:59 del día anterior a la S12**. Se califica la versión disponible al cierre del plazo: el último commit o la última versión guardada del notebook de Kaggle antes de la hora límite.
+Plazo: **viernes 23 de octubre, 23:59** (el día de la S10). Se califica la versión disponible al cierre del plazo: el último commit o la última versión guardada del notebook de Kaggle antes de la hora límite.
 
 | # | Entregable | Formato y condiciones |
 |---|---|---|
@@ -254,7 +256,7 @@ Pueden tomar una de estas ideas, adaptarla o proponer la suya. Un problema real 
 
 - ¿El problema tiene **valor** medible para alguien?
 - ¿Tenemos o podemos construir **datos** suficientes y legales?
-- ¿Es **factible** en Kaggle gratis y en las ~9 semanas que van de la S3 a la S12?
+- ¿Es **factible** en Kaggle gratis y en el tiempo que va del 3 al 24 de octubre (de la S3 a la S12)?
 - ¿El **riesgo** es manejable?
 
 Las organizaciones de los ejemplos son genéricas o ficticias.
@@ -400,7 +402,7 @@ Sí, hasta el H3 (S9), justificando el cambio en la Parte B del canvas. Después
 Usen subconjuntos y modelos más pequeños, repartan el entrenamiento entre las cuentas del grupo, entrenen en CPU los clasificadores sobre embeddings o usen Colab como respaldo ([configuración de Kaggle](../docs/configuracion-kaggle.md)).
 
 **¿Qué pasa si un integrante no aporta?**
-Aplíquenle los acuerdos del grupo; si el problema persiste, avisen al profesor antes de la S11 con evidencia. La coevaluación ajusta la nota individual (§6 y [rúbrica](rubrica.md)).
+Aplíquenle los acuerdos del grupo; si el problema persiste, avisen al profesor antes de la S10 con evidencia. La coevaluación ajusta la nota individual (§6 y [rúbrica](rubrica.md)).
 
 ---
 
@@ -408,8 +410,8 @@ Aplíquenle los acuerdos del grupo; si el problema persiste, avisen al profesor 
 
 | Plantilla | Para qué | Cuándo |
 |---|---|---|
-| [propuesta.md](plantillas/propuesta.md) | Canvas de propuesta (Parte A) y canvas de caso de uso (Parte B) | H2 (antes de la S6) · H3 (S9) |
-| [informe-tecnico.md](plantillas/informe-tecnico.md) | Estructura del informe técnico (≤ 8 páginas) y bitácora de mejora | H4 (S11, §5) · entrega final |
+| [propuesta.md](plantillas/propuesta.md) | Canvas de propuesta (Parte A) y canvas de caso de uso (Parte B) | H2 (miércoles 14 oct.) · H3 (S9) |
+| [informe-tecnico.md](plantillas/informe-tecnico.md) | Estructura del informe técnico (≤ 8 páginas) y bitácora de mejora | H4 (§5, con la entrega final del viernes 23 oct.) |
 | [model-card.md](plantillas/model-card.md) | Model card (Mitchell et al., 2019) | Entrega final |
 | [registro-uso-ia.md](plantillas/registro-uso-ia.md) | Registro grupal de uso de IA + reflexión | Durante todo el proyecto · entrega final |
 | [coevaluacion.md](plantillas/coevaluacion.md) | Evaluación confidencial de los compañeros de grupo | S12 (individual) |

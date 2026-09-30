@@ -63,7 +63,7 @@ Los asistentes de IA se equivocan con seguridad y con buena redacción. Antes de
 |---|---|
 | **Suplantación** | Que otra persona, o un agente de IA que actúe por ti, resuelva tu challenge o presente tu micro-sustentación; entregar con el código estudiantil de otra persona; recibir ayuda de un asistente o de otra persona durante una micro-sustentación |
 | **Resultados fabricados** | Escribir números que tu notebook no produjo; editar salidas a mano; ajustar resultados para que "se vean mejor"; citar estadísticas, casos o referencias que no existen o que no verificaste |
-| **Compartir resultados personalizados** | Enviar a compañeros tu notebook ejecutado, tu configuración, tus resultados o tus respuestas; publicar soluciones de los challenges durante el semestre |
+| **Compartir resultados personalizados** | Enviar a compañeros tu notebook ejecutado, tu configuración, tus resultados o tus respuestas; publicar soluciones de los challenges mientras el curso está en marcha |
 | **Exponer datos personales o confidenciales** | Pegar en un asistente o en un agente datos personales o sensibles de personas reales (nombres, cédulas, teléfonos, datos de salud) o información confidencial de tu empresa. En Colombia, el tratamiento de datos personales está regulado por la Ley 1581 de 2012; en el curso usamos datos públicos o ficticios |
 | **Ocultar el uso de IA** | Omitir usos relevantes en el registro o describirlos de forma engañosa |
 

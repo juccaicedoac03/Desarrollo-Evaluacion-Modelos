@@ -1,7 +1,7 @@
 # Sesión 01 — Introduction to Generative and Pretrained Models
 *Introducción a modelos generativos y preentrenados*
 
-**RAE asociados:** RAE 1, RAE 4, RAE 5 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 1, RAE 4, RAE 5 · **Duración:** 3 horas (virtual) · **Fecha:** viernes 2 de octubre de 2026, 18:00–21:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -66,6 +66,7 @@ Las slides y el lab están en inglés; el challenge y esta guía, en español. E
 3. **Explora el Hugging Face Hub:** para un caso de uso de tu organización, encuentra 3 modelos candidatos y anota para cada uno la tarea, el tamaño, el idioma y la licencia de su *model card*. *(≈1 h)*
 4. **Lecturas de profundización** (elige dos): Vaswani et al. (2017); Devlin et al. (2019); el capítulo 20 de Goodfellow, Bengio y Courville (2016); Bender et al. (2021). *(≈2.5 h)*
 5. **Proyecto final:** lee el [enunciado del proyecto](../../proyecto-final/README.md) y empieza a conversar con posibles compañeros. **Los grupos de 3 se conforman en la Sesión 03** (hito H1); se recomienda mezclar perfiles de negocio y técnicos. *(≈1 h)*
+6. **Prepara las sesiones 02 y 03 antes del sábado a las 7:00:** el sábado 3 de octubre hay dos sesiones seguidas (7:00–10:00 y 10:00–13:00), así que haz antes la sección "Antes de la clase" de ambas guías ([Sesión 02](../02-training-generative-models/README.md) y [Sesión 03](../03-transfer-learning/README.md)).
 
 ## Lecturas y recursos
 
