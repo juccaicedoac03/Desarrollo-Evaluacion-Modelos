@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desarrollo y Evaluación de Modelos Propios · Universidad del Rosario</title>
+<meta name="description" content="Portal del curso Desarrollo y Evaluación de Modelos Propios — Especialización en Inteligencia Artificial Generativa y Desarrollo de Negocios, Escuela de Administración (Rosario GSB), Universidad del Rosario.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#9E1B32" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131112" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%239E1B32'/%3E%3Ctext x='32' y='43' font-family='Arial,sans-serif' font-size='30' font-weight='700' text-anchor='middle' fill='%23fff'%3EDM%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap">
+<style>
+  :root {
+    --brand: #9E1B32;
+    --accent: #0F766E;
+    --accent-2: #B45309;
+    --surface: #f6f4f2;
+    --bg: #ffffff;
+    --card: #ffffff;
+    --ink: #1d1d1f;
+    --muted: #5f6368;
+    --line: #e7e1dc;
+    --brand-ink: #9E1B32;
+    --accent-ink: #0F766E;
+    --accent-2-ink: #B45309;
+    --brand-soft: #f8e9ec;
+    --accent-soft: #e4f3f1;
+    --accent-2-soft: #fcefe3;
+    --warmup: #6D5BD0;
+    --break: #a3a7ab;
+    --hero-from: #9E1B32;
+    --hero-to: #6f1123;
+    --shadow: 0 1px 2px rgba(29, 29, 31, .05), 0 6px 20px rgba(29, 29, 31, .06);
+    --radius: 14px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1718;
+      --bg: #131112;
+      --card: #1e1a1c;
+      --ink: #f3efec;
+      --muted: #b5ada8;
+      --line: #352e31;
+      --brand-ink: #f28b9c;
+      --accent-ink: #5fd0c2;
+      --accent-2-ink: #f3aa68;
+      --brand-soft: #3b1a22;
+      --accent-soft: #12302d;
+      --accent-2-soft: #3a2717;
+      --warmup: #9c8ff2;
+      --break: #6d7276;
+      --hero-from: #641225;
+      --hero-to: #3a0a15;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+      color-scheme: dark;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    overflow-wrap: break-word;
+  }
+  a { color: var(--brand-ink); }
+  a:focus-visible, .btn:focus-visible {
+    outline: 3px solid var(--accent-ink);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .9em;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: .05em .35em;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+  .wrap { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 16px; }
+  @media (min-width: 720px) { .wrap { padding: 0 28px; } }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    color: #fff;
+    background:
+      radial-gradient(circle at 88% 12%, rgba(255, 255, 255, .10) 0, rgba(255, 255, 255, 0) 38%),
+      linear-gradient(135deg, var(--hero-from), var(--hero-to));
+    padding-bottom: 56px;
+  }
+  .topbar {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 8px 20px; padding: 18px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .18);
+    font-size: 14px;
+  }
+  .topbar .inst { font-weight: 600; letter-spacing: .01em; }
+  .topbar nav { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+  .topbar nav a { color: #fff; text-decoration: none; opacity: .88; }
+  .topbar nav a:hover { opacity: 1; text-decoration: underline; }
+  .hero-body { padding-top: 44px; max-width: 820px; }
+  .eyebrow {
+    margin: 0 0 12px; font-size: 13px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: rgba(255, 255, 255, .82);
+  }
+  .hero h1 {
+    margin: 0; font-size: clamp(32px, 6vw, 54px); line-height: 1.08;
+    letter-spacing: -.02em; font-weight: 800;
+  }
+  .hero .school { margin: 14px 0 0; font-size: 17px; color: rgba(255, 255, 255, .9); }
+  .hero .lede { margin: 20px 0 0; font-size: 18px; max-width: 680px; color: rgba(255, 255, 255, .92); }
+  .facts { list-style: none; padding: 0; margin: 26px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .facts li {
+    font-size: 14px; padding: 6px 12px; border-radius: 999px;
+    background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .22);
+  }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+  .hero-cta a {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
+    padding: 10px 18px; border-radius: 10px; font-weight: 600; text-decoration: none; font-size: 15px;
+  }
+  .hero-cta .solid { background: #fff; color: #7a1427; }
+  .hero-cta .outline { color: #fff; border: 1.5px solid rgba(255, 255, 255, .6); }
+  .hero-cta a:hover { filter: brightness(.96); }
+  .hero-cta a:focus-visible { outline-color: #fff; }
+
+  /* ---------- Sections ---------- */
+  section { padding: 56px 0 8px; scroll-margin-top: 12px; }
+  .section-head { margin-bottom: 22px; max-width: 760px; }
+  .kicker {
+    margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--brand-ink);
+  }
+  h2 { margin: 0; font-size: clamp(24px, 3.4vw, 32px); line-height: 1.2; letter-spacing: -.01em; }
+  .section-head p:not(.kicker) { margin: 10px 0 0; color: var(--muted); }
+
+  /* ---------- Quick links ---------- */
+  .quick { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+  .quick a {
+    display: flex; flex-direction: column; gap: 4px; padding: 16px 18px;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); color: var(--ink); text-decoration: none;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+  .quick a:hover { transform: translateY(-2px); border-color: var(--brand-ink); }
+  .quick strong { font-size: 16px; display: flex; justify-content: space-between; gap: 8px; }
+  .quick strong::after { content: "→"; color: var(--brand-ink); font-weight: 600; }
+  .quick span { font-size: 14px; color: var(--muted); }
+  .note { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+
+  /* ---------- Session structure ---------- */
+  .panel {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px;
+  }
+  @media (min-width: 720px) { .panel { padding: 26px 28px; } }
+  .timeline {
+    display: flex; height: 48px; border-radius: 10px; overflow: hidden; gap: 3px;
+  }
+  .timeline > div {
+    display: flex; align-items: center; justify-content: center; min-width: 0;
+    color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden;
+  }
+  .t-warmup { background: var(--warmup); }
+  .t-theory { background: var(--brand); }
+  .t-break { background: var(--break); }
+  .t-lab { background: var(--accent); }
+  .t-challenge { background: var(--accent-2); }
+  .timeline .lbl { display: none; }
+  @media (min-width: 600px) { .timeline .lbl { display: inline; } }
+  .legend {
+    list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 12px 20px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+  }
+  .legend li { display: grid; grid-template-columns: 14px 1fr; gap: 10px; align-items: start; font-size: 14px; }
+  .legend .sw { width: 14px; height: 14px; border-radius: 4px; margin-top: 4px; }
+  .legend b { display: block; font-size: 15px; }
+  .legend span { color: var(--muted); }
+
+  /* ---------- Session cards ---------- */
+  .sessions { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); }
+  .session {
+    display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; min-width: 0;
+  }
+  .session-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .session-num {
+    font-size: 30px; line-height: 1; font-weight: 800; color: var(--brand-ink);
+    font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+  }
+  .chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+  .chip {
+    font-size: 12px; font-weight: 600; line-height: 1; padding: 6px 9px; border-radius: 999px;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .chip-theory { background: var(--brand-soft); color: var(--brand-ink); }
+  .chip-lab { background: var(--accent-soft); color: var(--accent-ink); }
+  .chip-challenge { background: var(--accent-2-soft); color: var(--accent-2-ink); }
+  .chip-startti { background: transparent; border-color: var(--accent-ink); color: var(--accent-ink); }
+  .chip-project { background: var(--brand); color: #fff; }
+  .session h3 { margin: 16px 0 0; font-size: 19px; line-height: 1.3; letter-spacing: -.005em; }
+  .session-es { margin: 4px 0 0; color: var(--muted); font-style: italic; }
+  .session-meta { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+  .session-meta b { color: var(--ink); font-weight: 600; }
+  .milestone {
+    margin: 10px 0 0; font-size: 13px; padding: 7px 10px; border-radius: 8px;
+    background: var(--surface); border-left: 3px solid var(--brand-ink);
+  }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 18px; }
+  .btn {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    min-height: 42px; padding: 8px 10px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    line-height: 1.2; text-decoration: none; border: 1.5px solid transparent;
+    transition: filter .15s ease, background-color .15s ease;
+  }
+  .btn:hover { filter: brightness(.95); }
+  .btn-slides { background: var(--brand); color: #fff; }
+  .btn-lab { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent-ink); }
+  .btn-challenge { background: var(--accent-2-soft); color: var(--accent-2-ink); border-color: var(--accent-2-ink); }
+  .btn-guide { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn-guide:hover { border-color: var(--muted); }
+  .btn-project { background: var(--brand-soft); color: var(--brand-ink); border-color: var(--brand-ink); }
+
+  /* ---------- Evaluation ---------- */
+  .grade-bar { display: flex; height: 52px; border-radius: 10px; overflow: hidden; gap: 3px; }
+  .grade-bar > div {
+    display: flex; align-items: center; justify-content: center; color: #fff;
+    font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; min-width: 0;
+  }
+  .g-challenges { background: var(--brand); }
+  .g-tech { background: var(--accent); }
+  .g-demo { background: #14958b; }
+  .g-defense { background: #2bb3a6; }
+  .grade-bar .lbl-sm { display: none; }
+  @media (min-width: 760px) { .grade-bar .lbl-sm { display: inline; } }
+  .eval-grid { display: grid; gap: 16px; margin-top: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+  .eval-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow);
+  }
+  .eval-card .big { font-size: 40px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+  .eval-card h3 { margin: 6px 0 8px; font-size: 18px; }
+  .eval-card p { margin: 0; color: var(--muted); }
+  .eval-card ul { margin: 12px 0 0; padding-left: 18px; }
+  .eval-card li { margin: 4px 0; }
+  .big.c1 { color: var(--brand-ink); }
+  .big.c2 { color: var(--accent-ink); }
+  .rules { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1100px) { .rules { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .rules li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; font-size: 14px; }
+  .rules b { display: block; font-size: 15px; margin-bottom: 2px; }
+  .more { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 18px 0 0; font-weight: 600; }
+
+  /* ---------- Footer ---------- */
+  footer { margin-top: 64px; border-top: 1px solid var(--line); background: var(--surface); }
+  footer .wrap { padding-top: 24px; padding-bottom: 28px; font-size: 14px; color: var(--muted); display: grid; gap: 6px; }
+  footer p { margin: 0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="topbar">
+      <span class="inst">Universidad del Rosario · Rosario GSB</span>
+      <nav aria-label="Secciones del portal">
+        <a href="#documentos">Documentos</a>
+        <a href="#sesiones">Sesiones</a>
+        <a href="#evaluacion">Evaluación</a>
+        <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos">GitHub</a>
+      </nav>
+    </div>
+    <div class="hero-body">
+      <p class="eyebrow">Especialización en Inteligencia Artificial Generativa y Desarrollo de Negocios</p>
+      <h1>Desarrollo y Evaluación de Modelos Propios</h1>
+      <p class="school">Escuela de Administración (Rosario GSB) · Universidad del Rosario</p>
+      <p class="lede">Entrena, afina y evalúa modelos generativos y preentrenados, y conviértelos en chatbots, clasificadores y agentes útiles para tu organización, con criterio ético y de negocio.</p>
+      <ul class="facts" aria-label="Datos del curso">
+        <li>12 sesiones virtuales de 3 h</li>
+        <li>3 créditos</li>
+        <li>Profesor: Julian Caicedo</li>
+        <li>Teoría en inglés · evaluación en español</li>
+      </ul>
+      <div class="hero-cta">
+        <a class="solid" href="#sesiones">Ver las sesiones</a>
+        <a class="outline" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/configuracion-kaggle.md">Empieza aquí: configura Kaggle</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="documentos" aria-labelledby="documentos-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="kicker">Empieza aquí</p>
+        <h2 id="documentos-title">Documentos del curso</h2>
+        <p>Lee la metodología, la evaluación y la política de IA antes de la primera sesión.</p>
+      </div>
+      <div class="quick">
+        <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/guia-de-asignatura/guia-de-asignatura.md"><strong>Guía de asignatura</strong><span>Programa institucional: RAE, contenidos, evaluación y cronograma.</span></a>
+        <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/metodologia.md"><strong>Metodología</strong><span>Cómo trabajamos: sesiones activas, labs, proyecto y trabajo independiente.</span></a>
+        <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/evaluacion.md"><strong>Evaluación</strong><span>Notas, rúbricas, micro-sustentaciones y plazos.</span></a>
+        <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/politica-uso-ia.md"><strong>Política de IA</strong><span>Qué puedes hacer con asistentes de IA y cómo declararlo.</span></a>
+        <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/configuracion-kaggle.md"><strong>Configurar Kaggle</strong><span>Cuenta, verificación, GPU, Internet, Secrets y entrega.</span></a>
+        <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/configuracion-startti.md"><strong>Configurar Startti</strong><span>Licencia, primer agente y API key para S06, S07 y S09.</span></a>
+        <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/proyecto-final/README.md"><strong>Proyecto final</strong><span>Reto, hitos, entregables, socialización y rúbrica.</span></a>
+      </div>
+      <p class="note">¿Necesitas la guía de asignatura en Word? <a href="guia-de-asignatura/guia-de-asignatura.docx">Descarga el archivo .docx</a>.</p>
+    </div>
+  </section>
+
+  <section id="estructura" aria-labelledby="estructura-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="kicker">Cada semana</p>
+        <h2 id="estructura-title">Estructura de cada sesión</h2>
+        <p>180 minutos, siempre en el mismo orden. El challenge se empieza en clase y se entrega hasta las 23:59 del mismo día.</p>
+      </div>
+      <div class="panel">
+        <div class="timeline" role="img" aria-label="Distribución de la sesión: calentamiento 10 minutos, teoría 60, descanso 10, lab guiado 60 y challenge 40.">
+          <div class="t-warmup" style="flex: 10"></div>
+          <div class="t-theory" style="flex: 60"><span class="lbl">Teoría · 60'</span></div>
+          <div class="t-break" style="flex: 10"></div>
+          <div class="t-lab" style="flex: 60"><span class="lbl">Lab guiado · 60'</span></div>
+          <div class="t-challenge" style="flex: 40"><span class="lbl">Challenge · 40'</span></div>
+        </div>
+        <ul class="legend">
+          <li><i class="sw t-warmup"></i><div><b>Calentamiento · 10'</b><span>Quiz de repaso, no calificado.</span></div></li>
+          <li><i class="sw t-theory"></i><div><b>Teoría · 60'</b><span>Interactiva: quiz, simulador o sala de grupo cada ~10 minutos.</span></div></li>
+          <li><i class="sw t-break"></i><div><b>Descanso · 10'</b><span>Pausa.</span></div></li>
+          <li><i class="sw t-lab"></i><div><b>Lab guiado · 60'</b><span>Live coding en Kaggle con checkpoints.</span></div></li>
+          <li><i class="sw t-challenge"></i><div><b>Challenge · 40'</b><span>Individual, personalizado y calificado, con micro-sustentaciones.</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="sesiones" aria-labelledby="sesiones-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="kicker">Programa</p>
+        <h2 id="sesiones-title">Las 12 sesiones</h2>
+        <p>Slides y labs en inglés; challenges y guías en español. Los botones de Kaggle crean una copia del notebook en tu cuenta; cada guía de sesión incluye además enlaces a Colab.</p>
+      </div>
+      <div class="sessions">
+        <article class="session" id="s01">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">01</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 01: </span><span lang="en">Introduction to Generative and Pretrained Models</span></h3>
+          <p class="session-es">Introducción a modelos generativos y preentrenados</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 1 · 4 · 5</b></p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/01-intro-generative-models/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s02">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">02</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 02: </span><span lang="en">Training Generative Models</span></h3>
+          <p class="session-es">Entrenamiento de modelos generativos</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 1 · 2</b></p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/02-training-generative-models/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/02-training-generative-models/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/02-training-generative-models/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/02-training-generative-models/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s03">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">03</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 03: </span><span lang="en">Pretrained Models and Transfer Learning</span></h3>
+          <p class="session-es">Modelos preentrenados y transferencia de aprendizaje</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 1 · 3</b></p>
+          <p class="milestone"><strong>Hito del proyecto:</strong> Conformación de grupos</p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/03-transfer-learning/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/03-transfer-learning/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/03-transfer-learning/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/03-transfer-learning/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s04">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">04</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 04: </span><span lang="en">Fine-Tuning Generative Models</span></h3>
+          <p class="session-es">Afinamiento de modelos generativos</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 1 · 2</b></p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/04-fine-tuning/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/04-fine-tuning/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/04-fine-tuning/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/04-fine-tuning/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s05">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">05</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 05: </span><span lang="en">Evaluating Generative Models</span></h3>
+          <p class="session-es">Evaluación de modelos generativos</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 2</b></p>
+          <p class="milestone"><strong>Hito del proyecto:</strong> Propuesta (canvas) antes de S06</p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/05-evaluating-generative-models/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/05-evaluating-generative-models/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/05-evaluating-generative-models/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/05-evaluating-generative-models/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s06">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">06</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span><span class="chip chip-startti">Startti</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 06: </span><span lang="en">Introduction to Basic Application Development</span></h3>
+          <p class="session-es">Introducción al desarrollo de aplicaciones básicas</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 3 · 4</b></p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/06-basic-ai-applications/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/06-basic-ai-applications/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/06-basic-ai-applications/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/06-basic-ai-applications/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s07">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">07</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span><span class="chip chip-startti">Startti</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 07: </span><span lang="en">Implementing Basic Chatbots and Agents</span></h3>
+          <p class="session-es">Implementación de chatbots básicos y agentes</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 3 · 4 · 6</b></p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/07-chatbots-and-agents/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/07-chatbots-and-agents/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/07-chatbots-and-agents/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/07-chatbots-and-agents/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s08">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">08</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 08: </span><span lang="en">Building Classifiers with Generative Models</span></h3>
+          <p class="session-es">Creación de clasificadores con modelos generativos</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 1 · 2 · 3</b></p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/08-generative-classifiers/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/08-generative-classifiers/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/08-generative-classifiers/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/08-generative-classifiers/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s09">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">09</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span><span class="chip chip-startti">Startti</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 09: </span><span lang="en">Use Cases: Generative Models in Real Contexts</span></h3>
+          <p class="session-es">Casos de uso: modelos generativos en contexto real</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 4 · 5 · 6</b></p>
+          <p class="milestone"><strong>Hito del proyecto:</strong> Canvas de caso de uso</p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/09-real-world-use-cases/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/09-real-world-use-cases/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/09-real-world-use-cases/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/09-real-world-use-cases/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s10">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">10</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 10: </span><span lang="en">Ethics and Sustainability in Generative Models</span></h3>
+          <p class="session-es">Ética y sostenibilidad en modelos generativos</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 2 · 6</b></p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/10-ethics-and-sustainability/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/10-ethics-and-sustainability/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/10-ethics-and-sustainability/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/10-ethics-and-sustainability/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s11">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">11</span>
+            <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 11: </span><span lang="en">Evaluation and Continuous Model Improvement</span></h3>
+          <p class="session-es">Evaluación y mejora continua de modelos</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 2 · 6</b></p>
+          <p class="milestone"><strong>Hito del proyecto:</strong> Iteración de mejora</p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/11-continuous-improvement/slides.html">Slides</a>
+            <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
+            <a class="btn btn-challenge" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/challenge.ipynb" target="_blank" rel="noopener">Challenge en Kaggle</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+        <article class="session" id="s12">
+          <div class="session-top">
+            <span class="session-num" aria-hidden="true">12</span>
+            <div class="chips"><span class="chip chip-project">Proyecto final</span><span class="chip chip-startti">Startti opcional</span></div>
+          </div>
+          <h3><span class="sr-only">Sesión 12: </span><span lang="en">Integrative Project: Complete Solution</span></h3>
+          <p class="session-es">Proyecto integrador: desarrollo de solución completa</p>
+          <p class="session-meta">Resultados de aprendizaje: <b>RAE 1–6</b></p>
+          <p class="milestone"><strong>Proyecto:</strong> Entrega y socialización</p>
+          <div class="actions">
+            <a class="btn btn-slides" href="sessions/12-integrative-project/slides.html">Slides</a>
+            <a class="btn btn-project" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/proyecto-final/README.md">Proyecto final</a>
+            <a class="btn btn-guide" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/12-integrative-project/README.md">Guía de la sesión</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="evaluacion" aria-labelledby="evaluacion-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="kicker">Nota final</p>
+        <h2 id="evaluacion-title">Evaluación en resumen</h2>
+        <p>Escala de 0.0 a 5.0; se aprueba con 3.0. Sin parciales: evaluación continua y un proyecto integrador.</p>
+      </div>
+      <div class="panel">
+        <div class="grade-bar" role="img" aria-label="Composición de la nota: challenges 70 por ciento; proyecto final 30 por ciento, dividido en entregable técnico 15, socialización y demo 10, y defensa individual 5.">
+          <div class="g-challenges" style="flex: 70">Challenges · 70%</div>
+          <div class="g-tech" style="flex: 15"><span class="lbl-sm">Entregable · 15%</span></div>
+          <div class="g-demo" style="flex: 10"><span class="lbl-sm">Demo · 10%</span></div>
+          <div class="g-defense" style="flex: 5"><span class="lbl-sm">5%</span></div>
+        </div>
+        <div class="eval-grid">
+          <div class="eval-card">
+            <div class="big c1">70%</div>
+            <h3>Challenges de sesión</h3>
+            <p>11 challenges individuales (S01–S11). Cuentan tus <strong>mejores 10</strong>; cada uno vale <strong>7%</strong>.</p>
+            <ul>
+              <li>Ejecución técnica · 40%</li>
+              <li>Análisis e interpretación · 40%</li>
+              <li>Reflexión y registro de uso de IA · 20%</li>
+            </ul>
+          </div>
+          <div class="eval-card">
+            <div class="big c2">30%</div>
+            <h3>Proyecto final (grupos de 3)</h3>
+            <p>Un modelo propio, evaluado y mejorado, expuesto en una app o un agente.</p>
+            <ul>
+              <li>Entregable técnico · 15%</li>
+              <li>Socialización y demo · 10%</li>
+              <li>Defensa individual · 5%</li>
+              <li>× factor de coevaluación (0.7–1.0)</li>
+            </ul>
+          </div>
+        </div>
+        <ul class="rules">
+          <li><b>Entrega</b>Descarga el notebook y súbelo a e-Aulas como <code>S&lt;NN&gt;_&lt;codigo&gt;.ipynb</code> antes de las 23:59.</li>
+          <li><b>Entregas tardías</b>Hasta 24 h después del plazo: −0.5. Después: 0.0.</li>
+          <li><b>Registro de IA</b>Obligatorio. Sin registro, el componente de 20% vale 0.</li>
+          <li><b>Micro-sustentaciones</b>Si no puedes explicar tu propia entrega, la nota de ese challenge se limita a 3.0.</li>
+        </ul>
+        <p class="more">
+          <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/evaluacion.md">Ver el esquema completo →</a>
+          <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/politica-uso-ia.md">Política de uso de IA →</a>
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Desarrollo y Evaluación de Modelos Propios</strong> · Escuela de Administración (Rosario GSB) · Universidad del Rosario</p>
+    <p>© 2026 Julian Caicedo · Materiales bajo <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/LICENSE">licencia MIT</a> · <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos">Repositorio en GitHub</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
