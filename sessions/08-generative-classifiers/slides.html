@@ -1,0 +1,1423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S08 · Building Classifiers with Generative Models</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+<style>
+  /* Session 08 · small deck-specific helpers (everything else comes from course.css) */
+  .reveal .db-panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .reveal .db-panels h4 { margin: 0 0 4px; font-size: 21px; }
+  .reveal .db-panels svg { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  .reveal .db-panels .stat { margin: 4px 0 0; }
+  .reveal .legend-row { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 8px 0 0; font-size: 18px; color: var(--muted); }
+  .reveal .legend-row span { display: inline-flex; align-items: center; gap: 6px; }
+  .reveal .sw { display: inline-block; width: 14px; height: 14px; }
+  .reveal .sw.a { background: var(--series-1); border-radius: 50%; }
+  .reveal .sw.b { background: var(--series-2); }
+  .reveal .sw.opt { width: 22px; height: 0; border-top: 3px dashed var(--ink); }
+  .reveal .seg { display: inline-flex; gap: 0; border: 2px solid var(--line-strong); border-radius: 12px; overflow: hidden; }
+  .reveal .seg button { margin: 0; padding: 8px 16px; border: 0; background: #fff; color: var(--ink); font: 600 20px var(--font-sans); cursor: pointer; }
+  .reveal .seg button + button { border-left: 2px solid var(--line-strong); }
+  .reveal .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .reveal .seg button:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .reveal .formula-box { padding: 10px 18px; border-radius: 14px; background: var(--surface); }
+  .reveal table.compact.tight td, .reveal table.compact.tight th { padding: 5px 10px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ===================================================================== -->
+  <!-- OPENING                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="08">
+    <div class="title-main">
+      <h1>Building Classifiers with Generative Models</h1>
+      <p class="subtitle">Creación de clasificadores con modelos generativos</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome to Session 08. Last week the bots we built had a small classifier
+      hidden inside (the NLU that predicts the intent). Today we open that box and ask a broader
+      question: when should a classifier be generative, discriminative, or simply an LLM that we
+      ask politely? Keys: S speaker view, F fullscreen, Esc overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Warm-up: chatbots and agents in three questions <span class="time">10'</span></li>
+      <li data-block="theory">Theory: generative vs discriminative, LLMs as classifiers, synthetic data, calibration, cost <span class="time">60'</span></li>
+      <li data-block="break">Break <span class="time">10'</span></li>
+      <li data-block="lab">Guided lab (PyTorch): NB vs LR, an MLP, zero-shot scoring, augmentation <span class="time">60'</span></li>
+      <li data-block="challenge">Session challenge (graded, individual) <span class="time">40'</span></li>
+    </ol>
+    <aside class="notes">
+      [0:01 · 1 min] Same five blocks as always. Today's theory has three simulators and a
+      breakout; the lab is PyTorch-first (with a short Keras cell for comparison) and the
+      challenge reuses every piece of the lab with each student's own data slice.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WARM-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 3 · Warm-up divider -->
+  <section class="section-slide" data-block="warmup">
+    <h2>Warm-up</h2>
+    <p>Three questions on last session: intents and slots, agents, and how we measured our bots.</p>
+    <span class="block-tag" data-block="warmup">Warm-up · 10'</span>
+    <aside class="notes">
+      [0:02] Retrieval practice on Session 07. Launch each question as a Zoom poll, wait about
+      45 seconds, then click the most voted option.
+    </aside>
+  </section>
+
+  <!-- 4 · Warm-up Q1 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q1</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">An intent-based bot (Rasa, Dialogflow CX) receives: “Please block my card ending in 4521.” What is “4521”?</p>
+      <button class="quiz-opt" data-key="a">The intent predicted by the NLU</button>
+      <button class="quiz-opt" data-key="b">An entity value that fills the card slot of the “block card” flow</button>
+      <button class="quiz-opt" data-key="c">A fallback: the bot cannot handle numbers</button>
+      <button class="quiz-opt" data-key="d">A webhook that the dialogue manager calls</button>
+      <div class="quiz-explain">The intent (block card) comes from a text classifier; entities such as the last four
+        digits fill slots. In our S07 lab that classifier was TF-IDF + logistic regression. Today we open that box.</div>
+    </div>
+    <aside class="notes">
+      [0:02 · 2 min] Poll, then click. Link it explicitly: the NLU of every intent-based bot is a
+      classifier, and so is the router that decides "answer or hand off". Everything we learn today
+      applies to those components.
+    </aside>
+  </section>
+
+  <!-- 5 · Warm-up Q2 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q2</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">What makes an <em>agent</em> different from a chatbot that only answers from its prompt?</p>
+      <button class="quiz-opt" data-key="a">It always uses a larger model</button>
+      <button class="quiz-opt" data-key="b">It never needs a human handoff</button>
+      <button class="quiz-opt" data-key="c">It can decide to call tools (APIs, search, databases), observe the result and continue</button>
+      <button class="quiz-opt" data-key="d">It remembers every user forever</button>
+      <div class="quiz-explain">Agents interleave reasoning and actions (the ReAct pattern of Yao et al., 2023):
+        think, call a tool, read the observation, decide the next step. Size and memory are separate choices.</div>
+    </div>
+    <aside class="notes">
+      [0:05 · 2 min] Quick one. If someone answers (a), remind them that the Startti agents we built
+      used models of the same size as the plain chatbot: the difference is the loop with tools.
+    </aside>
+  </section>
+
+  <!-- 6 · Warm-up Q3 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q3</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">After a change, a bot's containment rate rose from 60% to 85%, but complaints went up. Most likely reason?</p>
+      <button class="quiz-opt" data-key="a">Containment measures satisfaction, so the complaints must be noise</button>
+      <button class="quiz-opt" data-key="b">The bot now keeps conversations it should hand off: containment needs task success and CSAT beside it</button>
+      <button class="quiz-opt" data-key="c">The test suite had too many adversarial cases</button>
+      <button class="quiz-opt" data-key="d">The model became more calibrated</button>
+      <div class="quiz-explain">A single metric can be gamed. Containment rises if the bot simply refuses to escalate.
+        Today we meet the same trap in classification: a model that always says “neutral” scores high accuracy.</div>
+    </div>
+    <aside class="notes">
+      [0:07 · 2 min] The numbers are a hypothetical scenario. This question bridges to today's
+      metric discussion: accuracy vs macro-F1 on imbalanced classes, and calibration.
+    </aside>
+  </section>
+
+  <!-- 7 · Learning objectives -->
+  <section>
+    <p class="kicker">Learning objectives</p>
+    <h2>By the end of this session you can…</h2>
+    <ol>
+      <li>Contrast generative and discriminative classifiers with Bayes' rule, and predict when each wins <span class="pill">RAE 1</span></li>
+      <li>Train Naive Bayes, logistic regression and a PyTorch MLP, and read a learning curve <span class="pill">RAE 1</span></li>
+      <li>Turn an LLM into a zero-shot classifier by scoring the log-likelihood of each label <span class="pill">RAE 3</span></li>
+      <li>Run a synthetic-data experiment without leaking into the test set, and check calibration <span class="pill">RAE 2</span></li>
+      <li>Recommend a classifier under cost, latency and privacy constraints <span class="pill">RAE 3</span></li>
+    </ol>
+    <p class="small muted">RAE numbers refer to the learning outcomes in the course syllabus (guía de asignatura).</p>
+    <aside class="notes">
+      [0:09 · 1 min] RAE 1 (design and train), RAE 2 (evaluate) and RAE 3 (prototypes such as
+      classifiers). The challenge assesses objectives 2 to 5 directly.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 1 · GENERATIVE VS DISCRIMINATIVE                          -->
+  <!-- ===================================================================== -->
+
+  <!-- 8 · Part 1 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 1</p>
+    <h2>Generative vs discriminative classifiers</h2>
+    <p>Two ways to answer “which class?”: model how the data is produced, or only draw the boundary.</p>
+    <aside class="notes">
+      [0:10] Theory block starts: four parts of about 15 minutes, each with an interaction.
+    </aside>
+  </section>
+
+  <!-- 9 · Two ways to classify -->
+  <section>
+    <p class="kicker">Two strategies, one decision</p>
+    <h2>Model the data, or model the boundary</h2>
+    <div class="cols">
+      <div class="card">
+        <span class="icon">🎨</span>
+        <h3>Generative</h3>
+        <p>Learn how each class produces data, \(p(x \mid y)\), and how common it is, \(p(y)\). Classify with Bayes' rule:</p>
+        $$ \hat{y} = \arg\max_y \; p(x \mid y)\, p(y) $$
+        <p class="small muted">Naive Bayes, Gaussian discriminant analysis, class-conditional language models, an LLM scoring labels.</p>
+      </div>
+      <div class="card">
+        <span class="icon">✂️</span>
+        <h3>Discriminative</h3>
+        <p>Learn the answer directly, \(p(y \mid x)\), without modelling \(x\) at all:</p>
+        $$ \hat{y} = \arg\max_y \; p_\theta(y \mid x) $$
+        <p class="small muted">Logistic regression, an MLP on embeddings, a fine-tuned BERT classifier (S04).</p>
+      </div>
+    </div>
+    <p class="small">Both end in the same place, \(p(y \mid x) = \dfrac{p(x \mid y)\,p(y)}{p(x)}\); they differ in <strong>what they spend data on</strong>.</p>
+    <aside class="notes">
+      [0:11 · 2 min] The denominator p(x) is the same for every class, so the generative classifier
+      only needs p(x|y)p(y). A generative model can also do things a discriminative one cannot:
+      sample new x for a class (we will do that with an LLM in Part 3), or flag inputs with low p(x).
+      The price: it has to model x, which is often much harder than drawing a boundary.
+    </aside>
+  </section>
+
+  <!-- 10 · Naive Bayes -->
+  <section>
+    <p class="kicker">The classic generative classifier</p>
+    <h2>Naive Bayes: independence makes it cheap</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr)">
+      <div>
+        <p>Assume the words of a text are independent given the class:</p>
+        $$ p(x \mid y) = \prod_{j=1}^{n} p(w_j \mid y) $$
+        <p>Multinomial NB estimates each word probability by counting, with Laplace smoothing \(\alpha\):</p>
+        $$ \hat p(w \mid y) = \frac{\text{count}(w, y) + \alpha}{\sum_{w'} \text{count}(w', y) + \alpha\,|V|} $$
+        <p class="small">In practice we add logs: \(\log p(y) + \sum_j \log p(w_j \mid y)\).</p>
+      </div>
+      <div>
+        <div class="callout tip">
+          <p><strong>Why it learns fast:</strong> each class needs only word counts, estimated separately. No optimisation, no iterations.</p>
+        </div>
+        <div class="callout warn">
+          <p><strong>Why it is “naive”:</strong> “price” and “target” are not independent in “price target cut”, so evidence is double-counted and probabilities become extreme.</p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:13 · 2 min] Jurafsky and Martin, chapter 4, is the reference reading for this slide. The
+      independence assumption is false for language, yet NB is a strong baseline for short texts.
+      The double counting matters later for calibration: NB ranks well but its probabilities are
+      pushed towards 0 and 1 (Niculescu-Mizil and Caruana, 2005).
+    </aside>
+  </section>
+
+  <!-- 11 · NB worked example -->
+  <section>
+    <p class="kicker">Worked example · toy numbers</p>
+    <h2>Is “Analyst cuts price target” bearish?</h2>
+    <table class="compact">
+      <thead>
+        <tr><th>Class</th><th class="num">Prior \(p(y)\)</th><th class="num">\(p(\text{cuts} \mid y)\)</th><th class="num">\(p(\text{target} \mid y)\)</th><th class="num">Product</th><th class="num">Posterior</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Bearish</strong></td><td class="num">0.15</td><td class="num">0.010</td><td class="num">0.008</td><td class="num">1.2 × 10⁻⁵</td><td class="num"><strong>83%</strong></td></tr>
+        <tr><td>Bullish</td><td class="num">0.20</td><td class="num">0.001</td><td class="num">0.009</td><td class="num">1.8 × 10⁻⁶</td><td class="num">12%</td></tr>
+        <tr><td>Neutral</td><td class="num">0.65</td><td class="num">0.0005</td><td class="num">0.002</td><td class="num">6.5 × 10⁻⁷</td><td class="num">5%</td></tr>
+      </tbody>
+      <caption>Priors ≈ class shares in the training split of the tweets dataset we use in the lab (15% · 20% · 65%). Word likelihoods are illustrative.</caption>
+    </table>
+    <div class="cols">
+      <div class="callout"><p class="small">Posterior = product ÷ sum of products. “Neutral” starts as the favourite (prior 0.65) and loses because “cuts” is 20 times more likely under “bearish”.</p></div>
+      <div class="prompt-card" data-kind="chat">
+        <h4>Your turn in the chat</h4>
+        <p class="small">Which word would you add to push the answer towards “bullish”?</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:15 · 2 min] Do the arithmetic aloud: 0.15 × 0.010 × 0.008 = 1.2e-5, and so on. Sum =
+      1.445e-5; 1.2e-5 / 1.445e-5 ≈ 0.83. Ask for words in the chat ("raises", "upgrade", "beats").
+      Point out that the prior is real (1,442 / 1,923 / 6,178 tweets in the training split) while the
+      word probabilities are made up for the example.
+    </aside>
+  </section>
+
+  <!-- 12 · Logistic regression -->
+  <section>
+    <p class="kicker">The classic discriminative classifier</p>
+    <h2>Logistic regression: learn only the boundary</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr)">
+      <div>
+        <p>Score each class with a weighted sum of features, turn scores into probabilities with softmax:</p>
+        $$ p(y = k \mid x) = \frac{\exp(w_k^\top x + b_k)}{\sum_{j} \exp(w_j^\top x + b_j)} $$
+        <p>Fit \(w\) by minimising the cross-entropy (the negative conditional log-likelihood) with gradient descent:</p>
+        $$ \mathcal{L}(w) = -\frac{1}{N} \sum_{i=1}^{N} \log p(y_i \mid x_i) + \lambda \lVert w \rVert^2 $$
+      </div>
+      <div>
+        <div class="card">
+          <h4>What changes vs NB</h4>
+          <ul class="small">
+            <li>Weights are fitted <em>jointly</em>: correlated words share the credit instead of double-counting it.</li>
+            <li>Needs an optimiser, iterations and regularisation \(\lambda\).</li>
+            <li>Probabilities are usually better calibrated than NB's.</li>
+            <li>A one-layer neural network: add hidden layers and you get the MLP of the lab.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:17 · 2 min] Jurafsky and Martin, chapter 5. Stress the last bullet: logistic regression is
+      a neural network with no hidden layer, which is why the PyTorch MLP in the lab is a natural
+      next step. Regularisation matters with few examples: without it, weights can grow without
+      limit on separable data.
+    </aside>
+  </section>
+
+  <!-- 13 · Simulator 1: decision boundaries -->
+  <section>
+    <p class="kicker">Simulator · decision boundaries</p>
+    <h2>Gaussian NB vs logistic regression, fitted live</h2>
+    <div class="sim" style="grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.6fr)">
+      <div class="sim-controls">
+        <div class="control">
+          <label for="db-n">Points per class <output id="db-n-out">–</output></label>
+          <input type="range" id="db-n" min="0" max="10" step="1" value="2">
+        </div>
+        <div class="control">
+          <label for="db-rho">Feature correlation ρ <output id="db-rho-out">–</output></label>
+          <input type="range" id="db-rho" min="0" max="0.9" step="0.1" value="0">
+        </div>
+        <div><button class="btn btn-sm" id="db-resample" type="button">🎲 New training sample</button></div>
+        <p class="stat" style="margin: 0">Bayes-optimal accuracy: <strong id="db-acc-bayes">–</strong></p>
+        <p class="small muted" style="margin: 0">Accuracy on a fixed test sample of 1,000 points. Synthetic 2-D data generated in your browser (seeded).</p>
+      </div>
+      <div class="sim-output">
+        <div class="db-panels">
+          <div>
+            <h4>Gaussian NB · generative</h4>
+            <div id="db-gnb"></div>
+            <p class="stat">Test accuracy: <strong id="db-acc-gnb">–</strong></p>
+          </div>
+          <div>
+            <h4>Logistic regression · discriminative</h4>
+            <div id="db-lr"></div>
+            <p class="stat">Test accuracy: <strong id="db-acc-lr">–</strong></p>
+          </div>
+        </div>
+        <p class="legend-row"><span><i class="sw a"></i>Class A</span><span><i class="sw b"></i>Class B</span><span><i class="sw opt"></i>Bayes-optimal boundary</span><span>Shading = predicted class</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:19 · 6 min] Interaction. The data are two Gaussian classes with the same covariance. Gaussian
+      NB estimates a mean and a variance per class and feature (independent features); logistic
+      regression runs 300 steps of gradient descent with a little L2.
+      1) ρ = 0, 5 points per class: both boundaries wobble; press "New training sample" a few times.
+      2) Move to 2–3 points: NB's per-class variances are noisy, so its boundary can curve.
+      3) Move to 200 points: both approach the dashed optimal line (≈ 86%).
+      4) Now raise ρ to 0.8–0.9 with 200 points: the optimal boundary tilts. NB assumes independent
+      features and keeps an almost vertical boundary (≈ 85%), logistic regression tilts and gets close
+      to the optimum (≈ 98–99%). Message: a wrong modelling assumption sets the generative model's
+      ceiling. In 2-D both learn fast; the data-efficiency effect needs many features, which is
+      exactly what text has (next slide).
+    </aside>
+  </section>
+
+  <!-- 14 · Ng & Jordan on real data -->
+  <section>
+    <p class="kicker">Ng &amp; Jordan (2002), on our own data</p>
+    <h2>Generative learns faster; discriminative ends higher</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr)">
+      <div>
+        <div class="seg" role="group" aria-label="Metric">
+          <button type="button" id="lc-f1" aria-pressed="true">Macro-F1</button>
+          <button type="button" id="lc-acc" aria-pressed="false">Accuracy</button>
+        </div>
+        <div id="lc-chart" style="margin-top: 8px"></div>
+      </div>
+      <div>
+        <div class="callout">
+          <p class="small"><strong>Theory:</strong> NB approaches its (higher) asymptotic error with about \(O(\log d)\) examples; logistic regression needs about \(O(d)\), where \(d\) is the number of features. Often two regimes: NB first, LR later.</p>
+        </div>
+        <p class="small">Here: TF-IDF features, financial tweets, test = the dataset's validation split (2,388 tweets); mean of 3 random training samples per size.</p>
+        <p class="small muted">Switch to accuracy: at small sizes both hover near 66%, the score of always answering “neutral”.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:25 · 3 min] These curves come from the lab code (Part 1) run on the full data: MultinomialNB
+      (alpha = 0.1) vs LogisticRegression (C = 10), same TF-IDF features, stratified training samples.
+      NB leads on macro-F1 up to a few hundred examples; LR overtakes somewhere between 640 and 1,280
+      and ends higher. Ng and Jordan (2002) proved the rates for NB vs LR and found the crossing on
+      several UCI datasets; it is a tendency, not a law. Toggle to accuracy to show why accuracy
+      alone would hide the story.
+    </aside>
+  </section>
+
+  <!-- 15 · Quiz: which first -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · Part 1</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">Andes Bank has 60 labelled complaint emails today and will have 20,000 in a year. Best plan?</p>
+      <button class="quiz-opt" data-key="a">Logistic regression now and forever: discriminative models always win</button>
+      <button class="quiz-opt" data-key="b">Naive Bayes now and forever: it is the most data-efficient</button>
+      <button class="quiz-opt" data-key="c">Start with NB (or zero-shot), measure, and switch to a discriminative model as labels accumulate</button>
+      <button class="quiz-opt" data-key="d">Wait a year before building anything</button>
+      <div class="quiz-explain">Two regimes: with little data the generative model (or an LLM prior) often wins;
+        with plenty, discriminative models usually reach a lower error. Re-check the learning curve as data grows.</div>
+    </div>
+    <aside class="notes">
+      [0:28 · 1 min] Quick poll. Emphasise "measure": the crossing point depends on the task, so the
+      learning curve (which the lab plots) is the tool that tells you when to switch.
+    </aside>
+  </section>
+
+  <!-- 16 · Business lens Part 1 -->
+  <section>
+    <p class="kicker">Metrics that match the business</p>
+    <h2>A model that never catches a sell-off</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">65.6%</span>
+        <p class="caption muted">accuracy of a “classifier” that always answers “neutral” on the validation split of the
+          financial-tweets dataset (1,566 of 2,388 tweets). Its recall for “bearish” is 0%.</p>
+      </div>
+      <div class="callout business">
+        <p><strong>Andes Bank</strong> (fictional) wants alerts on bearish news about its clients' holdings. The rare class is the valuable one.</p>
+        <ul class="small">
+          <li>Report <strong>macro-F1</strong> and per-class recall, not only accuracy.</li>
+          <li>Start with a cheap NB/LR baseline: minutes to train, runs on a laptop, top words explain it.</li>
+          <li>Every later model must beat that baseline on the same test set.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:29 · 1 min] The 65.6% is computed from the dataset (1,566 neutral tweets out of 2,388 in the
+      validation split). This is the containment trap from the warm-up again: a single metric rewards
+      doing nothing useful.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 2 · NEURAL GENERATIVE CLASSIFIERS AND LLMS                -->
+  <!-- ===================================================================== -->
+
+  <!-- 17 · Part 2 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 2</p>
+    <h2>Neural generative classifiers and LLMs</h2>
+    <p>Any model of \(p(x \mid y)\) can classify, including a large language model.</p>
+    <aside class="notes">
+      [0:30] Part 2: from Naive Bayes to neural generative models, VAEs and LLMs used as classifiers.
+    </aside>
+  </section>
+
+  <!-- 18 · Any generative model can classify -->
+  <section>
+    <p class="kicker">From counts to neural networks</p>
+    <h2>Plug any density model into Bayes' rule</h2>
+    <table class="compact">
+      <thead><tr><th>Model of \(p(x \mid y)\)</th><th>Captures</th><th>Typical use</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Naive Bayes</strong></td><td>Word counts per class, independent words</td><td>Text baselines, spam filters</td></tr>
+        <tr><td><strong>Gaussian discriminant analysis</strong></td><td>A Gaussian per class (shared or own covariance)</td><td>Numeric features, the simulator you just used</td></tr>
+        <tr><td><strong>Class-conditional LSTM / LM</strong></td><td>Word order: one language model per class</td><td>Small data, adding new classes later</td></tr>
+        <tr><td><strong>VAE</strong> (S02)</td><td>A latent code \(z\) that explains \(x\)</td><td>Semi-supervised learning, latent features</td></tr>
+        <tr><td><strong>Instruction-tuned LLM</strong></td><td>Text given a prompt that describes the task</td><td>Zero- and few-shot classification</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><p class="small">Yogatama et al. (2017) found the same two regimes with neural models: generative LSTM classifiers did better with little data and when new classes arrived, discriminative LSTMs reached lower error with more data.</p></div>
+    <aside class="notes">
+      [0:30 · 2 min] The pattern of Part 1 survives in the neural world. Yogatama, Dyer, Ling and
+      Blunsom (2017) compared generative and discriminative LSTM text classifiers: the generative ones
+      had higher asymptotic error but better sample efficiency and continual learning of new classes.
+    </aside>
+  </section>
+
+  <!-- 19 · VAE latent features -->
+  <section>
+    <p class="kicker">Back to Session 02</p>
+    <h2>VAEs as classifiers: learn from unlabelled data</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>M1 · latent features</h4>
+        <p class="small">Train a VAE on <em>all</em> your data, labelled or not. Encode each example into its latent mean \(\mu(x)\) and train a small classifier on those features with the few labels you have.</p>
+        <p class="small muted">Same idea as our lab's MLP on sentence embeddings: a pretrained representation plus a light head.</p>
+      </div>
+      <div class="card">
+        <h4>M2 · label as a latent variable</h4>
+        <p class="small">Make the class part of the generative model: <span style="white-space: nowrap">\(p(x \mid y, z)\,p(y)\,p(z)\)</span>. For unlabelled examples, \(y\) is inferred like \(z\); a classifier \(q(y \mid x)\) is trained along the way.</p>
+        <p class="small muted">Kingma, Rezende, Mohamed &amp; Welling (2014) combined M1 + M2 for strong results with very few labels.</p>
+      </div>
+    </div>
+    <div class="callout business"><p class="small">Unlabelled data is cheap (every past email, call transcript, headline); labels are expensive. Semi-supervised generative models turn the cheap part into accuracy.</p></div>
+    <aside class="notes">
+      [0:32 · 2 min] Connect to S02 where students trained a VAE on Fashion-MNIST: the encoder they
+      trained is exactly the M1 feature extractor. We do not train a VAE in today's lab; the
+      sentence-embedding model plays the same role (a representation learned without our labels).
+    </aside>
+  </section>
+
+  <!-- 20 · LLM as a generative classifier -->
+  <section>
+    <p class="kicker">Zero-shot by label log-likelihood</p>
+    <h2>Ask the LLM how likely each label is</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr)">
+      <div>
+        <p class="small">A <strong>verbalizer</strong> \(v(y)\) maps each class to a word: bearish, bullish, neutral. Score each label as a continuation of the prompt:</p>
+        <div class="formula-box">
+          $$ s(y) = \sum_{t=1}^{|v(y)|} \log p_\theta\big(v(y)_t \mid \text{prompt}(x),\, v(y)_{&lt;t}\big) $$
+        </div>
+        <p class="small">Predict \(\hat y = \arg\max_y s(y)\); a softmax over the three scores gives a confidence.</p>
+      </div>
+      <div class="card">
+        <h4>Why score instead of generate?</h4>
+        <ul class="small">
+          <li>Always returns a valid label: no parsing of “Bullish!” or “It depends…”.</li>
+          <li>One forward pass per label (batched), no sampling, deterministic.</li>
+          <li>Gives a score for <em>every</em> class, so you can rank, set thresholds and calibrate.</li>
+          <li>Works with any open model where you can read the logits.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="small muted">Prompt = system message + “Tweet: … Is this tweet bearish, bullish or neutral?” rendered with the model's chat template.</p>
+    <aside class="notes">
+      [0:34 · 2 min] This is the generative classifier idea applied to an LLM: the prompt plays the
+      role of x, and we read p(label | x) directly from the model. With an instruct model, always
+      build the prompt with its chat template (apply_chat_template), otherwise the probabilities
+      refer to a different kind of text than the model was tuned on.
+    </aside>
+  </section>
+
+  <!-- 21 · Mini-sim: sum vs mean -->
+  <section>
+    <p class="kicker">Simulator · multi-token labels</p>
+    <h2>Sum or mean? The tokenizer gets a vote</h2>
+    <div class="sim">
+      <div class="sim-controls">
+        <table class="compact tight" style="font-size: 19px; margin: 0">
+          <thead><tr><th>Label</th><th>Tokens</th><th class="num">log p per token</th></tr></thead>
+          <tbody>
+            <tr><td>bearish</td><td><span class="tag">bear</span> <span class="tag">ish</span></td><td class="num">−1.90 · −0.02</td></tr>
+            <tr><td>bullish</td><td><span class="tag">bull</span> <span class="tag">ish</span></td><td class="num">−2.60 · −0.02</td></tr>
+            <tr><td>neutral</td><td><span class="tag">neutral</span></td><td class="num">−1.20</td></tr>
+          </tbody>
+        </table>
+        <div class="seg" role="group" aria-label="Scoring rule">
+          <button type="button" id="sm-sum" aria-pressed="true">Sum</button>
+          <button type="button" id="sm-mean" aria-pressed="false">Mean per token</button>
+        </div>
+        <p class="small muted" style="margin: 0">Illustrative log-probabilities. The token splits are real for the Qwen2.5 tokenizer.</p>
+      </div>
+      <div class="sim-output">
+        <div id="sm-chart"></div>
+        <p class="stat">Prediction: <strong id="sm-pred">–</strong></p>
+        <p class="small" id="sm-why" style="margin: 0"></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:36 · 3 min] Interaction. The sum is the exact log-probability of the whole label string.
+      "neutral" is a single token, "bearish" is two; once the model writes "bear", "ish" is almost
+      certain (−0.02). The mean divides by the token count and halves bearish's penalty, so the
+      prediction flips from neutral to bearish. Length normalisation is a common heuristic when labels
+      have very different lengths, but here it creates a bias towards two-token labels. In the lab we
+      compute both and choose the rule on a small development set, never on the test set.
+    </aside>
+  </section>
+
+  <!-- 22 · Pitfalls and fixes -->
+  <section>
+    <p class="kicker">What can go wrong</p>
+    <h2>Four traps of LLM classifiers, and their fixes</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>1 · Surface-form competition</h4>
+        <p class="small">“bearish”, “Bearish”, “negative” share probability mass, so the right answer can lose (Holtzman et al., 2021). <strong>Fix:</strong> fix the format in the prompt, several verbalizers per class, or PMI-style scoring.</p>
+      </div>
+      <div class="card">
+        <h4>2 · Label prior bias</h4>
+        <p class="small">Models favour some labels regardless of the input (Zhao et al., 2021). <strong>Fix:</strong> contextual calibration: subtract the scores for a content-free input such as “N/A”.</p>
+      </div>
+      <div class="card">
+        <h4>3 · Prompt sensitivity</h4>
+        <p class="small">Wording, label order and few-shot examples change results. <strong>Fix:</strong> freeze the prompt like code, version it, compare variants on a dev set.</p>
+      </div>
+      <div class="card">
+        <h4>4 · Generate-and-parse fragility</h4>
+        <p class="small">Free text needs parsing and can drift. <strong>Fix:</strong> score labels, or constrain decoding to the allowed labels or a JSON schema (many APIs offer structured outputs).</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:39 · 2 min] Holtzman, West, Shwartz, Choi and Zettlemoyer (2021) named surface-form
+      competition; Zhao, Wallace, Feng, Klein and Singh (2021) showed majority-label and recency biases
+      and proposed contextual calibration. The lab has a "Try it" exercise with contextual calibration.
+      For APIs, check your provider's documentation for token log-probabilities or structured outputs;
+      features differ by provider and change often.
+    </aside>
+  </section>
+
+  <!-- 23 · Code -->
+  <section>
+    <p class="kicker">Lab preview · PyTorch</p>
+    <h2>Scoring labels in a dozen lines</h2>
+    <pre><code class="language-python" data-trim data-noescape data-line-numbers="7-10">
+@torch.no_grad()
+def label_scores(tweet):
+    prompt = prompt_ids(tweet)                   # chat template -> token ids
+    scores = []
+    for label_ids in LABEL_TOKEN_IDS:            # [bear, ish], [bull, ish], [neutral]
+        ids = torch.cat([prompt, torch.tensor(label_ids)])
+        logp = model(input_ids=ids[None]).logits.log_softmax(-1)[0]
+        # the token at position t is predicted by the logits at t - 1
+        pos = torch.arange(len(prompt) - 1, len(ids) - 1)
+        token_logp = logp[pos, torch.tensor(label_ids)]
+        scores.append(token_logp.sum().item())   # or .mean(): length-normalised
+    return scores                                # argmax -> predicted label
+    </code></pre>
+    <p class="small muted">The lab batches the three labels of a tweet into one forward pass with padding.</p>
+    <aside class="notes">
+      [0:41 · 2 min] Walk through the highlighted lines (prompt_ids applies the chat template, as on the previous slide): the off-by-one shift is the most common bug.
+      Logits at position t predict the token at t + 1, so the first label token is predicted by the
+      last prompt position. No generate() call anywhere.
+    </aside>
+  </section>
+
+  <!-- 24 · Zero-shot, few-shot, verbalizers -->
+  <section>
+    <p class="kicker">Prompts as classifiers</p>
+    <h2>Zero-shot, few-shot and verbalizers</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>Zero-shot</h4>
+        <p class="small">Only an instruction and the label names. Needs no labels to start; quality depends on how well the label names describe the classes.</p>
+      </div>
+      <div class="card">
+        <h4>Few-shot (in-context)</h4>
+        <p class="small">Add \(k\) labelled examples to the prompt (Brown et al., 2020). No training, longer prompts, sensitive to which examples and in what order.</p>
+      </div>
+      <div class="card">
+        <h4>Patterns + verbalizers</h4>
+        <p class="small">PET (Schick &amp; Schütze, 2021) rewrites inputs as cloze questions, maps labels to words, then fine-tunes on few labels plus unlabelled data.</p>
+      </div>
+    </div>
+    <div class="callout tip"><p class="small"><strong>Design the verbalizer:</strong> single, common words that the model would naturally use; avoid synonyms across classes; keep them consistent between prompt and scoring.</p></div>
+    <aside class="notes">
+      [0:43 · 1 min] S03 already did zero- and few-shot with generation. Today's twist is scoring.
+      PET is the bridge between prompting and fine-tuning: it uses the verbalizer idea to squeeze more
+      out of few labels.
+    </aside>
+  </section>
+
+  <!-- 25 · Quiz Part 2 -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · Part 2</span>
+    <div class="quiz" data-correct="d" style="margin-top: 18px">
+      <p class="quiz-q">Your zero-shot LLM labels 70% of tweets “bullish”, but only 20% are. First thing to try?</p>
+      <button class="quiz-opt" data-key="a">Use a bigger model, since small models cannot classify</button>
+      <button class="quiz-opt" data-key="b">Raise the temperature to get more diverse labels</button>
+      <button class="quiz-opt" data-key="c">Tune the prompt until test accuracy is highest</button>
+      <button class="quiz-opt" data-key="d">Check for label prior bias: compare with a content-free input and calibrate on a dev set</button>
+      <div class="quiz-explain">Scoring is deterministic, so temperature does nothing. A skewed label distribution is the
+        classic symptom of prior bias; contextual calibration or a better verbalizer are cheap fixes. Tuning on the test set is leakage.</div>
+    </div>
+    <aside class="notes">
+      [0:44 · 1 min] (c) is the trap: it looks diligent but turns the test set into a training set.
+      We meet this leak again in the challenge's "Crítica a la IA" task.
+    </aside>
+  </section>
+
+  <!-- 26 · Business lens Part 2 -->
+  <section>
+    <p class="kicker">Zero labels on day one</p>
+    <h2>Zero-shot is a start, not a finish</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>NovaTel</strong> (fictional) wants to tag customer messages into 8 new categories next week, with no labelled data.</p>
+        <ul class="small">
+          <li>Zero-shot gives a working classifier today: the prompt is the specification.</li>
+          <li>You still need 100–200 hand-labelled messages to <em>measure</em> it.</li>
+          <li>Those labels are also the seed of a cheaper supervised model later.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Questions before production</h4>
+        <ul class="small">
+          <li>Where does the text go? An API means data leaves your perimeter.</li>
+          <li>Latency per message at peak volume?</li>
+          <li>Cost per 1,000 predictions vs a small local model?</li>
+          <li>Who re-validates when the model version changes?</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:45 · 1 min] A common and sensible path: zero-shot to bootstrap, humans label an evaluation
+      set, then the LLM labels (verified) become training data for a small, fast model. We come back
+      to cost with a calculator in Part 4.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 3 · SYNTHETIC DATA AND CALIBRATION                        -->
+  <!-- ===================================================================== -->
+
+  <!-- 27 · Part 3 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 3</p>
+    <h2>Synthetic data and calibration</h2>
+    <p>Generative models can also write training data. And any classifier's confidence must be checked.</p>
+    <aside class="notes">
+      [0:46] Part 3: using the generative power of LLMs to fix class imbalance, and checking whether
+      a model's confidence means what it says.
+    </aside>
+  </section>
+
+  <!-- 28 · Synthetic augmentation recipe -->
+  <section>
+    <p class="kicker">Synthetic data augmentation</p>
+    <h2>A recipe for rare classes</h2>
+    <ol class="small">
+      <li><strong>Seed:</strong> pick a few real examples of the rare class from the <em>training</em> set.</li>
+      <li><strong>Generate:</strong> ask the LLM for new, different examples (temperature ≈ 0.9, many samples).</li>
+      <li><strong>Filter:</strong> remove duplicates, near-copies of the seeds, off-format and off-label outputs.</li>
+      <li><strong>Inspect:</strong> read a sample by hand; measure diversity (for example, average similarity between examples).</li>
+      <li><strong>Train</strong> on real + synthetic; <strong>evaluate on real data only</strong>, against the real-only baseline.</li>
+    </ol>
+    <div class="cols">
+      <div class="callout tip"><p class="small"><strong>Evidence:</strong> across ten classification tasks, human-labelled data matched or beat LLM-augmented data, but augmentation helped rare classes in multi-class tasks (Møller et al., 2024).</p></div>
+      <div class="callout"><p class="small"><strong>Classic alternatives:</strong> back-translation, synonym replacement, paraphrasing; see the survey by Feng et al. (2021).</p></div>
+    </div>
+    <aside class="notes">
+      [0:46 · 2 min] This is exactly Part 4 of the lab: 30 synthetic "bearish" tweets from Qwen2.5-0.5B.
+      Møller, Pera, Dalsgaard and Aiello (2024) is a useful, sober reference: synthetic data is a
+      supplement for rare classes, not a replacement for real labels.
+    </aside>
+  </section>
+
+  <!-- 29 · Risks -->
+  <section>
+    <p class="kicker">Synthetic data · risks</p>
+    <h2>What the generator gives, and what it hides</h2>
+    <div class="cols">
+      <div>
+        <ul class="small">
+          <li><strong>Low diversity:</strong> small models repeat the same companies and templates, so the classifier learns the template.</li>
+          <li><strong>Label noise:</strong> a “bearish” request can return a bullish tweet; nobody checks unless you read them.</li>
+          <li><strong>Leakage:</strong> synthetic examples in the test set inflate every metric.</li>
+          <li><strong>Bias amplification:</strong> the generator's stereotypes become training data.</li>
+          <li><strong>Recursion:</strong> models trained repeatedly on generated data lose the tails of the distribution (Shumailov et al., 2024).</li>
+          <li><strong>Terms of use:</strong> some model licences restrict using outputs to train other models.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Seen while preparing this lab</h4>
+        <p class="small">Asked for bearish tweets, the 0.5B model also wrote:</p>
+        <p class="small"><em>“Apple announces strong quarterly earnings despite mixed tech sector outlook”</em></p>
+        <p class="small muted">Off-label (bullish) and a company name repeated across samples. Filtering and reading are not optional.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:48 · 2 min] The example is a real output from a preparation run with Qwen2.5-0.5B-Instruct and a
+      prompt like the lab's generation cell. Shumailov et al. (2024, Nature) studied "model collapse" when models
+      are trained recursively on generated data. On licences: always read the generating model's terms.
+    </aside>
+  </section>
+
+  <!-- 30 · Flip cards: rules -->
+  <section>
+    <p class="kicker">Self-check · three rules</p>
+    <h2>Say the rule before you flip the card</h2>
+    <div class="cols-3">
+      <div class="flip-card">
+        <div class="front">Where may synthetic examples go?</div>
+        <div class="back">Only into the training set. Validation and test stay 100% real and untouched.</div>
+      </div>
+      <div class="flip-card">
+        <div class="front">What do you compare against?</div>
+        <div class="back">The same model trained on real data only, evaluated on the same real test set.</div>
+      </div>
+      <div class="flip-card">
+        <div class="front">What must you record?</div>
+        <div class="back">Provenance: generator model, prompt, temperature, filters and how many examples you kept.</div>
+      </div>
+    </div>
+    <div class="prompt-card" data-kind="chat">
+      <h4>One line in the chat</h4>
+      <p class="small">Where in your organisation is one class rare but important (fraud, churn, complaints…)?</p>
+    </div>
+    <aside class="notes">
+      [0:50 · 1 min] Ask volunteers before flipping. Collect chat answers: rare-but-important classes
+      are the best candidates for augmentation, and also where metrics like accuracy mislead most.
+      Documenting provenance is the datasheet idea (Gebru et al., 2021) that we revisit in S10.
+    </aside>
+  </section>
+
+  <!-- 31 · Calibration -->
+  <section>
+    <p class="kicker">Calibration</p>
+    <h2>Does 90% confident mean 90% right?</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr)">
+      <div>
+        <div id="cal-chart"></div>
+        <p class="caption small muted">Reliability diagram, illustrative values: an overconfident model sits below the diagonal.</p>
+      </div>
+      <div>
+        <p class="small">Group predictions into bins by confidence; compare accuracy and confidence in each bin:</p>
+        $$ \text{ECE} = \sum_{b=1}^{B} \frac{|B_b|}{n}\, \big|\, \text{acc}(B_b) - \text{conf}(B_b) \big| $$
+        <ul class="small">
+          <li>Modern deep networks tend to be <strong>overconfident</strong>; <strong>temperature scaling</strong>, \(\text{softmax}(z/T)\) with \(T\) fitted on validation data, is a simple fix (Guo et al., 2017).</li>
+          <li>Naive Bayes pushes probabilities to 0 and 1; logistic regression is usually well calibrated (Niculescu-Mizil &amp; Caruana, 2005).</li>
+          <li>Calibration changes confidences, not the ranking: accuracy stays the same.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:51 · 3 min] Read the chart: the diagonal is perfect calibration. The illustrative model says
+      "90%" but is right about 72% of the time in that bin. ECE is the weighted average gap. The lab's
+      summary table reports ECE for every model; with small test sets it is noisy, so read it as a
+      rough signal. Temperature scaling divides the logits by one number T fitted on validation data.
+    </aside>
+  </section>
+
+  <!-- 32 · Quiz calibration -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · Part 3</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Over 1,000 alerts the model said “bearish, 90% sure”. 700 were truly bearish. What do you conclude?</p>
+      <button class="quiz-opt" data-key="a">The model is well calibrated: 70% is close enough to 90%</button>
+      <button class="quiz-opt" data-key="b">It is overconfident; recalibrate (for example, temperature scaling on validation data) before using 90% as a threshold</button>
+      <button class="quiz-opt" data-key="c">It is underconfident; lower the threshold</button>
+      <button class="quiz-opt" data-key="d">Calibration only matters for generative models</button>
+      <div class="quiz-explain">Confidence 0.90 vs accuracy 0.70 is a 20-point gap: overconfident. Any rule of the form
+        “automate if confidence ≥ τ” (Session 06) silently breaks if confidences are not calibrated.</div>
+    </div>
+    <aside class="notes">
+      [0:54 · 1 min] Connect with S06's routing threshold: the expected-cost threshold assumes the
+      probabilities are honest.
+    </aside>
+  </section>
+
+  <!-- 33 · Business lens Part 3 -->
+  <section>
+    <p class="kicker">From confidence to operations</p>
+    <h2>Calibrated scores set the human workload</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>Banco Andino</strong> (fictional) auto-tags news when confidence ≥ τ and sends the rest to two analysts.</p>
+        <ul class="small">
+          <li>Overconfident model → fewer items reach analysts, more silent errors.</li>
+          <li>Underconfident model → analysts review items the model had right.</li>
+          <li>Recalibrate after every model or prompt change; confidences drift.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Synthetic data meets calibration</h4>
+        <p class="small">Adding synthetic minority examples changes the class balance the model sees, so its probabilities shift too. Re-check calibration and thresholds on real validation data after augmenting.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:55 · 1 min] The link between Parts 3 and 4: calibration is what turns a model score into a
+      staffing decision. Augmentation changes the effective prior, so thresholds chosen before
+      augmentation are no longer valid.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 4 · CHOOSING AND SHIPPING                                 -->
+  <!-- ===================================================================== -->
+
+  <!-- 34 · Part 4 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 4</p>
+    <h2>Choosing and shipping a classifier</h2>
+    <p>Quality is one column of the decision. Cost, latency and privacy are the others.</p>
+    <aside class="notes">
+      [0:56] Part 4: compare the options, estimate costs, and a note on PyTorch vs TensorFlow. Then
+      the breakout.
+    </aside>
+  </section>
+
+  <!-- 35 · Comparison table -->
+  <section>
+    <p class="kicker">The menu</p>
+    <h2>Five classifiers, five trade-offs</h2>
+    <table class="compact">
+      <thead>
+        <tr><th>Option</th><th>Labels to start</th><th>Speed on CPU</th><th>Main cost</th><th>Data stays in-house</th><th>Confidence</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>NB / LR on TF-IDF</strong></td><td>Tens to thousands</td><td>Fastest</td><td>Almost none</td><td>Yes</td><td>LR good, NB extreme</td></tr>
+        <tr><td><strong>MLP on sentence embeddings</strong></td><td>Hundreds+</td><td>Fast (small encoder)</td><td>Encoder compute</td><td>Yes</td><td>Check it</td></tr>
+        <tr><td><strong>Fine-tuned encoder</strong> (S04)</td><td>Thousands</td><td>Medium; GPU helps</td><td>Training + serving</td><td>Yes</td><td>Often overconfident</td></tr>
+        <tr><td><strong>Small local LLM, zero-shot</strong></td><td>None (+ eval set)</td><td>Slow on CPU</td><td>GPU/CPU hours</td><td>Yes</td><td>Prior bias; calibrate</td></tr>
+        <tr><td><strong>LLM via API</strong></td><td>None (+ eval set)</td><td>Network + queue</td><td>Per-token bill</td><td>No, by default</td><td>Provider-dependent</td></tr>
+      </tbody>
+      <caption>Qualitative guide. Measure your own numbers: the lab's summary table reports accuracy, macro-F1, ECE and latency per model.</caption>
+    </table>
+    <aside class="notes">
+      [0:56 · 2 min] Deliberately qualitative: absolute latencies depend on hardware, batch size and
+      text length, and API features and prices change often. "Data stays in-house: No, by default"
+      because some providers offer private deployments with contractual guarantees; that is a legal
+      and procurement conversation (Ley 1581 de 2012 for personal data in Colombia).
+    </aside>
+  </section>
+
+  <!-- 36 · Simulator: cost calculator -->
+  <section>
+    <p class="kicker">Simulator · monthly cost</p>
+    <h2>API per token vs a self-hosted small model</h2>
+    <div class="sim" style="grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.3fr)">
+      <div class="sim-controls" style="gap: 10px">
+        <div class="control">
+          <label for="cc-req">Requests per day <output id="cc-req-out">–</output></label>
+          <input type="range" id="cc-req" min="2" max="6.5" step="0.1" value="4">
+        </div>
+        <div class="control">
+          <label for="cc-tok">Tokens per request <output id="cc-tok-out">–</output></label>
+          <input type="range" id="cc-tok" min="50" max="2000" step="50" value="150">
+        </div>
+        <div class="control">
+          <label for="cc-price">API price, USD per 1M tokens <output id="cc-price-out">–</output></label>
+          <input type="range" id="cc-price" min="0.05" max="10" step="0.05" value="1">
+        </div>
+        <div class="control">
+          <label for="cc-server">Server + ops, USD per month <output id="cc-server-out">–</output></label>
+          <input type="range" id="cc-server" min="50" max="3000" step="50" value="400">
+        </div>
+        <div class="control">
+          <label for="cc-cap">Requests/day one server handles <output id="cc-cap-out">–</output></label>
+          <input type="range" id="cc-cap" min="4" max="7" step="0.1" value="5.5">
+        </div>
+      </div>
+      <div class="sim-output">
+        <div id="cc-chart"></div>
+        <p class="stat" style="margin-bottom: 4px">API: <strong id="cc-api">–</strong> · Self-hosted: <strong id="cc-self">–</strong></p>
+        <p class="stat" style="margin: 0">Break-even: <strong id="cc-break">–</strong></p>
+      </div>
+    </div>
+    <p class="small muted" style="margin-top: 8px">All prices are inputs, not quotes: set them from a current price list and write down the date.</p>
+    <aside class="notes">
+      [0:58 · 3 min] Interaction. Defaults: 10,000 requests a day, 150 tokens each (a tweet prompt plus
+      a label), a placeholder API price of 1 USD per million tokens, a 400 USD/month server. API ≈ 45
+      USD/month vs 400: the API wins. Slide the volume up to ~10^5: the lines cross (break-even ≈ 89k
+      requests a day with these inputs). Then raise tokens per request to 1,000 (few-shot prompts are
+      long): break-even drops a lot. Capacity comes from the lab: requests/day ≈ 86,400 s ÷ latency per
+      request × utilisation. Remind them the self-hosted line hides people costs (MLOps, on-call).
+    </aside>
+  </section>
+
+  <!-- 37 · PyTorch vs TensorFlow -->
+  <section>
+    <p class="kicker">Implementation notes</p>
+    <h2>The same MLP in PyTorch and in Keras</h2>
+    <div class="cols">
+      <div>
+        <pre><code class="language-python" data-trim data-noescape style="font-size: 17px">
+model = nn.Sequential(nn.Linear(384, 128), nn.ReLU(),
+                      nn.Dropout(0.2), nn.Linear(128, 3))
+opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+for epoch in range(20):
+    for xb, yb in loader:
+        opt.zero_grad()
+        loss = F.cross_entropy(model(xb), yb)
+        loss.backward()
+        opt.step()
+        </code></pre>
+        <p class="small"><strong>PyTorch:</strong> explicit loop, full control; the default for most Hugging Face models and research code.</p>
+      </div>
+      <div>
+        <pre><code class="language-python" data-trim data-noescape style="font-size: 17px">
+model = keras.Sequential([
+    keras.Input(shape=(384,)),
+    keras.layers.Dense(128, activation="relu"),
+    keras.layers.Dropout(0.2),
+    keras.layers.Dense(3, activation="softmax")])
+model.compile(optimizer="adam",
+              loss="sparse_categorical_crossentropy")
+model.fit(X, y, epochs=20, batch_size=32)
+        </code></pre>
+        <p class="small"><strong>Keras 3:</strong> compile + fit, runs on TensorFlow, JAX or PyTorch backends; TensorFlow adds TF Lite (LiteRT) for mobile.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:01 · 1 min] The syllabus says "PyTorch or TensorFlow": the concepts are identical (layers,
+      loss, optimiser, epochs). Choose by the team's skills and the deployment target. For export,
+      PyTorch models commonly go to ONNX or torch.export; TensorFlow models to SavedModel or LiteRT.
+      The lab trains the MLP with a manual PyTorch loop and shows the Keras version in one cell.
+    </aside>
+  </section>
+
+  <!-- 38 · Breakout -->
+  <section>
+    <p class="kicker">Apply it</p>
+    <h2>Recommend a classifier under three constraints</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr)">
+      <div class="prompt-card" data-kind="breakout">
+        <h4>One case per room · 6 min</h4>
+        <ol class="small" style="margin-bottom: 8px">
+          <li><strong>Budget · MercaLatam:</strong> tag 500 seller reviews a day into 12 brand-new categories by next week; no labels; one analyst; almost no budget.</li>
+          <li><strong>Latency · NovaTel:</strong> route every live-chat message to 1 of 8 queues in under 50 ms at peak; 40,000 labelled chats.</li>
+          <li><strong>Privacy · Banco Andino:</strong> classify complaints into 6 regulatory categories; text cannot leave the bank; 300 labelled examples; one on-premises GPU.</li>
+        </ol>
+        <p class="small muted" style="margin: 0">Deliver: model choice · metric you would report · one risk and its mitigation. All companies are fictional.</p>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="6" data-label="Breakout rooms"></div>
+        <p class="small">Rooms of 3–4. One person per room reports in 30 seconds.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:02 · 6 min + 2 min debrief] Assign case 1, 2 or 3 by room number (mod 3). Debrief ideas
+      (discuss, do not announce): 1 MercaLatam → zero-shot LLM (API or small local model) to start,
+      hand-label ~150 reviews to measure macro-F1, later train NB/LR on verified LLM labels; risk:
+      ambiguous category definitions → write a labelling guide. 2 NovaTel → with 40k labels a
+      discriminative model wins: TF-IDF + LR or a small fine-tuned encoder; LLMs are too slow for
+      50 ms; report p95 latency and macro-F1; calibrate for routing. 3 Banco Andino → everything
+      on-premises: MLP on local sentence embeddings or a fine-tuned small encoder, NB as a baseline,
+      local LLM for synthetic minority examples (training only); risk: leakage and privacy of
+      generated text → provenance log. Accept other answers with a sound reason.
+    </aside>
+  </section>
+
+  <!-- 39 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Stretch and come back ready to code. Tip: open the lab now so the model downloads during the break.</p>
+    <div class="timer" data-minutes="10" data-label="Break"></div>
+    <aside class="notes">
+      [1:10 · 10 min] Press Start before you mute. Suggest turning on the GPU in Kaggle and running
+      the first two cells during the break.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- LAB                                                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 40 · Lab divider -->
+  <section class="section-slide" data-block="lab">
+    <p class="kicker">Hands-on</p>
+    <h2>Guided lab</h2>
+    <p>Four classifiers for financial tweets, from word counts to an LLM, compared on quality, calibration, latency and cost.</p>
+    <span class="block-tag" data-block="lab">Lab · 60'</span>
+    <aside class="notes">
+      [1:20] Lab block. Share your screen with the notebook and code along.
+    </aside>
+  </section>
+
+  <!-- 41 · Lab bridge -->
+  <section>
+    <p class="kicker">Lab bridge</p>
+    <h2>What we will build</h2>
+    <div class="cols">
+      <table class="compact">
+        <tbody>
+          <tr><td><strong>1</strong></td><td>NB vs logistic regression on TF-IDF, learning curve from 20 tweets to the full set</td><td class="num">18'</td></tr>
+          <tr><td><strong>2</strong></td><td>PyTorch MLP on MiniLM embeddings (manual loop) + the Keras version</td><td class="num">12'</td></tr>
+          <tr><td><strong>3</strong></td><td>Zero-shot with <span class="tag">Qwen2.5-0.5B-Instruct</span> by label log-likelihood</td><td class="num">15'</td></tr>
+          <tr><td><strong>4</strong></td><td>30 synthetic “bearish” tweets: retrain and compare</td><td class="num">10'</td></tr>
+          <tr><td><strong>5</strong></td><td>Summary: accuracy, macro-F1, ECE, latency, cost</td><td class="num">5'</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h4>Open the notebook</h4>
+        <p class="small">Kaggle checklist: Internet on · Accelerator GPU T4 x2 recommended (CPU works; Parts 3–4 are slower).</p>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/08-generative-classifiers/lab.ipynb" target="_blank" rel="noopener">Open in Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/08-generative-classifiers/lab.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <div class="callout tip"><strong>Dataset:</strong> <span class="tag">zeroshot/twitter-financial-news-sentiment</span>, about 12,000 English finance tweets labelled bearish, bullish or neutral.</div>
+    <aside class="notes">
+      [1:20 · 3 min] Everyone opens the notebook. Timing: Part 1 until 1:38, Part 2 until 1:50, Part 3
+      until 2:05, Part 4 until 2:15, summary until 2:20. If the GPU queue is slow, CPU is fine: the
+      notebook uses 150 test tweets for the LLM part.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CHALLENGE                                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 42 · Challenge divider -->
+  <section class="section-slide" data-block="challenge">
+    <h2>Session challenge</h2>
+    <p>Individual, graded, 40 minutes in class. Submit by 23:59 today.</p>
+    <aside class="notes">
+      [2:20] Challenge block. The next slide is the only slide in Spanish.
+    </aside>
+  </section>
+
+  <!-- 43 · Challenge briefing (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Challenge de la sesión · evaluado</p>
+    <h2>Challenge S08: tu clasificador, tus restricciones</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <div>
+        <ol class="small">
+          <li><strong>Ejecución:</strong> Naive Bayes vs. regresión logística vs. LLM zero-shot con tu <code>n_train</code> y tu porción personal de 60 tuits.</li>
+          <li><strong>Análisis:</strong> aumento sintético para tu clase minoritaria (bajista o alcista): ¿mejoró su F1? ¿a qué costo?</li>
+          <li><strong>Explica y decide:</strong> recomienda un clasificador para tu perfil (presupuesto, latencia o privacidad).</li>
+          <li><strong>Crítica a la IA:</strong> encuentra y corrige tres fugas de datos en un código generado por IA.</li>
+        </ol>
+        <ul class="small">
+          <li><strong>Rúbrica:</strong> ejecución 40% · análisis 40% · reflexión y registro de IA 20%.</li>
+          <li><strong>IA permitida</strong> con registro; <strong>micro-sustentaciones</strong>: si no explicas tu entrega, máximo 3.0.</li>
+          <li><strong>Entrega:</strong> Archivo → Descargar notebook → e-Aulas como <code>S08_&lt;codigo&gt;.ipynb</code>, 23:59.</li>
+        </ul>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="40" data-label="Challenge"></div>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/08-generative-classifiers/challenge.ipynb" target="_blank" rel="noopener">Abrir en Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/08-generative-classifiers/challenge.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:20 · 38 min] This briefing slide is in Spanish by course convention. Remind students to type
+      their STUDENT_ID in the first cell (their n_train, minority class, test slice and constraint
+      profile depend on it) and to turn on the GPU if available. Start the 40' timer. Run 3–4 random
+      micro-vivas (2–3 minutes each, screen shared, no AI help).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WRAP-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 44 · Wrap-up -->
+  <section>
+    <p class="kicker">Wrap-up</p>
+    <h2>Key takeaways</h2>
+    <div class="cols">
+      <ul class="small">
+        <li>Generative classifiers model \(p(x \mid y)\,p(y)\); discriminative ones model \(p(y \mid x)\). Little data favours the first, lots of data the second.</li>
+        <li>An LLM is a generative classifier: score each label's log-likelihood instead of parsing free text, and watch token counts, wording and prior bias.</li>
+        <li>Synthetic data can help rare classes, only in training, always measured on real data.</li>
+        <li>Choose with macro-F1, calibration, latency, cost per 1,000 predictions and privacy, not accuracy alone.</li>
+      </ul>
+      <div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">For a classification problem in your organisation: which of today's classifiers would you try first, and what evidence would make you switch?</p>
+        </div>
+        <p class="small"><strong>Next session:</strong> use cases in real contexts (health, finance, education), value × feasibility and ROI.
+          <span class="muted">Pre-work: finish the challenge; for the project, train your first model and compare it with your baseline.</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:58 · 2 min] Collect exit answers in the chat. Remind students of the 23:59 deadline, the
+      file name S08_codigo.ipynb, and the project milestone for S09 (use-case canvas).
+    </aside>
+  </section>
+
+  <!-- 45 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Sources for this session</h2>
+    <div class="cols" style="font-size: 16px; line-height: 1.3">
+      <ul>
+        <li>Ng, A. Y., &amp; Jordan, M. I. (2002). On discriminative vs. generative classifiers: A comparison of logistic regression and naive Bayes. <em>NeurIPS 14</em>.</li>
+        <li>Jurafsky, D., &amp; Martin, J. H. (2023). <em>Speech and language processing</em> (3rd ed. draft), ch. 4 (Naive Bayes) and ch. 5 (Logistic regression).</li>
+        <li>Niculescu-Mizil, A., &amp; Caruana, R. (2005). Predicting good probabilities with supervised learning. <em>ICML</em>.</li>
+        <li>Yogatama, D., Dyer, C., Ling, W., &amp; Blunsom, P. (2017). Generative and discriminative text classification with recurrent neural networks. arXiv:1703.01898.</li>
+        <li>Kingma, D. P., Rezende, D. J., Mohamed, S., &amp; Welling, M. (2014). Semi-supervised learning with deep generative models. <em>NeurIPS</em>.</li>
+        <li>Brown, T. B., et al. (2020). Language models are few-shot learners. <em>NeurIPS</em>.</li>
+        <li>Schick, T., &amp; Schütze, H. (2021). Exploiting cloze questions for few shot text classification and natural language inference. <em>EACL</em>.</li>
+        <li>Holtzman, A., West, P., Shwartz, V., Choi, Y., &amp; Zettlemoyer, L. (2021). Surface form competition: Why the highest probability answer isn't always right. <em>EMNLP</em>.</li>
+        <li>Zhao, Z., Wallace, E., Feng, S., Klein, D., &amp; Singh, S. (2021). Calibrate before use: Improving few-shot performance of language models. <em>ICML</em>.</li>
+      </ul>
+      <ul>
+        <li>Møller, A. G., Pera, A., Dalsgaard, J., &amp; Aiello, L. (2024). The parrot dilemma: Human-labeled vs. LLM-augmented data in classification tasks. <em>EACL</em> (short papers).</li>
+        <li>Feng, S. Y., Gangal, V., Wei, J., Chandar, S., Vosoughi, S., Mitamura, T., &amp; Hovy, E. (2021). A survey of data augmentation approaches for NLP. <em>Findings of ACL</em>.</li>
+        <li>Shumailov, I., et al. (2024). AI models collapse when trained on recursively generated data. <em>Nature, 631</em>, 755–759.</li>
+        <li>Guo, C., Pleiss, G., Sun, Y., &amp; Weinberger, K. Q. (2017). On calibration of modern neural networks. <em>ICML</em>.</li>
+        <li>Gebru, T., et al. (2021). Datasheets for datasets. <em>Communications of the ACM, 64</em>(12), 86–92.</li>
+        <li>Reimers, N., &amp; Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. <em>EMNLP</em>.</li>
+        <li>Malo, P., Sinha, A., Korhonen, P., Wallenius, J., &amp; Takala, P. (2014). Good debt or bad debt: Detecting semantic orientations in economic texts. <em>JASIST, 65</em>(4), 782–796.</li>
+        <li>Yao, S., et al. (2023). ReAct: Synergizing reasoning and acting in language models. <em>ICLR</em>.</li>
+        <li>Tunstall, L., von Werra, L., &amp; Wolf, T. (2022). <em>Natural language processing with transformers</em> (rev. ed.), ch. 2. O'Reilly.</li>
+      </ul>
+    </div>
+    <aside class="notes">
+      Primary sources for every claim in the deck. Malo et al. (2014) introduced the Financial
+      PhraseBank, the classic benchmark for financial sentiment, useful context for today's tweets
+      dataset. Tunstall et al. (2022), chapter 2, is the reading for this week.
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "08" });
+  Course.onReady(() => {
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const pct = (v) => (v * 100).toFixed(1) + "%";
+    function svgEl(tag, attrs, parent) {
+      const node = document.createElementNS(SVG_NS, tag);
+      Object.entries(attrs || {}).forEach(([k, v]) => node.setAttribute(k, v));
+      if (parent) parent.appendChild(node);
+      return node;
+    }
+    // Log-scale axes: label only the exact powers of ten (10, 100, 1,000…)
+    const powerOfTen = (v) => (Math.abs(v - Math.round(v)) < 1e-6 ? Math.pow(10, Math.round(v)).toLocaleString("en-US") : "");
+    function setPressed(active, others) {
+      active.setAttribute("aria-pressed", "true");
+      others.forEach((b) => b.setAttribute("aria-pressed", "false"));
+    }
+
+    // --- Simulator 1: decision boundaries (Gaussian NB vs logistic regression) ----------------
+    // Two Gaussian classes with the same covariance [[1, rho], [rho, 1]] and means (-1.1, 0) and
+    // (1.1, 0). Everything is seeded with Course.seededRandom, so the same slider settings always
+    // give the same picture.
+    const N_VALUES = [2, 3, 5, 8, 12, 20, 30, 50, 80, 120, 200];
+    const MU = [[-1.1, 0], [1.1, 0]];
+    const X_RANGE = [-4, 4];
+    const Y_RANGE = [-3.2, 3.2];
+    const W = 360, H = 288, CELL = 9;           // SVG viewBox and grid cell size (user units)
+    const COLORS = ["var(--series-1)", "var(--series-2)"];
+    const N_TEST = 500;                          // per class, fixed seed
+    const VAR_FLOOR = 0.05;                      // small variance floor keeps NB finite with 2 points
+
+    function gaussian(rng) {
+      let u = 0;
+      while (u <= 1e-12) u = rng();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng());
+    }
+    function latentDraws(seed, perClass) {        // standard-normal pairs, transformed later by rho
+      const rng = Course.seededRandom(seed);
+      return [0, 1].map(() => Array.from({ length: perClass }, () => [gaussian(rng), gaussian(rng)]));
+    }
+    function toData(Z, rho, n) {
+      const s = Math.sqrt(1 - rho * rho);
+      const X = [], y = [];
+      for (let c = 0; c < 2; c++) {
+        for (let i = 0; i < n; i++) {
+          const [a, b] = Z[c][i];
+          X.push([MU[c][0] + a, MU[c][1] + rho * a + s * b]);
+          y.push(c);
+        }
+      }
+      return { X, y };
+    }
+    function fitGaussianNB(X, y) {
+      const mean = [[0, 0], [0, 0]], vari = [[0, 0], [0, 0]], count = [0, 0];
+      X.forEach((x, i) => { count[y[i]]++; mean[y[i]][0] += x[0]; mean[y[i]][1] += x[1]; });
+      for (let c = 0; c < 2; c++) for (let j = 0; j < 2; j++) mean[c][j] /= count[c];
+      X.forEach((x, i) => { for (let j = 0; j < 2; j++) vari[y[i]][j] += (x[j] - mean[y[i]][j]) ** 2; });
+      for (let c = 0; c < 2; c++) for (let j = 0; j < 2; j++) vari[c][j] = vari[c][j] / count[c] + VAR_FLOOR;
+      const logPrior = count.map((k) => Math.log(k / (count[0] + count[1])));
+      return (x) => {                            // log p(B|x) - log p(A|x); > 0 means class B
+        const s = [0, 1].map((c) => logPrior[c] + [0, 1].reduce((acc, j) =>
+          acc - 0.5 * Math.log(2 * Math.PI * vari[c][j]) - (x[j] - mean[c][j]) ** 2 / (2 * vari[c][j]), 0));
+        return s[1] - s[0];
+      };
+    }
+    function fitLogReg(X, y, steps = 300, lr = 0.5, l2 = 0.01) {
+      let w0 = 0, w1 = 0, b = 0;
+      const n = X.length;
+      for (let t = 0; t < steps; t++) {
+        let g0 = 0, g1 = 0, gb = 0;
+        for (let i = 0; i < n; i++) {
+          const p = 1 / (1 + Math.exp(-(w0 * X[i][0] + w1 * X[i][1] + b)));
+          const e = p - y[i];
+          g0 += e * X[i][0]; g1 += e * X[i][1]; gb += e;
+        }
+        w0 -= lr * (g0 / n + l2 * w0);
+        w1 -= lr * (g1 / n + l2 * w1);
+        b -= lr * (gb / n);
+      }
+      return (x) => w0 * x[0] + w1 * x[1] + b;
+    }
+    const accuracy = (f, D) => D.X.reduce((acc, x, i) => acc + (((f(x) > 0) ? 1 : 0) === D.y[i] ? 1 : 0), 0) / D.X.length;
+    const sx = (v) => (v - X_RANGE[0]) / (X_RANGE[1] - X_RANGE[0]) * W;
+    const sy = (v) => H - (v - Y_RANGE[0]) / (Y_RANGE[1] - Y_RANGE[0]) * H;
+    const ux = (px) => X_RANGE[0] + px / W * (X_RANGE[1] - X_RANGE[0]);
+    const uy = (py) => Y_RANGE[0] + (H - py) / H * (Y_RANGE[1] - Y_RANGE[0]);
+
+    function drawPanel(host, f, train, rho, label) {
+      host.textContent = "";
+      const root = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": label }, host);
+      for (let py = 0; py < H; py += CELL) {     // sampled grid: predicted class per cell
+        for (let px = 0; px < W; px += CELL) {
+          const c = f([ux(px + CELL / 2), uy(py + CELL / 2)]) > 0 ? 1 : 0;
+          svgEl("rect", { x: px, y: py, width: CELL + 0.5, height: CELL + 0.5, fill: COLORS[c], "fill-opacity": 0.13 }, root);
+        }
+      }
+      // Bayes-optimal boundary: x1 - rho * x2 = 0 (shared covariance, equal priors)
+      const yA = Y_RANGE[0], yB = Y_RANGE[1];
+      svgEl("line", { x1: sx(rho * yA), y1: sy(yA), x2: sx(rho * yB), y2: sy(yB), stroke: "var(--ink)",
+        "stroke-width": 2, "stroke-dasharray": "7 6" }, root);
+      train.X.forEach((x, i) => {
+        if (x[0] < X_RANGE[0] || x[0] > X_RANGE[1] || x[1] < Y_RANGE[0] || x[1] > Y_RANGE[1]) return;
+        if (train.y[i] === 0) {
+          svgEl("circle", { cx: sx(x[0]), cy: sy(x[1]), r: 4.6, fill: COLORS[0], stroke: "#fff", "stroke-width": 1.4 }, root);
+        } else {
+          svgEl("rect", { x: sx(x[0]) - 4.2, y: sy(x[1]) - 4.2, width: 8.4, height: 8.4, fill: COLORS[1], stroke: "#fff", "stroke-width": 1.4 }, root);
+        }
+      });
+    }
+
+    const dbN = document.getElementById("db-n");
+    const dbRho = document.getElementById("db-rho");
+    let trainSeed = 2024;
+    let testCache = { rho: null, data: null };
+    const testZ = latentDraws(7, N_TEST);
+
+    function updateBoundaries() {
+      const n = N_VALUES[Number(dbN.value)];
+      const rho = Number(dbRho.value);
+      if (testCache.rho !== rho) testCache = { rho, data: toData(testZ, rho, N_TEST) };
+      const train = toData(latentDraws(trainSeed, 200), rho, n);
+      const gnb = fitGaussianNB(train.X, train.y);
+      const lr = fitLogReg(train.X, train.y);
+      const bayes = (x) => x[0] - rho * x[1];
+      drawPanel(document.getElementById("db-gnb"), gnb, train, rho, "Gaussian naive Bayes decision regions");
+      drawPanel(document.getElementById("db-lr"), lr, train, rho, "Logistic regression decision regions");
+      document.getElementById("db-acc-gnb").textContent = pct(accuracy(gnb, testCache.data));
+      document.getElementById("db-acc-lr").textContent = pct(accuracy(lr, testCache.data));
+      document.getElementById("db-acc-bayes").textContent = pct(accuracy(bayes, testCache.data));
+    }
+    Course.bindRange(dbN, document.getElementById("db-n-out"), (v) => String(N_VALUES[v]), updateBoundaries);
+    Course.bindRange(dbRho, document.getElementById("db-rho-out"), (v) => v.toFixed(1), updateBoundaries);
+    document.getElementById("db-resample").addEventListener("click", () => { trainSeed += 1; updateBoundaries(); });
+
+    // --- Chart: NB vs LR learning curves on the tweets dataset (lab Part 1, full run) -----------
+    // Mean of 3 stratified training samples per size; test = validation split (2,388 tweets).
+    const LC_N = [20, 40, 80, 160, 320, 640, 1280, 2560, 5000, 9543];
+    const LC = {
+      f1: { nb: [0.348, 0.359, 0.382, 0.447, 0.482, 0.512, 0.569, 0.623, 0.685, 0.730],
+            lr: [0.276, 0.281, 0.304, 0.358, 0.435, 0.489, 0.584, 0.661, 0.702, 0.753] },
+      acc: { nb: [0.627, 0.641, 0.652, 0.680, 0.699, 0.716, 0.744, 0.768, 0.799, 0.822],
+             lr: [0.658, 0.659, 0.660, 0.673, 0.697, 0.712, 0.746, 0.782, 0.801, 0.829] }
+    };
+    const lcF1 = document.getElementById("lc-f1");
+    const lcAcc = document.getElementById("lc-acc");
+    function drawLearningCurves(metric) {
+      const pts = (vals) => LC_N.map((n, i) => [Math.log10(n), vals[i]]);
+      const series = [
+        { name: "Naive Bayes", points: pts(LC[metric].nb) },
+        { name: "Log. regression", points: pts(LC[metric].lr), dashed: true }
+      ];
+      if (metric === "acc") {
+        series.push({ name: "Always neutral", points: [[1, 0.656], [4, 0.656]], dashed: true });
+      }
+      Course.lineChart(document.getElementById("lc-chart"), series, {
+        xLabel: "Training tweets (log scale)", yLabel: metric === "f1" ? "Macro-F1" : "Accuracy",
+        xMin: 1, xMax: 4, yMin: metric === "f1" ? 0.2 : 0.6, yMax: metric === "f1" ? 0.8 : 0.85, width: 720, height: 430,
+        xFormat: powerOfTen,
+        title: "Learning curves on financial tweets"
+      });
+    }
+    lcF1.addEventListener("click", () => { setPressed(lcF1, [lcAcc]); drawLearningCurves("f1"); });
+    lcAcc.addEventListener("click", () => { setPressed(lcAcc, [lcF1]); drawLearningCurves("acc"); });
+    drawLearningCurves("f1");
+
+    // --- Simulator 2: sum vs mean of token log-probabilities (illustrative values) ---------------
+    const SM_LABELS = ["bearish", "bullish", "neutral"];
+    const SM_TOKENS = [[-1.90, -0.02], [-2.60, -0.02], [-1.20]];
+    const smSum = document.getElementById("sm-sum");
+    const smMean = document.getElementById("sm-mean");
+    function drawScoring(rule) {
+      const scores = SM_TOKENS.map((t) => {
+        const s = t.reduce((a, b) => a + b, 0);
+        return rule === "sum" ? s : s / t.length;
+      });
+      const probs = Course.softmax(scores);
+      const best = probs.indexOf(Math.max(...probs));
+      Course.barChart(document.getElementById("sm-chart"), SM_LABELS, probs,
+        { max: 1, format: pct, highlight: best, title: "Softmax over the three label scores" });
+      document.getElementById("sm-pred").textContent = SM_LABELS[best];
+      document.getElementById("sm-why").textContent = rule === "sum"
+        ? `Scores: ${scores.map((s) => s.toFixed(2)).join(" · ")}. The sum is the log-probability of the whole word.`
+        : `Scores: ${scores.map((s) => s.toFixed(2)).join(" · ")}. Dividing by 2 halves the two-token labels' penalty.`;
+    }
+    smSum.addEventListener("click", () => { setPressed(smSum, [smMean]); drawScoring("sum"); });
+    smMean.addEventListener("click", () => { setPressed(smMean, [smSum]); drawScoring("mean"); });
+    drawScoring("sum");
+
+    // --- Chart: illustrative reliability diagram -----------------------------------------------
+    Course.lineChart(document.getElementById("cal-chart"), [
+      { name: "Perfect", points: [[0.5, 0.5], [1, 1]], dashed: true },
+      { name: "Overconfident", points: [[0.55, 0.52], [0.65, 0.57], [0.75, 0.63], [0.85, 0.68], [0.95, 0.74]] }
+    ], { xLabel: "Confidence", yLabel: "Accuracy", xMin: 0.5, xMax: 1, yMin: 0.5, yMax: 1, width: 560, height: 400,
+         title: "Reliability diagram (illustrative)" });
+
+    // --- Simulator 3: monthly cost, API vs self-hosted -----------------------------------------
+    // Transparent arithmetic: API = requests/day x 30 x tokens x price / 1e6;
+    // self-hosted = ceil(requests/day / capacity) servers x monthly cost per server.
+    const cc = Object.fromEntries(["req", "tok", "price", "server", "cap"].map((k) => [k, document.getElementById("cc-" + k)]));
+    const usd = (v) => "USD " + (v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(v >= 10 ? 0 : 2));
+    const count = (v) => Number(Math.pow(10, v).toPrecision(2)).toLocaleString("en-US");
+    const apiCost = (R, tok, price) => R * 30 * tok * price / 1e6;
+    const selfCost = (R, server, cap) => Math.max(1, Math.ceil(R / cap)) * server;
+
+    function updateCost() {
+      const R = Math.pow(10, Number(cc.req.value));
+      const tok = Number(cc.tok.value);
+      const price = Number(cc.price.value);
+      const server = Number(cc.server.value);
+      const cap = Math.pow(10, Number(cc.cap.value));
+      const xs = [];
+      for (let v = 2; v <= 6.5001; v += 0.05) xs.push(v);
+      const log = (v) => Math.log10(Math.max(v, 0.01));
+      const api = xs.map((v) => [v, log(apiCost(Math.pow(10, v), tok, price))]);
+      const self = xs.map((v) => [v, log(selfCost(Math.pow(10, v), server, cap))]);
+      const now = Math.log10(R);
+      Course.lineChart(document.getElementById("cc-chart"), [
+        { name: "API", points: api },
+        { name: "Self-hosted", points: self },
+        { name: "Your volume", points: [[now, -1], [now, 6]], dashed: true }
+      ], {
+        xLabel: "Requests per day", yLabel: "USD per month", xMin: 2, xMax: 6.5, yMin: -1, yMax: 6,
+        width: 640, height: 330, legend: true,
+        xFormat: powerOfTen,
+        yFormat: (v) => { const x = Math.pow(10, v); return x >= 1e6 ? (x / 1e6) + "M" : x >= 1000 ? (x / 1000) + "k" : String(Number(x.toPrecision(2))); },
+        title: "Monthly cost (log scales)"
+      });
+      const a = apiCost(R, tok, price), s = selfCost(R, server, cap);
+      const servers = Math.max(1, Math.ceil(R / cap));
+      document.getElementById("cc-api").textContent = usd(a) + "/month";
+      document.getElementById("cc-self").textContent = usd(s) + `/month (${servers} server${servers > 1 ? "s" : ""})`;
+      let crossing = null;
+      for (let v = 2; v <= 7.5; v += 0.01) {
+        const r = Math.pow(10, v);
+        if (apiCost(r, tok, price) >= selfCost(r, server, cap)) { crossing = r; break; }
+      }
+      document.getElementById("cc-break").textContent = crossing
+        ? `≈ ${Number(crossing.toPrecision(2)).toLocaleString("en-US")} requests/day; above it, self-hosting is cheaper`
+        : "the API stays cheaper across this whole range";
+    }
+    Course.bindRange(cc.req, document.getElementById("cc-req-out"), count, updateCost);
+    Course.bindRange(cc.tok, document.getElementById("cc-tok-out"), String, updateCost);
+    Course.bindRange(cc.price, document.getElementById("cc-price-out"), (v) => v.toFixed(2), updateCost);
+    Course.bindRange(cc.server, document.getElementById("cc-server-out"), (v) => v.toLocaleString("en-US"), updateCost);
+    Course.bindRange(cc.cap, document.getElementById("cc-cap-out"), count, updateCost);
+  });
+</script>
+</body>
+</html>
