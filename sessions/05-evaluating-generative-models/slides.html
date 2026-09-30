@@ -1,0 +1,1357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S05 · Evaluating Generative Models</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ===================================================================== -->
+  <!-- OPENING                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="05">
+    <div class="title-main">
+      <h1>Evaluating Generative Models</h1>
+      <p class="subtitle">Evaluación de modelos generativos</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome back. Last week we fine-tuned models; today we ask the question that
+      decides whether any of that work was worth it: how do we know a model is good enough? Frame
+      the session: every number we compute today has a blind spot, and the job is to know which one.
+      Keys: S speaker view, F fullscreen, Esc overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Warm-up: three questions on fine-tuning (S04) <span class="time">10'</span></li>
+      <li data-block="theory">Theory: text metrics, human and LLM judges, classification metrics, validation, KPIs <span class="time">60'</span></li>
+      <li data-block="break">Break <span class="time">10'</span></li>
+      <li data-block="lab">Guided lab: perplexity, BLEU, chrF, ROUGE, k-fold and error analysis <span class="time">60'</span></li>
+      <li data-block="challenge">Session challenge (graded, individual) <span class="time">40'</span></li>
+    </ol>
+    <p class="small muted" style="margin-top: 18px">Project milestone H2: your group's proposal canvas is due before Session 06.</p>
+    <aside class="notes">
+      [0:01 · 1 min] Walk through the blocks. Mention up front that the H2 proposal canvas is due the
+      day before S06 at 23:59: today's content is exactly what goes in its "success metric" block.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WARM-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 3 · Warm-up divider -->
+  <section class="section-slide" data-block="warmup">
+    <h2>Warm-up</h2>
+    <p>Three questions on last session: LoRA, overfitting and the test set.</p>
+    <span class="block-tag" data-block="warmup">Warm-up · 10'</span>
+    <aside class="notes">
+      [0:02] Retrieval practice on Session 04. Launch each Zoom poll, wait about 45 seconds, then click
+      the majority answer. The third question is the bridge into today's topic.
+    </aside>
+  </section>
+
+  <!-- 4 · Warm-up Q1 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q1</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">With LoRA, a weight matrix becomes \(W = W_0 + BA\). During fine-tuning, what is trained?</p>
+      <button class="quiz-opt" data-key="a">Both \(W_0\) and the product \(BA\)</button>
+      <button class="quiz-opt" data-key="b">Only the small matrices \(B\) and \(A\); \(W_0\) stays frozen</button>
+      <button class="quiz-opt" data-key="c">Only \(W_0\); \(B\) and \(A\) are fixed random projections</button>
+      <button class="quiz-opt" data-key="d">Nothing: LoRA only changes the prompt</button>
+      <div class="quiz-explain">\(B\) is \(d \times r\) and \(A\) is \(r \times k\) with a small rank \(r\), so each adapted
+        matrix trains \(r(d + k)\) parameters instead of \(d \cdot k\). The pretrained \(W_0\) is untouched, which is why
+        adapters are small files and several can share one base model.</div>
+    </div>
+    <aside class="notes">
+      [0:03 · 2 min] Poll, then click. If people pick (a), recall the LoRA calculator from S04: with
+      r = 8 on a 768 × 768 matrix, 12,288 trainable parameters instead of 589,824.
+    </aside>
+  </section>
+
+  <!-- 5 · Warm-up Q2 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q2</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">Fine-tuning on 200 examples: training loss keeps falling, but validation loss rises after epoch 2. What is happening?</p>
+      <button class="quiz-opt" data-key="a">Underfitting: train for more epochs</button>
+      <button class="quiz-opt" data-key="b">The learning rate is too low</button>
+      <button class="quiz-opt" data-key="c">Overfitting: stop around epoch 2, regularise or get more data</button>
+      <button class="quiz-opt" data-key="d">Catastrophic forgetting of the validation set</button>
+      <div class="quiz-explain">The model is memorising the 200 training examples. Early stopping on the validation
+        loss, fewer epochs, weight decay, LoRA dropout or more (and more varied) data all help. Today we make
+        "validation" precise: how to split, how many folds, and what to keep sealed.</div>
+    </div>
+    <aside class="notes">
+      [0:05 · 2 min] Poll, then click. This is the "tuning game" from S04. Ask one volunteer what they
+      would change first and why.
+    </aside>
+  </section>
+
+  <!-- 6 · Warm-up Q3 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q3</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">In the S04 challenge, the AI-proposed <code>TrainingArguments</code> picked the best epoch by looking at the test set. Why is that a problem?</p>
+      <button class="quiz-opt" data-key="a">It is not a problem: the test set exists to choose the best model</button>
+      <button class="quiz-opt" data-key="b">The test score is no longer an honest estimate: the test set was used to make a decision</button>
+      <button class="quiz-opt" data-key="c">It makes training much slower</button>
+      <button class="quiz-opt" data-key="d">It causes the model to forget its pretraining</button>
+      <div class="quiz-explain">Every decision you take while looking at a dataset tunes the model to it. Choose with a
+        validation set (or cross-validation) and open the test set once, at the end. That rule is today's backbone.</div>
+    </div>
+    <aside class="notes">
+      [0:07 · 2 min] Poll, then click. Bridge: "Today's question is not only which metric, but also on
+      which data and how many times you are allowed to look." Keep this example alive; it returns in
+      Part 3 and in the challenge's AI critique.
+    </aside>
+  </section>
+
+  <!-- 7 · Learning objectives -->
+  <section>
+    <p class="kicker">Learning objectives</p>
+    <h2>By the end of this session you can…</h2>
+    <ol>
+      <li>Explain why generated text is hard to evaluate and separate intrinsic from extrinsic evaluation <span class="pill">RAE 2</span></li>
+      <li>Compute and interpret perplexity, BLEU, ROUGE, chrF and embedding similarity, and name what each misses <span class="pill">RAE 2</span></li>
+      <li>Design a human or LLM-as-a-judge evaluation that controls known biases <span class="pill">RAE 2</span></li>
+      <li>Choose classification metrics and a validation scheme without leakage <span class="pill">RAE 2</span></li>
+      <li>Link an offline metric to a business KPI and a go/no-go threshold <span class="pill">RAE 2</span></li>
+    </ol>
+    <p class="small muted">RAE 2: evaluate trained models with standard metrics and validation methods (course syllabus).</p>
+    <aside class="notes">
+      [0:09 · 1 min] One RAE today, covered in depth: RAE 2 is about evaluation. The challenge assesses
+      objectives 2, 4 and 5 with the students' own samples.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 1 · WHY IS GENERATION HARD TO EVALUATE                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 8 · Part 1 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 1</p>
+    <h2>Why is generation hard to evaluate?</h2>
+    <p>Many right answers, many ways to be wrong, and a model's own measure of surprise.</p>
+    <span class="block-tag" data-block="theory">Theory · 60'</span>
+    <aside class="notes">
+      [0:10] Theory block: three parts. Part 1 (13 min): the problem and perplexity. Part 2 (21 min):
+      reference-based metrics, humans and LLM judges. Part 3 (26 min, including the breakout):
+      labels, validation, KPIs.
+    </aside>
+  </section>
+
+  <!-- 9 · One input, many right answers -->
+  <section>
+    <p class="kicker">The core difficulty</p>
+    <h2>One input, many right answers</h2>
+    <p class="small"><strong>Input:</strong> a 6-minute call in which an Andes Bank customer reports a card charged twice at a supermarket and asks for a refund.</p>
+    <div class="cols" style="gap: 20px">
+      <div class="card">
+        <h4>Three good summaries</h4>
+        <ol class="small" style="margin-bottom: 0">
+          <li>Customer reports a duplicate supermarket charge and requests a refund.</li>
+          <li>Double card payment at a supermarket; refund requested.</li>
+          <li>Client was billed twice for one purchase and wants the money back.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h4>One fluent, wrong summary</h4>
+        <p class="small">Customer reports a duplicate supermarket charge; the refund was already approved.</p>
+        <p class="small muted" style="margin-bottom: 0">It shares most words with summary 1, yet it invents a commitment the bank never made.</p>
+      </div>
+    </div>
+    <div class="cols-3" style="margin-top: 16px; gap: 14px">
+      <div class="callout" style="margin: 0"><strong>No single reference:</strong> good outputs differ in words and order.</div>
+      <div class="callout" style="margin: 0"><strong>Many dimensions:</strong> fluency, faithfulness, coverage, tone, safety.</div>
+      <div class="callout warn" style="margin: 0"><strong>Humans disagree too,</strong> and their time is expensive.</div>
+    </div>
+    <aside class="notes">
+      [0:10 · 3 min] Ask in the chat: "Which summary is best?" Answers will differ, which is the point.
+      Then point to the wrong one: it overlaps heavily with summary 1 in words, so any word-overlap
+      metric would rate it well. Contrast with classification, where there is one correct label and
+      accuracy is well defined. All examples are fictional.
+    </aside>
+  </section>
+
+  <!-- 10 · Intrinsic vs extrinsic -->
+  <section>
+    <p class="kicker">A map of evaluation</p>
+    <h2>Intrinsic vs extrinsic evaluation</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Intrinsic: the output itself</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li><strong>Reference-free:</strong> perplexity, an LLM judge, human ratings</li>
+          <li><strong>Lexical overlap</strong> with a reference: BLEU, ROUGE, chrF</li>
+          <li><strong>Semantic similarity</strong> to a reference: embeddings, BERTScore</li>
+          <li><strong>Task metrics</strong> for labels: precision, recall, F1</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Extrinsic: the effect it causes</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Did the agent resolve the case faster?</li>
+          <li>Did fewer customers call back?</li>
+          <li>Did fraud losses or review hours go down?</li>
+          <li>Measured offline (a simulation, a pilot) or online (A/B test, shadow mode)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout tip"><strong>Rule of thumb:</strong> intrinsic metrics are cheap and fast, so you use them to iterate;
+      extrinsic ones are what the business pays for, so you use them to decide.</div>
+    <aside class="notes">
+      [0:13 · 2 min] Intrinsic = judged in isolation; extrinsic = judged by its impact on a downstream
+      task or on people. Most of today's lab is intrinsic; the breakout and the challenge's "Explica y
+      decide" connect it to extrinsic KPIs. Shadow mode: the model runs on real traffic but its
+      outputs are logged, not shown, so you can compare with what humans did.
+    </aside>
+  </section>
+
+  <!-- 11 · Perplexity -->
+  <section>
+    <p class="kicker">Reference-free · perplexity</p>
+    <h2>Perplexity: how surprised is the model?</h2>
+    <p>For a text of \(N\) tokens, perplexity is the exponential of the average negative log-likelihood:</p>
+    $$ \text{PPL} = \exp\Big(-\frac{1}{N}\sum_{t=1}^{N} \log p(x_t \mid x_{&lt;t})\Big) $$
+    <div class="cols">
+      <div class="card">
+        <h4>Worked example</h4>
+        <p class="small">The model gives the three tokens probabilities \(\tfrac12, \tfrac14, \tfrac18\).</p>
+        <p class="small">Mean NLL \(= \tfrac13(\ln 2 + \ln 4 + \ln 8) = \ln 4\) → \(\text{PPL} = 4\).</p>
+        <p class="small muted" style="margin-bottom: 0">As uncertain as a fair choice among 4 tokens at every step.</p>
+      </div>
+      <div class="card">
+        <h4>What it is good for</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Tracking training and validation loss (it is \(e^{\text{loss}}\))</li>
+          <li>Comparing models that share a tokenizer on the same text</li>
+          <li>Spotting out-of-domain text (tweets, another language)</li>
+        </ul>
+      </div>
+    </div>
+    <p class="small muted">Introduced for speech recognition by Jelinek et al. (1977); see Jurafsky &amp; Martin, <em>SLP3</em>, ch. 3.</p>
+    <aside class="notes">
+      [0:15 · 2 min] Walk the worked example: the geometric mean of 2, 4 and 8 is 4. Lower is better,
+      the minimum is 1 (perfect certainty). Connect to S02 and S04: the cross-entropy loss printed by
+      Trainer is the mean NLL, so exp(loss) is the perplexity. It needs no reference text, which is
+      its strength and its limit: it says how fluent a text is under the model, not whether it is true.
+    </aside>
+  </section>
+
+  <!-- 12 · Perplexity and tokenizers -->
+  <section>
+    <p class="kicker">Reference-free · a trap</p>
+    <h2>Perplexity depends on the tokenizer</h2>
+    <table class="compact">
+      <thead>
+        <tr><th>GPT-2 on a short text</th><th class="num">Tokens / word</th><th class="num">PPL per token</th><th class="num">PPL per word</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>News paragraph (English)</td><td class="num">1.10</td><td class="num">42.8</td><td class="num">63.4</td></tr>
+        <tr><td>Same news, words shuffled</td><td class="num">1.10</td><td class="num">3,489.9</td><td class="num">8,163.2</td></tr>
+        <tr><td>Informal tweet (English)</td><td class="num">1.43</td><td class="num">315.0</td><td class="num">3,841.6</td></tr>
+        <tr><td>News paragraph (Spanish)</td><td class="num">2.02</td><td class="num">141.3</td><td class="num">22,538.0</td></tr>
+      </tbody>
+      <caption>Computed in today's lab with <code>openai-community/gpt2</code> on four short texts written for class. PPL per word = exp(total NLL ÷ number of words).</caption>
+    </table>
+    <div class="cols" style="margin-top: 6px">
+      <div class="callout warn" style="margin: 0"><strong>Not comparable</strong> across tokenizers: a model that cuts words into more, easier pieces gets a lower per-token PPL.</div>
+      <div class="callout tip" style="margin: 0"><strong>Compare fairly:</strong> same text, same tokenizer; or normalise per word, character or byte; or use a task metric.</div>
+    </div>
+    <aside class="notes">
+      [0:17 · 3 min] These are the real numbers students will reproduce in Part 1 of the lab. Point
+      1: shuffling the same words multiplies perplexity by about 80: the model has learned order.
+      Point 2: Spanish needs about two GPT-2 tokens per word; per token it looks roughly 3 times
+      harder than English, per word over 300 times. Same model, same texts: only the unit changed.
+      A lower perplexity also does not mean true: a fluent false sentence can score very well.
+    </aside>
+  </section>
+
+  <!-- 13 · Quiz perplexity -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · perplexity</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">On the same Spanish test set, model A reports perplexity 18 and model B reports 27. They use different tokenizers. Which one models Spanish better?</p>
+      <button class="quiz-opt" data-key="a">A, because lower perplexity is always better</button>
+      <button class="quiz-opt" data-key="b">B, because a higher perplexity means a richer vocabulary</button>
+      <button class="quiz-opt" data-key="c">We cannot tell yet: normalise by a shared unit (words, bytes) or compare on the task</button>
+      <button class="quiz-opt" data-key="d">They are equal, because the test set is the same</button>
+      <div class="quiz-explain">Per-token perplexity averages over different numbers of tokens for the same text. Convert to a
+        shared unit (e.g., bits per byte or per word) or, better for a business decision, compare both models on the
+        task you care about. This exact trap is one of the planted errors in today's challenge.</div>
+    </div>
+    <aside class="notes">
+      [0:20 · 1 min] Poll, then click. If the room splits between (a) and (c), ask a volunteer from (c)
+      to explain using the Spanish row of the previous slide.
+    </aside>
+  </section>
+
+  <!-- 14 · Business lens 1 -->
+  <section>
+    <p class="kicker">Buying on benchmarks</p>
+    <h2>A leaderboard is not your test set</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>Andes Bank</strong> (fictional) must pick a model for a Spanish-language customer chat. Two vendors
+          send impressive scores: one a low perplexity, the other a top rank on a public English benchmark.</p>
+        <p class="small" style="margin-bottom: 0">Neither number was measured on Andes Bank's customers, language or task.</p>
+      </div>
+      <div>
+        <h4>Ask before you believe a score</h4>
+        <ul class="small">
+          <li><strong>Which data?</strong> Language, domain, date. Could the model have seen it during training (contamination)?</li>
+          <li><strong>Which unit and settings?</strong> Tokenizer, prompt, decoding, number of examples.</li>
+          <li><strong>Against what baseline?</strong> The current process, a simple rule, the cheaper model.</li>
+        </ul>
+        <p class="small muted">Build a small private evaluation set from real, anonymised cases and run every candidate on it.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:21 · 2 min] Business lens for Part 1. Contamination: public benchmarks circulate on the web
+      and can end up in training data, inflating scores. A private evaluation set is cheap insurance
+      and it is reusable: S11 (continuous improvement) runs it again after every model change.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 2 · REFERENCE-BASED METRICS, HUMANS AND JUDGES           -->
+  <!-- ===================================================================== -->
+
+  <!-- 15 · Part 2 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 2</p>
+    <h2>Comparing with a reference, and beyond</h2>
+    <p>BLEU, ROUGE, chrF, embeddings, human raters and LLM judges.</p>
+    <aside class="notes">
+      [0:23] Part 2: about 20 minutes, with the BLEU/ROUGE simulator, a quiz and the flip cards.
+    </aside>
+  </section>
+
+  <!-- 16 · BLEU -->
+  <section>
+    <p class="kicker">Reference-based · translation</p>
+    <h2>BLEU: clipped n-gram precision + brevity penalty</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr)">
+      <div>
+        <p class="small"><strong>1 · Clipped precision</strong> \(p_n\): each candidate n-gram counts at most as many times as it appears in the reference.</p>
+        <p class="small" style="margin-bottom: 4px"><strong>2 · Brevity penalty</strong> for a candidate of length \(c\) and reference length \(r\):</p>
+        $$ \text{BP} = \begin{cases} 1 & c &gt; r \\ e^{\,1 - r/c} & c \le r \end{cases} $$
+        <p class="small" style="margin-bottom: 4px"><strong>3 · Geometric mean</strong> of \(p_1 \dots p_4\):</p>
+        $$ \text{BLEU} = \text{BP} \cdot \exp\Big(\sum_{n=1}^{4} \tfrac14 \log p_n\Big) $$
+      </div>
+      <div class="card">
+        <h4>Why clip? (Papineni et al., 2002)</h4>
+        <p class="small">Reference: <em>the cat is on the mat</em><br>Candidate: <em>the the the the the the the</em></p>
+        <p class="small">Plain unigram precision: 7/7. Clipped: <strong>2/7</strong>, because "the" appears only twice in the reference.</p>
+        <p class="small muted" style="margin-bottom: 0">BLEU is precision-based; recall is only approximated by the brevity penalty. Corpus BLEU pools counts over all sentences.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:23 · 3 min] BLEU asks "how much of what the system wrote is supported by the reference?" That
+      is precision. Without the brevity penalty, a one-word output made of a correct word would get a
+      perfect score; BP is the patch that punishes short outputs. With several references, a
+      candidate n-gram is clipped by its maximum count in any single reference. sacrebleu reports
+      BLEU on a 0–100 scale together with a signature (tokenizer, smoothing) so scores are reproducible
+      (Post, 2018).
+    </aside>
+  </section>
+
+  <!-- 17 · ROUGE and chrF -->
+  <section>
+    <p class="kicker">Reference-based · summaries and morphology</p>
+    <h2>ROUGE looks at recall, chrF at characters</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>ROUGE (Lin, 2004)</h4>
+        <p class="small"><strong>ROUGE-N</strong> recall: the share of the reference's n-grams that the candidate covers (ROUGE-1 unigrams, ROUGE-2 bigrams).</p>
+        <p class="small"><strong>ROUGE-L:</strong> longest common subsequence (LCS) of \(m\) reference and \(n\) candidate words; order matters, gaps are allowed.</p>
+        <p class="small" style="margin-bottom: 0">\(R = \tfrac{\text{LCS}}{m}\) · \(P = \tfrac{\text{LCS}}{n}\) · \(F_1 = \tfrac{2PR}{P + R}\) (as in the <code>rouge_score</code> package)</p>
+      </div>
+      <div class="card">
+        <h4>chrF (Popović, 2015)</h4>
+        <p class="small">An F-score over <strong>character</strong> n-grams (up to 6 characters). Partial credit for <em>aprobó</em> vs <em>aprobado</em>, which share most characters.</p>
+        <p class="small">\(F_\beta\) with \(\beta = 2\) in <code>sacrebleu</code>: recall counts more than precision.</p>
+        <p class="small muted" style="margin-bottom: 0">Useful for morphologically rich languages such as Spanish.</p>
+      </div>
+    </div>
+    <div class="callout warn"><strong>Shared blind spot:</strong> all three reward surface overlap with one reference. None of them checks that the facts are right.</div>
+    <aside class="notes">
+      [0:26 · 2 min] ROUGE was designed for summaries, where missing key content is the main failure,
+      hence recall. ROUGE-L rewards words in the same order without requiring them to be contiguous.
+      chrF works below the word level, so it gives partial credit to inflected forms, frequent in
+      Spanish. Next slide: try all of this live.
+    </aside>
+  </section>
+
+  <!-- 18 · Simulator 1: BLEU & ROUGE calculator -->
+  <section>
+    <p class="kicker">Simulator · BLEU &amp; ROUGE calculator</p>
+    <h2>Score a candidate against a reference</h2>
+    <div class="sim" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 20px; padding: 14px 18px">
+      <div class="sim-controls" style="gap: 10px">
+        <div class="control">
+          <label for="bl-ref">Reference</label>
+          <textarea id="bl-ref" rows="2" maxlength="300" spellcheck="false">The bank approved the customer's transfer yesterday afternoon.</textarea>
+        </div>
+        <div class="control">
+          <label for="bl-cand">Candidate</label>
+          <textarea id="bl-cand" rows="2" maxlength="300" spellcheck="false">Yesterday afternoon the client's transfer was approved by the bank.</textarea>
+        </div>
+        <div class="token-row" style="gap: 6px">
+          <button class="btn btn-sm btn-ghost" type="button" data-preset="identical">Identical</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-preset="paraphrase">Paraphrase</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-preset="negation">Negation</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-preset="short">Too short</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-preset="repeat">"the the the…"</button>
+        </div>
+        <p class="small muted" style="margin: 0">Candidate words found in the reference (clipped):</p>
+        <div class="token-row" id="bl-tokens" aria-live="polite" style="gap: 5px; font-size: 22px"></div>
+      </div>
+      <div class="sim-output" style="padding: 10px 14px">
+        <table class="compact bl-compact" style="margin: 0 0 8px; font-size: 19px">
+          <thead><tr><th>n-gram</th><th class="num">clipped matches / total</th><th class="num">\(p_n\)</th></tr></thead>
+          <tbody id="bl-rows"></tbody>
+        </table>
+        <p class="stat" style="margin: 0 0 4px">Length \(c\) = <strong id="bl-c">–</strong> · \(r\) = <strong id="bl-r">–</strong> · BP = <strong id="bl-bp">–</strong></p>
+        <p class="stat" style="margin: 0 0 6px">BLEU (0–100): <strong id="bl-bleu" style="font-size: 30px; color: var(--brand)">–</strong></p>
+        <table class="compact bl-compact" style="margin: 0; font-size: 19px">
+          <thead><tr><th></th><th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th></tr></thead>
+          <tbody>
+            <tr><td>ROUGE-1</td><td class="num" id="r1-p">–</td><td class="num" id="r1-r">–</td><td class="num" id="r1-f">–</td></tr>
+            <tr><td>ROUGE-L</td><td class="num" id="rl-p">–</td><td class="num" id="rl-r">–</td><td class="num" id="rl-f">–</td></tr>
+          </tbody>
+        </table>
+        <p class="small muted" id="bl-lcs" style="margin: 6px 0 0; font-size: 17px"></p>
+      </div>
+    </div>
+    <p class="small muted" style="margin: 4px 0 0; font-size: 16px">Lower-cased words, punctuation ignored. * Smoothing: the \(k\)-th order with 0 matches uses \(p_n = 1/(2^k \cdot \text{total})\) (sacrebleu's "exp" method).</p>
+    <aside class="notes">
+      [0:28 · 5 min] Interaction. The calculator implements BLEU (clipped precision for n = 1..4,
+      geometric mean, brevity penalty), ROUGE-1 and ROUGE-L (LCS) exactly as on the previous slides,
+      on lower-cased words without punctuation, so numbers differ a little from sacrebleu. Sequence:
+      1) Paraphrase (default): same meaning, but BLEU is only 13.7 because 3- and 4-grams do not
+      match (those orders are smoothed, marked *). 2) Negation: opposite meaning, yet BLEU 45.2 and
+      ROUGE-L F1 0.78. 3) Too short: precisions 100/75/67/50% but BP = 0.55 roughly halves BLEU
+      (38.8), and ROUGE recall drops to 0.63. 4) "the the the…": clipping in action (2 of 7).
+      Typing fewer than 4 words shows BLEU 0: no 4-grams exist, so BLEU-4 is undefined. Invite a student to type a candidate in the
+      chat and paste it in. Zero-match orders are smoothed as in sacrebleu's sentence-level default.
+    </aside>
+  </section>
+
+  <!-- 19 · Quiz BLEU -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · BLEU</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Reference: “El banco aprobó ayer la transferencia del cliente.” Which candidate gets the <em>higher</em> sentence BLEU with sacrebleu?</p>
+      <button class="quiz-opt" data-key="a">“Ayer, la transferencia del cliente fue aprobada por el banco.” (a correct paraphrase)</button>
+      <button class="quiz-opt" data-key="b">“El banco no aprobó ayer la transferencia del cliente.” (the opposite meaning)</button>
+      <button class="quiz-opt" data-key="c">They get the same BLEU</button>
+      <div class="quiz-explain">In the lab: the negated sentence gets BLEU 70.7 (chrF 94.8), the paraphrase BLEU 23.5 (chrF 70.0).
+        One inserted word keeps most n-grams; a reordering breaks them. Overlap is not meaning, so pair these metrics with
+        a meaning check: embeddings, a judge or a person.</div>
+    </div>
+    <aside class="notes">
+      [0:33 · 1 min] Poll, then click. Many will choose (a) on principle; the lesson lands when you
+      show that BLEU prefers the wrong answer. These are the exact numbers from Part 2 of the lab.
+    </aside>
+  </section>
+
+  <!-- 20 · Semantic similarity -->
+  <section>
+    <p class="kicker">Reference-based · meaning</p>
+    <h2>Embedding similarity and BERTScore</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)">
+      <div>
+        <ul class="small">
+          <li><strong>Sentence embeddings</strong> (e.g., <span class="tag">all-MiniLM-L6-v2</span>; Reimers &amp; Gurevych, 2019): one vector per text; cosine similarity near 1 means "about the same thing".</li>
+          <li><strong>BERTScore</strong> (Zhang et al., 2020): match every token to its most similar token in the other text using contextual embeddings, then compute precision, recall and F1.</li>
+          <li>Both reward paraphrases that n-gram metrics miss.</li>
+        </ul>
+      </div>
+      <table class="compact" style="margin: 0">
+        <thead><tr><th>Pair (English)</th><th class="num">ROUGE-L F1</th><th class="num">Cosine</th></tr></thead>
+        <tbody>
+          <tr><td>Paraphrase</td><td class="num">0.500</td><td class="num">0.668</td></tr>
+          <tr><td>Negation</td><td class="num">0.933</td><td class="num">0.801</td></tr>
+          <tr><td>Unrelated</td><td class="num">0.000</td><td class="num">−0.035</td></tr>
+        </tbody>
+        <caption>From the lab: MiniLM cosine and ROUGE-L on three hand-written pairs. The negation still scores high on both.</caption>
+      </table>
+    </div>
+    <div class="callout warn"><strong>Still not a fact-checker:</strong> "was approved" and "was not approved" sit close in embedding space.
+      Pick an embedding model that covers your language (MiniLM was trained mainly on English).</div>
+    <aside class="notes">
+      [0:34 · 2 min] Embeddings move us from words to meaning, but only partly. The negation pair keeps
+      a cosine of 0.80. For factual consistency we need people or a judge with a precise rubric.
+      Language matters: for Spanish outputs, use a multilingual embedding model.
+    </aside>
+  </section>
+
+  <!-- 21 · Human evaluation -->
+  <section>
+    <p class="kicker">The reference standard</p>
+    <h2>Human evaluation, designed properly</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>What to rate</h4>
+        <p class="small">Explicit criteria: fluency, faithfulness to the source, coverage, tone, safety. One question per criterion.</p>
+      </div>
+      <div class="card">
+        <h4>How to rate</h4>
+        <p class="small"><strong>Likert</strong> (1–5 per criterion) or <strong>pairwise</strong> (A vs B, which is better?). Pairwise is often easier for raters to answer consistently.</p>
+      </div>
+      <div class="card">
+        <h4>Who and how many</h4>
+        <p class="small">At least two raters on a shared sample; measure agreement (e.g., Cohen's κ); blind them to which system wrote what.</p>
+      </div>
+    </div>
+    <div class="callout tip"><strong>Guidelines with examples</strong> are the cheapest way to raise agreement: show a 1, a 3 and a 5 for each criterion before rating starts.</div>
+    <aside class="notes">
+      [0:36 · 2 min] Human evaluation is the reference standard, but only if it is designed: criteria,
+      scale, raters, agreement. Low agreement usually means unclear guidelines, not bad raters.
+      Randomise the order of systems and hide their names to avoid bias. This connects to the
+      labelling-guidelines breakout from S04.
+    </aside>
+  </section>
+
+  <!-- 22 · LLM-as-a-judge -->
+  <section>
+    <p class="kicker">Scaling human judgment</p>
+    <h2>LLM-as-a-judge: useful, but biased</h2>
+    <div class="cols">
+      <div>
+        <p class="small">A strong LLM grades one answer against a rubric, or compares two answers. Zheng et al. (2023) found that
+          strong judges such as GPT-4 agreed with human preferences more than 80% of the time on their benchmarks,
+          similar to the agreement between humans.</p>
+        <h4>Known biases</h4>
+        <ul class="small">
+          <li><strong>Position:</strong> prefers the answer in a given slot</li>
+          <li><strong>Verbosity:</strong> prefers longer answers</li>
+          <li><strong>Self-enhancement:</strong> favours answers from its own model family</li>
+          <li><strong>Limited reasoning</strong> when grading maths or logic</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Mitigations</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Swap A and B; accept a verdict only if both orders agree</li>
+          <li>Give a rubric and, when possible, a reference answer</li>
+          <li>Ask for a justification before the verdict</li>
+          <li>Use a judge from a different family than the system under test</li>
+          <li><strong>Validate the judge</strong> on a sample with human ratings before trusting it</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:38 · 2 min] The paper introduced MT-Bench and Chatbot Arena; its agreement figures are for
+      those settings, not a guarantee for yours. A judge is a model, so it needs its own evaluation:
+      compare it with a few dozen human ratings on your data. In the lab there is a ready-made judge
+      prompt students can paste into any assistant, swapping A and B to see position bias.
+    </aside>
+  </section>
+
+  <!-- 23 · Flip cards -->
+  <section>
+    <p class="kicker">Self-check · name the problem</p>
+    <h2>What went wrong in each evaluation?</h2>
+    <div class="cols-3">
+      <div class="flip-card"><div class="front">The judge prefers whichever answer is shown first.</div><div class="back"><strong>Position bias.</strong> Swap the order and require agreement.</div></div>
+      <div class="flip-card"><div class="front">The judge prefers the longer answer even when it adds nothing.</div><div class="back"><strong>Verbosity bias.</strong> Rubric that rewards concision; control length.</div></div>
+      <div class="flip-card"><div class="front">A perfect paraphrase gets a low BLEU.</div><div class="back"><strong>Lexical metric limit.</strong> Add chrF, embeddings or human review.</div></div>
+      <div class="flip-card"><div class="front">Two raters agree only about half of the time.</div><div class="back"><strong>Unclear guidelines.</strong> Add examples per score; measure κ again.</div></div>
+      <div class="flip-card"><div class="front">The test sentences were also in the model's training data.</div><div class="back"><strong>Contamination.</strong> The score is optimistic; use fresh, private data.</div></div>
+      <div class="flip-card"><div class="front">The summarizer wins on ROUGE but invents a refund that was never approved.</div><div class="back"><strong>Faithfulness failure.</strong> Overlap ≠ truth; check facts with people or a rubric judge.</div></div>
+    </div>
+    <aside class="notes">
+      [0:40 · 2 min] Read each front, ask the chat to name the problem, then flip (click, or Tab +
+      Enter). About 20 seconds per card. The last card is the Andes Bank example from slide 9.
+    </aside>
+  </section>
+
+  <!-- 24 · HELM -->
+  <section>
+    <p class="kicker">Beyond one number</p>
+    <h2>Holistic evaluation (HELM)</h2>
+    <p class="small">Liang et al. (2022) evaluated many language models on many scenarios, and for each scenario reported seven kinds of metrics, not one:</p>
+    <p style="margin: 10px 0 16px">
+      <span class="pill">Accuracy</span> <span class="pill">Calibration</span> <span class="pill">Robustness</span>
+      <span class="pill">Fairness</span> <span class="pill">Bias</span> <span class="pill">Toxicity</span> <span class="pill">Efficiency</span>
+    </p>
+    <div class="cols">
+      <div class="card">
+        <h4>Lessons for your project</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Report a small <strong>set</strong> of metrics that expose trade-offs (quality vs cost vs risk).</li>
+          <li>Evaluate every candidate under the <strong>same conditions</strong> (data, prompts, decoding).</li>
+          <li>Say what you did <strong>not</strong> measure.</li>
+        </ul>
+      </div>
+      <div class="callout" style="margin: 0"><strong>Final project minimum:</strong> at least two justified metrics, one technical and one tied to the business
+        or to risk, compared against a baseline on the same test set.</div>
+    </div>
+    <aside class="notes">
+      [0:42 · 1 min] HELM's contribution is methodological: standardised conditions and a multi-metric
+      view. Link it to the project rubric: two metrics minimum, a baseline and an error analysis. Bias,
+      fairness and efficiency return in Session 10 (ethics and sustainability).
+    </aside>
+  </section>
+
+  <!-- 25 · Business lens 2 -->
+  <section>
+    <p class="kicker">The metric your customer feels</p>
+    <h2>Pick metrics that match the failure that hurts</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>NovaTel</strong> (fictional) machine-translates English support replies into Spanish. A wrong
+          number or a negation flipped in a reply about charges triggers a complaint; a slightly unusual word order does not.</p>
+        <ul class="small" style="margin-bottom: 0">
+          <li>chrF to track quality over time; BLEU only next to a baseline</li>
+          <li>Weekly human review by bilingual agents, focused on numbers and negations</li>
+          <li>KPI: complaints and repeat contacts about translated replies</li>
+        </ul>
+      </div>
+      <div>
+        <span class="big-number" style="font-size: 96px">≈ 6.7 h</span>
+        <p class="caption muted">of reviewer time per round to rate 200 replies with 2 raters at about 1 minute each
+          (200 × 2 × 1 min = 400 min; illustrative arithmetic).</p>
+        <p class="small">Human evaluation has a budget: plan the sample size and how often you repeat it.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:43 · 1 min] Business lens for Part 2. Start from the failure that costs money or trust, then
+      pick metrics that can see it. The arithmetic is illustrative: adapt it to your own reviewers'
+      time. Automatic metrics tell you where to look; people confirm what matters.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 3 · LABELS, VALIDATION, ERRORS AND KPIs                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 26 · Part 3 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 3</p>
+    <h2>When the output is a label</h2>
+    <p>Precision, recall, thresholds, honest validation, error analysis and business KPIs.</p>
+    <aside class="notes">
+      [0:44] Part 3: about 16 minutes plus the breakout. Many generative products contain a
+      classifier: routing, intent detection, moderation, fraud flags.
+    </aside>
+  </section>
+
+  <!-- 27 · Confusion matrix -->
+  <section>
+    <p class="kicker">Classification metrics</p>
+    <h2>The confusion matrix and its ratios</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr)">
+      <div>
+        <table class="compact" style="margin: 0 0 12px">
+          <thead><tr><th></th><th class="num">Flagged</th><th class="num">Not flagged</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Actually positive</strong></td><td class="num">TP</td><td class="num">FN</td></tr>
+            <tr><td><strong>Actually negative</strong></td><td class="num">FP</td><td class="num">TN</td></tr>
+          </tbody>
+        </table>
+        <p class="small" style="margin-bottom: 4px">\(\text{Precision} = \dfrac{TP}{TP + FP}\) · \(\text{Recall} = \dfrac{TP}{TP + FN}\)</p>
+        <p class="small">\(F_1 = \dfrac{2 \cdot P \cdot R}{P + R}\) · \(\text{Accuracy} = \dfrac{TP + TN}{\text{all}}\)</p>
+      </div>
+      <div>
+        <ul class="small">
+          <li><strong>Precision:</strong> of what we flagged, how much was right? (cost of false alarms)</li>
+          <li><strong>Recall:</strong> of what was there, how much did we catch? (cost of misses)</li>
+          <li><strong>Accuracy paradox:</strong> if 1% of transactions are fraud, "never fraud" is 99% accurate with 0 recall.</li>
+          <li><strong>Several classes:</strong> macro-F1 averages classes equally (small classes count); weighted-F1 follows class frequency.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="small muted">Reference: Google, <em>Machine Learning Crash Course</em>, classification module.</p>
+    <aside class="notes">
+      [0:44 · 2 min] Keep it concrete: precision answers the analyst ("how many of my alerts are real?"),
+      recall answers the risk manager ("how much fraud got through?"). F1 is the harmonic mean, so it
+      is low if either is low. With imbalance, never report accuracy alone. In the lab we use macro-F1
+      over 10 intents so that every intent matters equally.
+    </aside>
+  </section>
+
+  <!-- 28 · Simulator 2: threshold explorer -->
+  <section>
+    <p class="kicker">Simulator · threshold explorer</p>
+    <h2>Where do you put the threshold?</h2>
+    <div class="sim" style="grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr); gap: 20px; padding: 14px 18px">
+      <div class="sim-controls" style="gap: 10px">
+        <div class="control">
+          <label for="th-t">Flag if score ≥ <output id="th-t-out">0.50</output></label>
+          <input type="range" id="th-t" min="0" max="1" step="0.01" value="0.5">
+        </div>
+        <div class="control">
+          <label for="th-ratio">A missed fraud costs <output id="th-ratio-out">10×</output></label>
+          <input type="range" id="th-ratio" min="1" max="50" step="1" value="10">
+        </div>
+        <table class="compact" style="margin: 0; font-size: 20px">
+          <thead><tr><th></th><th class="num">Flagged</th><th class="num">Not flagged</th></tr></thead>
+          <tbody>
+            <tr><td>Fraud</td><td class="num">TP <strong id="th-tp">–</strong></td><td class="num">FN <strong id="th-fn">–</strong></td></tr>
+            <tr><td>Legit</td><td class="num">FP <strong id="th-fp">–</strong></td><td class="num">TN <strong id="th-tn">–</strong></td></tr>
+          </tbody>
+        </table>
+        <p class="stat" style="margin: 0">Precision <strong id="th-p">–</strong> · Recall <strong id="th-r">–</strong> ·
+          F1 <strong id="th-f">–</strong> · Accuracy <strong id="th-acc">–</strong></p>
+        <p class="stat" style="margin: 0">Cost = FP + FN × ratio: <strong id="th-cost">–</strong> ·
+          lowest at <strong id="th-best">–</strong></p>
+      </div>
+      <div class="sim-output" style="padding: 8px 12px">
+        <div id="th-strip"></div>
+        <div id="th-chart"></div>
+      </div>
+    </div>
+    <p class="small muted" style="margin: 6px 0 0; font-size: 16px">40 synthetic transactions (12 fraud, 28 legit) with made-up model scores. Cost is in "false-alert units": a false alert costs 1.</p>
+    <aside class="notes">
+      [0:46 · 5 min] Interaction. At 0.50: TP 9, FP 4, FN 3, precision 0.69, recall 0.75, F1 0.72 (the
+      best F1 here is around 0.50–0.52). Drag to 0.70: precision 0.86 but recall 0.50. Drag to 1.00:
+      nothing is flagged, accuracy is still 0.70 (the accuracy paradox) and recall is 0. Then the cost
+      slider: with a ratio of 1 the lowest cost is at 0.73; at 2 it is 0.52; at 3–5 it is 0.37; from
+      10 upwards it is 0.21 (catch all 12 frauds, accept 13 false alerts). Message: the threshold is a
+      business decision, not a model property. The data are illustrative, not from a real bank.
+    </aside>
+  </section>
+
+  <!-- 29 · Quiz fraud -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · metrics</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Andes Bank's fraud flagger: a missed fraud costs far more than a false alert, and the analyst team can review at most 300 alerts a day. What should drive the threshold?</p>
+      <button class="quiz-opt" data-key="a">Accuracy, because it summarises everything</button>
+      <button class="quiz-opt" data-key="b">Recall, subject to the alert volume (precision) the team can absorb</button>
+      <button class="quiz-opt" data-key="c">Precision only: never bother analysts</button>
+      <button class="quiz-opt" data-key="d">ROUGE-L between alerts and past frauds</button>
+      <div class="quiz-explain">Misses are expensive, so maximise recall, but alerts need people: the review capacity sets a
+        floor on precision (or a cap on alerts). Accuracy hides the rare class. Write the rule down before looking at test results.</div>
+    </div>
+    <aside class="notes">
+      [0:51 · 1 min] Poll, then click. The "300 alerts a day" figure is part of the fictional scenario.
+      Constraint-based thresholds ("maximise recall with at most N alerts") are common in operations.
+    </aside>
+  </section>
+
+  <!-- 30 · Validation -->
+  <section>
+    <p class="kicker">Validation</p>
+    <h2>Holdout, k-fold and the sealed test set</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr)">
+      <div>
+        <p class="small" style="margin-bottom: 8px"><strong>Stratified 5-fold cross-validation</strong> on the training data:</p>
+        <div id="kfold-grid" style="display: grid; grid-template-columns: 90px repeat(5, 1fr) 16px 110px; gap: 5px; font-size: 17px; align-items: center"></div>
+        <p class="small muted" style="margin-top: 8px">Each fold keeps the class proportions (stratification). Report the mean <strong>and</strong> the spread across folds.</p>
+      </div>
+      <div>
+        <ul class="small">
+          <li><strong>Holdout:</strong> one train/validation/test split. Simple, but one split can be lucky or unlucky.</li>
+          <li><strong>k-fold:</strong> every example is validated once; use it to choose models and hyperparameters when data are scarce.</li>
+          <li><strong>Test set:</strong> touched once, at the end, to confirm. If you tune on cross-validation, the CV score is optimistic: keep the test set (or use nested CV).</li>
+        </ul>
+        <p class="small muted">Kohavi (1995) recommended stratified 10-fold cross-validation for model selection.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:52 · 2 min] The grid shows five rounds: each round trains on four folds and validates on the
+      fifth. The test set stays sealed throughout. In the lab, students see that single 80/20 splits
+      can differ by several F1 points, while 5-fold gives a mean plus a standard deviation. Kohavi's
+      1995 study compared cross-validation and bootstrap and recommended stratified 10-fold for model
+      selection. Challenge: each student gets k = 3, 5 or 10.
+    </aside>
+  </section>
+
+  <!-- 31 · Leakage -->
+  <section>
+    <p class="kicker">Validation · the silent killer</p>
+    <h2>Data leakage: when the test is not really unseen</h2>
+    <table class="compact">
+      <thead><tr><th>Leak</th><th>Example</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Duplicates</strong></td><td>The same template message appears in train and test</td><td>Deduplicate before splitting</td></tr>
+        <tr><td><strong>Preprocessing</strong></td><td>TF-IDF vocabulary or a scaler fitted on all the data</td><td>Put it inside a <code>Pipeline</code></td></tr>
+        <tr><td><strong>Groups</strong></td><td>Messages from the same customer on both sides</td><td>Group-aware split (<code>GroupKFold</code>)</td></tr>
+        <tr><td><strong>Time</strong></td><td>Training on next month to predict last month</td><td>Split by date</td></tr>
+        <tr><td><strong>Tuning</strong></td><td>Choosing the epoch or threshold on the test set</td><td>Decide on validation; test once</td></tr>
+        <tr><td><strong>Contamination</strong></td><td>A public test set inside a pretrained model's training data</td><td>Private, fresh evaluation data</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted">Leakage is a widespread cause of irreproducible results in applied ML (Kapoor &amp; Narayanan, 2023).</p>
+    <aside class="notes">
+      [0:54 · 2 min] Go row by row quickly; ask the room which one they have seen at work. Groups and
+      time are the most common in business data: customers write many messages, and the future
+      is not available at prediction time. The next quiz is a group leak.
+    </aside>
+  </section>
+
+  <!-- 32 · Quiz leakage -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · leakage</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">NovaTel trains an intent classifier on chat messages; many customers wrote ten or more. Messages were shuffled randomly into train and test. Test F1 is excellent, but in production it is much lower. Most likely cause?</p>
+      <button class="quiz-opt" data-key="a">Too few training epochs</button>
+      <button class="quiz-opt" data-key="b">Group leakage: the same customers' phrasing appears in both train and test</button>
+      <button class="quiz-opt" data-key="c">The test set was too large</button>
+      <button class="quiz-opt" data-key="d">F1 is the wrong metric for intents</button>
+      <div class="quiz-explain">The model partly memorised how each customer writes, and the test set rewarded that. Split by
+        customer (group-aware split) so that test customers are new, as they are in production.</div>
+    </div>
+    <aside class="notes">
+      [0:56 · 1 min] Poll, then click. The scenario is fictional. Mention that time-based leakage often
+      hides in the same data: newer products and campaigns appear only in later messages.
+    </aside>
+  </section>
+
+  <!-- 33 · Error analysis -->
+  <section>
+    <p class="kicker">From numbers to fixes</p>
+    <h2>Error analysis: read the mistakes</h2>
+    <div class="cols-3" style="grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px">
+      <div class="card"><h4>1 · Sample</h4><p class="small">20+ errors from the validation set, or the top confused pairs.</p></div>
+      <div class="card"><h4>2 · Group</h4><p class="small">Ambiguous input, overlapping labels, missing vocabulary, label noise…</p></div>
+      <div class="card"><h4>3 · Count</h4><p class="small">How many errors per group? Fix the biggest group first.</p></div>
+      <div class="card"><h4>4 · Hypothesise</h4><p class="small">One cause and one change per group.</p></div>
+      <div class="card"><h4>5 · Re-evaluate</h4><p class="small">On validation (CV); confirm on test once.</p></div>
+    </div>
+    <div class="cols" style="margin-top: 16px">
+      <div class="card">
+        <h4>In today's lab (Banking77, 10 intents)</h4>
+        <p class="small" style="margin-bottom: 0">Top confusions include <em>pending_transfer</em> → <em>transfer_not_received_by_recipient</em>: "Why hasn't my transfer gone through yet?" could be either. That is a <strong>label-definition</strong> problem more than a model problem.</p>
+      </div>
+      <div class="callout tip" style="margin: 0"><strong>Slices:</strong> also break the metric down by segment (channel, language, product, customer type). An average can hide a group where the model fails.</div>
+    </div>
+    <aside class="notes">
+      [0:57 · 1 min] This is the workflow the final project requires (at least 20 errors, grouped and
+      counted). The lab example comes from the confusion matrix students will compute in Part 4. Some
+      errors are best fixed by merging or redefining labels, not by a bigger model.
+    </aside>
+  </section>
+
+  <!-- 34 · Metrics to KPIs -->
+  <section>
+    <p class="kicker">From offline to business</p>
+    <h2>Link each model metric to a KPI</h2>
+    <table class="compact">
+      <thead><tr><th>Product</th><th>Offline metric</th><th>Operational signal</th><th>Business KPI</th></tr></thead>
+      <tbody>
+        <tr><td>Call summarizer</td><td>Human faithfulness score; ROUGE vs a baseline</td><td>Minutes of after-call work</td><td>Cost per call</td></tr>
+        <tr><td>FAQ bot</td><td>Correct-answer rate (human or validated judge)</td><td>Share of chats resolved without an agent</td><td>Cost to serve · satisfaction</td></tr>
+        <tr><td>Fraud flagger</td><td>Recall at the capacity-limited precision</td><td>Alerts reviewed per day</td><td>Fraud losses · analyst hours</td></tr>
+        <tr><td>Reply translation</td><td>chrF + human adequacy review</td><td>Replies edited by agents</td><td>Repeat contacts · complaints</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Go / no-go:</strong> fix the thresholds before you look at the test set (e.g., "beats the baseline on the
+      offline metric and no critical errors in the human review sample"), then confirm online with a pilot or an A/B test.</div>
+    <aside class="notes">
+      [0:58 · 1 min] The chain goes from what the model does, to what changes in the operation, to what
+      the business measures. Offline metrics are necessary but not sufficient; the pilot or A/B test
+      is where the KPI is measured. This table is the template for the breakout and for challenge task 3.
+    </aside>
+  </section>
+
+  <!-- 35 · Business lens 3 -->
+  <section>
+    <p class="kicker">Thresholds are business decisions</p>
+    <h2>Put a price on each cell of the confusion matrix</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p>In the threshold simulator, the cheapest threshold moved from <strong>0.73</strong> to <strong>0.21</strong> when a missed
+          fraud went from costing the same as a false alert to costing ten times more.</p>
+        <p class="small" style="margin-bottom: 0">Same model, same data: only the cost assumption changed.</p>
+      </div>
+      <div>
+        <h4>Questions for the business owner</h4>
+        <ul class="small">
+          <li>What does one false positive cost (time, customer friction)?</li>
+          <li>What does one false negative cost (losses, regulatory risk)?</li>
+          <li>Which capacity limits the decision (reviewers, budget)?</li>
+          <li>Who signs off the threshold, and when is it reviewed?</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:59 · 1 min] Business lens for Part 3. Numbers come from the simulator's 40 synthetic
+      transactions. The model gives scores; the organisation chooses the operating point. Document the
+      cost assumptions so the threshold can be revisited when they change.
+    </aside>
+  </section>
+
+  <!-- 36 · Breakout -->
+  <section>
+    <p class="kicker">Apply it</p>
+    <h2>Choose the metrics for four products</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr)">
+      <div class="prompt-card" data-kind="breakout">
+        <h4>Evaluation plan in one line each · 7 min</h4>
+        <ol class="small" style="margin-bottom: 8px">
+          <li><strong>NovaTel call center:</strong> live EN→ES translation of chat replies.</li>
+          <li><strong>Andes Bank:</strong> summarizer of internal committee meetings.</li>
+          <li><strong>Banco Andino:</strong> FAQ bot on the public website.</li>
+          <li><strong>Andes Bank:</strong> fraud flagger for card transactions.</li>
+        </ol>
+        <p class="small" style="margin-bottom: 6px">For each: <strong>one automatic metric</strong>, <strong>one human or judge check</strong>, <strong>one business KPI</strong> and <strong>one go/no-go threshold</strong>.</p>
+        <p class="small muted" style="margin: 0">Rooms of 3–4, each room takes all four. All companies are fictional.</p>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="7" data-label="Breakout rooms"></div>
+        <p class="small">Each room reports one product in 30 seconds.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:00 · 7 min + 2 min debrief] Ends at 1:09, just before the break. If you are behind schedule,
+      cover slides 33–35 in two minutes so the breakout keeps its full time. Suggested answers (discuss, do not announce):
+      1 Translation: chrF on a monthly sample with references + bilingual agent review of numbers and
+      negations; KPI repeat contacts; go if no critical error in the review sample and chrF above the current system.
+      2 Meeting summarizer: human faithfulness/coverage rating (pairwise vs current minutes) and ROUGE only
+      against a baseline; KPI time spent writing minutes; go if no invented decisions in the sample.
+      3 FAQ bot: correct-answer rate by human or validated judge on a fixed question set, escalation rate
+      online; KPI resolution without an agent and satisfaction; go if the correct-answer rate meets the agreed bar
+      and there are no harmful answers.
+      4 Fraud: recall at a precision the analysts can absorb, per-segment slices; KPI losses and analyst hours;
+      threshold chosen with explicit costs on validation data, confirmed on test.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- BREAK                                                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 37 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Stretch, refill your coffee, and open Kaggle for the lab.</p>
+    <div class="timer" data-minutes="10" data-label="Break"></div>
+    <aside class="notes">
+      [1:10 · 10 min] Press Start before you mute. Remind students to sign in to Kaggle and to switch
+      Internet on in the notebook settings.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- LAB                                                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 38 · Lab divider -->
+  <section class="section-slide" data-block="lab">
+    <p class="kicker">Hands-on</p>
+    <h2>Guided lab</h2>
+    <p>Four small models, five metrics, one confusion matrix, all on a free CPU.</p>
+    <span class="block-tag" data-block="lab">Lab · 60'</span>
+    <aside class="notes">
+      [1:20] Lab block. Share your screen and code along; students run each cell after you.
+    </aside>
+  </section>
+
+  <!-- 39 · Lab bridge -->
+  <section>
+    <p class="kicker">Lab bridge</p>
+    <h2>What we will build</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr)">
+      <table class="compact">
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Perplexity of <span class="tag">gpt2</span> on news, tweets and Spanish; same tokenizer vs different units</td><td class="num">12'</td></tr>
+          <tr><td><strong>2</strong></td><td>EN→ES with <span class="tag">opus-mt-en-es</span> on <span class="tag">opus_books</span>: BLEU and chrF with sacrebleu</td><td class="num">12'</td></tr>
+          <tr><td><strong>3</strong></td><td>Summaries with <span class="tag">flan-t5-small</span> on CNN/DailyMail: ROUGE, lead-3 baseline, MiniLM similarity</td><td class="num">15'</td></tr>
+          <tr><td><strong>4</strong></td><td>Banking77 (10 intents): stratified 5-fold, confusion matrix, top confused pairs</td><td class="num">15'</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h4>Open the notebook</h4>
+        <p class="small">Kaggle checklist: Internet on · Accelerator none (CPU is enough today).</p>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/05-evaluating-generative-models/lab.ipynb" target="_blank" rel="noopener">Open in Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/05-evaluating-generative-models/lab.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:20 · 3 min] Everyone opens the notebook now. Common blockers: Internet off (downloads fail),
+      not signed in. Timing: Part 1 until 1:35, Part 2 until 1:47, Part 3 until 2:02, Part 4 until
+      2:17, wrap-up until 2:20. If a download is slow, move on and come back.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CHALLENGE                                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 40 · Challenge divider -->
+  <section class="section-slide" data-block="challenge">
+    <h2>Session challenge</h2>
+    <p>Individual, graded, 40 minutes in class. Submit by 23:59 today.</p>
+    <aside class="notes">
+      [2:20] Challenge block. The next slide is the only slide in Spanish.
+    </aside>
+  </section>
+
+  <!-- 41 · Challenge briefing (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Challenge de la sesión · evaluado</p>
+    <h2>Challenge S05: tus métricas, tu caso, tu plan</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <div>
+        <ol class="small">
+          <li><strong>Ejecución:</strong> ROUGE y similitud en <em>tus</em> 8 noticias (vs. lead-3), BLEU y chrF en <em>tus</em> 20 traducciones, validación cruzada con <em>tu</em> k.</li>
+          <li><strong>Análisis:</strong> encuentra un caso en el que la métrica y tu juicio no coinciden y explica por qué.</li>
+          <li><strong>Explica y decide:</strong> plan de evaluación para tu producto: métricas, evaluación humana, KPI y umbrales.</li>
+          <li><strong>Crítica a la IA:</strong> encuentra, explica y corrige 3 errores sobre métricas y validación.</li>
+        </ol>
+        <ul class="small">
+          <li><strong>Rúbrica:</strong> ejecución 40% · análisis 40% · reflexión y registro de IA 20%.</li>
+          <li><strong>IA permitida</strong> con registro; <strong>micro-sustentaciones</strong>: si no explicas tu entrega, máximo 3.0.</li>
+          <li><strong>Entrega:</strong> Archivo → Descargar notebook → e-Aulas como <code>S05_&lt;codigo&gt;.ipynb</code>, 23:59.</li>
+        </ul>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="40" data-label="Challenge"></div>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/05-evaluating-generative-models/challenge.ipynb" target="_blank" rel="noopener">Abrir en Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/05-evaluating-generative-models/challenge.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:20 · 38 min] This briefing slide is in Spanish by course convention. Remind students to type
+      their STUDENT_ID in the first cell: their news, sentences, k and product depend on it. The data
+      download takes about a minute; the whole notebook runs on CPU. Start the 40' timer. During the
+      block, run 3–4 random micro-vivas (2–3 minutes each, screen shared, no AI help).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WRAP-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 42 · Wrap-up -->
+  <section>
+    <p class="kicker">Wrap-up</p>
+    <h2>Key takeaways</h2>
+    <div class="cols">
+      <ul class="small">
+        <li>Perplexity measures surprise under a model; compare it only with the same text and tokenizer.</li>
+        <li>BLEU is precision with a brevity penalty, ROUGE is recall-oriented, chrF works on characters: all measure overlap, not truth.</li>
+        <li>Embeddings, human raters and validated LLM judges add meaning, at a cost and with biases.</li>
+        <li>Choose the threshold with explicit costs; report k-fold mean ± spread; open the test set once.</li>
+        <li>Every metric should point to a KPI and a go/no-go rule written in advance.</li>
+      </ul>
+      <div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">For your final project: which failure would hurt the user most, and which metric would see it?</p>
+        </div>
+        <p class="small"><strong>Before Session 06:</strong> submit the group's H2 proposal canvas (23:59 the day before)
+          and activate your Startti licence. <span class="muted">Next session: basic AI applications with Gradio and Startti.</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:58 · 2 min] Collect exit answers in the chat: they feed block 6 ("success metric") of the
+      proposal canvas. Remind: challenge by 23:59 today as S05_codigo.ipynb; proposal canvas (H2)
+      before S06, written feedback returned in S06; Startti licence activated before S06 (guide in
+      docs/configuracion-startti.md).
+    </aside>
+  </section>
+
+  <!-- 43 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Sources for this session</h2>
+    <div class="cols" style="font-size: 17px; line-height: 1.32">
+      <ul>
+        <li>Papineni, K., Roukos, S., Ward, T., &amp; Zhu, W.-J. (2002). BLEU: A method for automatic evaluation of machine translation. <em>ACL</em>.</li>
+        <li>Lin, C.-Y. (2004). ROUGE: A package for automatic evaluation of summaries. <em>Text Summarization Branches Out</em> (ACL workshop).</li>
+        <li>Popović, M. (2015). chrF: Character n-gram F-score for automatic MT evaluation. <em>WMT</em>.</li>
+        <li>Post, M. (2018). A call for clarity in reporting BLEU scores. <em>WMT</em>.</li>
+        <li>Zhang, T., Kishore, V., Wu, F., Weinberger, K. Q., &amp; Artzi, Y. (2020). BERTScore: Evaluating text generation with BERT. <em>ICLR</em>.</li>
+        <li>Reimers, N., &amp; Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. <em>EMNLP</em>.</li>
+        <li>Zheng, L., et al. (2023). Judging LLM-as-a-judge with MT-Bench and Chatbot Arena. <em>NeurIPS</em> Datasets and Benchmarks.</li>
+        <li>Liang, P., et al. (2022). Holistic evaluation of language models. arXiv:2211.09110.</li>
+      </ul>
+      <ul>
+        <li>Jelinek, F., Mercer, R. L., Bahl, L. R., &amp; Baker, J. K. (1977). Perplexity: A measure of the difficulty of speech recognition tasks. <em>JASA</em>, 62(S1), S63.</li>
+        <li>Jurafsky, D., &amp; Martin, J. H. (2023). <em>Speech and language processing</em> (3rd ed. draft), ch. 3: N-gram language models.</li>
+        <li>Google. <em>Machine Learning Crash Course</em>: Classification (accuracy, precision, recall, thresholds).</li>
+        <li>Kohavi, R. (1995). A study of cross-validation and bootstrap for accuracy estimation and model selection. <em>IJCAI</em>.</li>
+        <li>Kapoor, S., &amp; Narayanan, A. (2023). Leakage and the reproducibility crisis in machine-learning-based science. <em>Patterns</em>, 4(9).</li>
+        <li>See, A., Liu, P. J., &amp; Manning, C. D. (2017). Get to the point: Summarization with pointer-generator networks. <em>ACL</em>.</li>
+        <li>Tiedemann, J., &amp; Thottingal, S. (2020). OPUS-MT: Building open translation services for the world. <em>EAMT</em>.</li>
+        <li>Chung, H. W., et al. (2022). Scaling instruction-finetuned language models (FLAN-T5). arXiv:2210.11416.</li>
+      </ul>
+    </div>
+    <aside class="notes">
+      Primary sources for every metric in the deck. See et al. (2017) prepared the non-anonymised
+      CNN/DailyMail version used in the lab and discuss the strength of the lead-3 baseline. Recommended
+      first readings: Jurafsky and Martin, ch. 3; the Google crash course classification module
+      (available in Spanish).
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "05" });
+  Course.onReady(() => {
+    const fmt3 = (v) => (v == null || !isFinite(v) ? "–" : v.toFixed(3));
+
+    // --- Simulator 1: BLEU & ROUGE calculator ---------------------------------------------
+    // BLEU: clipped n-gram precision (n = 1..4), geometric mean, brevity penalty; an order with
+    // zero matches is smoothed with sacrebleu's "exp" method: p_n = 1 / (2^k · total) for the
+    // k-th zero order. ROUGE-1 and ROUGE-L (longest common subsequence) with precision, recall, F1.
+    const blRef = document.getElementById("bl-ref");
+    const blCand = document.getElementById("bl-cand");
+    const PRESETS = {
+      identical: "The bank approved the customer's transfer yesterday afternoon.",
+      paraphrase: "Yesterday afternoon the client's transfer was approved by the bank.",
+      negation: "The bank did not approve the customer's transfer yesterday afternoon.",
+      short: "The bank approved the transfer.",
+      repeat: "the the the the the the the"
+    };
+
+    function countMap(items) {
+      const m = new Map();
+      items.forEach((g) => m.set(g, (m.get(g) || 0) + 1));
+      return m;
+    }
+
+    function clippedMatches(candGrams, refGrams) {
+      const refCounts = countMap(refGrams);
+      let hits = 0;
+      countMap(candGrams).forEach((c, g) => { hits += Math.min(c, refCounts.get(g) || 0); });
+      return hits;
+    }
+
+    function lcs(a, b) {
+      const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+      for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+          dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+      const seq = [];
+      let i = a.length, j = b.length;
+      while (i > 0 && j > 0) {
+        if (a[i - 1] === b[j - 1]) { seq.unshift(a[i - 1]); i--; j--; }
+        else if (dp[i - 1][j] >= dp[i][j - 1]) i--;
+        else j--;
+      }
+      return seq;
+    }
+
+    const f1 = (p, r) => (p + r > 0 ? (2 * p * r) / (p + r) : 0);
+
+    function bleu(cand, ref) {
+      const rows = [];
+      let zeros = 0, logSum = 0, defined = cand.length > 0;
+      for (let n = 1; n <= 4; n++) {
+        const cg = Course.ngrams(cand, n);
+        const hits = clippedMatches(cg, Course.ngrams(ref, n));
+        const total = cg.length;
+        let p = null, smoothed = false;
+        if (total === 0) defined = false;
+        else if (hits === 0) { zeros += 1; p = 1 / (Math.pow(2, zeros) * total); smoothed = true; }
+        else p = hits / total;
+        if (p !== null) logSum += Math.log(p) / 4;
+        rows.push({ n, hits, total, p, smoothed });
+      }
+      const c = cand.length, r = ref.length;
+      const bp = c === 0 ? 0 : (c > r ? 1 : Math.exp(1 - r / c));
+      return { rows, c, r, bp, score: defined ? 100 * bp * Math.exp(logSum) : 0, defined };
+    }
+
+    function renderTokens(cand, ref) {
+      const box = document.getElementById("bl-tokens");
+      const left = countMap(ref);
+      box.textContent = "";
+      cand.forEach((tok) => {
+        const span = document.createElement("span");
+        span.className = "tag";
+        span.textContent = tok;
+        if ((left.get(tok) || 0) > 0) {
+          left.set(tok, left.get(tok) - 1);
+          span.style.borderColor = "var(--ok)";
+          span.style.background = "var(--ok-bg)";
+          span.title = "matched";
+        } else {
+          span.style.opacity = "0.55";
+          span.title = "not in the reference (or already used up)";
+        }
+        box.appendChild(span);
+      });
+      if (!cand.length) box.textContent = "(empty candidate)";
+    }
+
+    function updateMetrics() {
+      const ref = Course.tokenize(blRef.value);
+      const cand = Course.tokenize(blCand.value);
+      const b = bleu(cand, ref);
+      document.getElementById("bl-rows").innerHTML = b.rows.map((row) => {
+        const pTxt = row.p === null ? "n/a" : (100 * row.p).toFixed(1) + "%" + (row.smoothed ? " *" : "");
+        return `<tr><td>${row.n}</td><td class="num">${row.hits} / ${row.total}</td><td class="num">${pTxt}</td></tr>`;
+      }).join("");
+      document.getElementById("bl-c").textContent = String(b.c);
+      document.getElementById("bl-r").textContent = String(b.r);
+      document.getElementById("bl-bp").textContent = b.bp.toFixed(3);
+      document.getElementById("bl-bleu").textContent = b.defined ? b.score.toFixed(1)
+        : "0 (fewer than 4 words)";
+
+      const overlap = clippedMatches(cand, ref);
+      const p1 = cand.length ? overlap / cand.length : 0;
+      const r1 = ref.length ? overlap / ref.length : 0;
+      const common = lcs(ref, cand);
+      const pl = cand.length ? common.length / cand.length : 0;
+      const rl = ref.length ? common.length / ref.length : 0;
+      const set = (id, v) => { document.getElementById(id).textContent = fmt3(v); };
+      set("r1-p", p1); set("r1-r", r1); set("r1-f", f1(p1, r1));
+      set("rl-p", pl); set("rl-r", rl); set("rl-f", f1(pl, rl));
+      document.querySelectorAll(".bl-compact th, .bl-compact td").forEach((c) => { c.style.padding = "3px 10px"; });
+      document.getElementById("bl-lcs").textContent = common.length
+        ? `LCS (${common.length} words): ${common.join(" ")}` + (b.rows.some((x) => x.smoothed) ? " · * smoothed" : "")
+        : "No common subsequence.";
+      renderTokens(cand, ref);
+    }
+
+    blRef.addEventListener("input", updateMetrics);
+    blCand.addEventListener("input", updateMetrics);
+    document.querySelectorAll("[data-preset]").forEach((btn) => {
+      btn.addEventListener("click", () => { blCand.value = PRESETS[btn.dataset.preset]; updateMetrics(); });
+    });
+    // Keep typing inside the text areas from triggering deck shortcuts (arrows, space, F, S…).
+    [blRef, blCand].forEach((ta) => ta.addEventListener("keydown", (e) => e.stopPropagation()));
+    updateMetrics();
+
+    // --- Simulator 2: threshold explorer ---------------------------------------------------
+    // 40 synthetic transactions with illustrative model scores (not real data).
+    const FRAUD = [0.97, 0.93, 0.88, 0.84, 0.79, 0.73, 0.66, 0.58, 0.52, 0.44, 0.37, 0.21];
+    const LEGIT = [0.81, 0.69, 0.62, 0.55, 0.49, 0.46, 0.41, 0.38, 0.34, 0.31, 0.28, 0.26, 0.23, 0.20,
+      0.18, 0.16, 0.14, 0.12, 0.11, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01];
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    let threshold = 0.5, ratio = 10;
+
+    function confusion(t) {
+      const tp = FRAUD.filter((s) => s >= t).length;
+      const fp = LEGIT.filter((s) => s >= t).length;
+      const fn = FRAUD.length - tp, tn = LEGIT.length - fp;
+      const precision = tp + fp > 0 ? tp / (tp + fp) : null;
+      const recall = tp / FRAUD.length;
+      const f = precision == null ? 0 : f1(precision, recall);
+      return { tp, fp, fn, tn, precision, recall, f1: f, accuracy: (tp + tn) / (FRAUD.length + LEGIT.length) };
+    }
+
+    const GRID = Array.from({ length: 101 }, (_, i) => i / 100);
+    function bestThreshold(r) {
+      let best = GRID[0], bestCost = Infinity;
+      GRID.forEach((t) => {
+        const m = confusion(t);
+        const cost = m.fp + m.fn * r;
+        if (cost < bestCost || (cost === bestCost && t > best)) { best = t; bestCost = cost; }
+      });
+      return { t: best, cost: bestCost };
+    }
+
+    function el(tag, attrs, parent, text) {
+      const node = document.createElementNS(SVG_NS, tag);
+      Object.entries(attrs).forEach(([k, v]) => node.setAttribute(k, v));
+      if (text != null) node.textContent = text;
+      parent.appendChild(node);
+      return node;
+    }
+
+    function drawStrip(t) {
+      const host = document.getElementById("th-strip");
+      host.textContent = "";
+      const W = 640, H = 150, x0 = 120, x1 = 620;
+      const sx = (v) => x0 + v * (x1 - x0);
+      const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img",
+        "aria-label": "Scores of 40 synthetic transactions and the current threshold" }, host);
+      svg.style.aspectRatio = `${W} / ${H}`;
+      el("rect", { x: sx(t), y: 6, width: Math.max(0, x1 - sx(t)), height: 104, rx: 6,
+        style: "fill: var(--surface)" }, svg);
+      el("text", { x: x1 - 4, y: 22, "text-anchor": "end", class: "tick" }, svg, "flagged →");
+      [["Fraud", FRAUD, 44, "var(--brand)"], ["Legit", LEGIT, 88, "var(--accent)"]].forEach(([name, list, y, color]) => {
+        el("text", { x: 8, y: y, dy: "0.35em", class: "label" }, svg, `${name} (${list.length})`);
+        list.forEach((s, i) => {
+          const flagged = s >= t;
+          el("circle", { cx: sx(s), cy: y + (i % 2 ? 7 : -7), r: 7,
+            style: `stroke: ${color}; stroke-width: 2.5; fill: ${flagged ? color : "#fff"}` }, svg);
+        });
+      });
+      el("line", { x1: x0, x2: x1, y1: 118, y2: 118, class: "domain" }, svg);
+      [0, 0.25, 0.5, 0.75, 1].forEach((v) => {
+        el("line", { x1: sx(v), x2: sx(v), y1: 118, y2: 124, class: "domain" }, svg);
+        el("text", { x: sx(v), y: 143, "text-anchor": "middle", class: "tick" }, svg, String(v));
+      });
+      el("line", { x1: sx(t), x2: sx(t), y1: 4, y2: 122,
+        style: "stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 7 5" }, svg);
+    }
+
+    const curve = (key) => GRID.filter((t) => t <= 0.97).map((t) => [t, confusion(t)[key]]);
+    function updateThreshold() {
+      const m = confusion(threshold);
+      const txt = (id, v) => { document.getElementById(id).textContent = v; };
+      txt("th-tp", m.tp); txt("th-fn", m.fn); txt("th-fp", m.fp); txt("th-tn", m.tn);
+      txt("th-p", m.precision == null ? "– (no flags)" : m.precision.toFixed(2));
+      txt("th-r", m.recall.toFixed(2)); txt("th-f", m.f1.toFixed(2)); txt("th-acc", m.accuracy.toFixed(2));
+      txt("th-cost", String(m.fp + m.fn * ratio));
+      const best = bestThreshold(ratio);
+      txt("th-best", `t = ${best.t.toFixed(2)} (cost ${best.cost})`);
+      drawStrip(threshold);
+      Course.lineChart(document.getElementById("th-chart"), [
+        { name: "Precision", points: curve("precision"), markers: false },
+        { name: "Recall", points: curve("recall"), markers: false },
+        { name: "F1", points: curve("f1"), markers: false },
+        { name: "Threshold", points: [[threshold, 0], [threshold, 1]], dashed: true, markers: false, color: "var(--ink)" }
+      ], { xMin: 0, xMax: 1, yMin: 0, yMax: 1, width: 640, height: 250, xLabel: "Threshold",
+        title: "Precision, recall and F1 by threshold" });
+    }
+
+    Course.bindRange(document.getElementById("th-t"), document.getElementById("th-t-out"),
+      (v) => v.toFixed(2), (v) => { threshold = v; updateThreshold(); });
+    Course.bindRange(document.getElementById("th-ratio"), document.getElementById("th-ratio-out"),
+      (v) => `${v}×`, (v) => { ratio = v; updateThreshold(); });
+
+    // --- k-fold diagram (static, drawn once) -------------------------------------------------
+    const kf = document.getElementById("kfold-grid");
+    const cell = (text, style) => {
+      const d = document.createElement("div");
+      d.textContent = text;
+      d.style.cssText = "padding: 6px 4px; border-radius: 6px; text-align: center; " + style;
+      kf.appendChild(d);
+    };
+    for (let round = 1; round <= 5; round++) {
+      cell(`Round ${round}`, "text-align: left; padding-left: 0; font-weight: 600");
+      for (let fold = 1; fold <= 5; fold++) {
+        cell(fold === round ? "val" : "train", fold === round
+          ? "background: var(--brand); color: #fff; font-weight: 700"
+          : "background: color-mix(in srgb, var(--accent) 18%, white)");
+      }
+      cell("", "");
+      cell(round === 3 ? "🔒 test" : "", round === 3
+        ? "background: var(--ink); color: #fff; font-weight: 700" : "");
+    }
+  });
+</script>
+</body>
+</html>

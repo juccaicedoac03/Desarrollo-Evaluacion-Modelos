@@ -1,0 +1,26 @@
+# Tooling (checkers, smoke test, unit tests)
+nbformat
+nbclient
+jupytext
+ipykernel
+pytest
+
+# Runtime libraries used by the lab and challenge notebooks
+torch
+torchvision
+transformers
+datasets
+evaluate
+peft
+accelerate
+scikit-learn
+gradio
+codecarbon
+sacrebleu
+rouge_score
+optuna
+sentence-transformers
+matplotlib
+pandas
+requests
+keras

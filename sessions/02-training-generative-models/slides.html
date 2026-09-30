@@ -1,0 +1,1194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S02 · Training Generative Models</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ===================================================================== -->
+  <!-- OPENING                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="02">
+    <div class="title-main">
+      <h1>Training Generative Models</h1>
+      <p class="subtitle">Entrenamiento de modelos generativos</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome back. Last week we used pretrained models; today we open the black box
+      and train a generative model ourselves, from an empty network to new images of clothes.
+      Ask people to keep the Zoom chat open: there is an interaction every few minutes.
+      Keys: S speaker view, F fullscreen, Esc overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Warm-up: three questions on Session 01 <span class="time">10'</span></li>
+      <li data-block="theory">Theory: the training loop, generalization and data, from autoencoders to VAEs <span class="time">60'</span></li>
+      <li data-block="break">Break <span class="time">10'</span></li>
+      <li data-block="lab">Guided lab on Kaggle: train a VAE on Fashion-MNIST <span class="time">60'</span></li>
+      <li data-block="challenge">Session challenge (graded, individual) <span class="time">40'</span></li>
+    </ol>
+    <p class="small muted" style="margin-top: 18px">Same five blocks as every session. Today's lab runs best on a Kaggle GPU (CPU also works, just slower).</p>
+    <aside class="notes">
+      [0:01 · 1 min] Walk through the blocks. Mention now that the lab and challenge recommend the
+      GPU accelerator: students who have not verified their phone on Kaggle should do it during the
+      warm-up (docs/configuracion-kaggle.md). Everything also runs on CPU in a few minutes.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WARM-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 3 · Warm-up divider -->
+  <section class="section-slide" data-block="warmup">
+    <h2>Warm-up</h2>
+    <p>Three questions to reactivate Session 01: sampling, the adaptation spectrum and model families.</p>
+    <span class="block-tag" data-block="warmup">Warm-up · 10'</span>
+    <aside class="notes">
+      [0:02] Warm-up block: retrieval practice, not graded. Launch each Zoom poll, wait about
+      45 seconds, then click the option the majority chose.
+    </aside>
+  </section>
+
+  <!-- 4 · Warm-up Q1 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q1</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">You lower the sampling temperature from 1.0 to 0.2. What happens to the next-token distribution?</p>
+      <button class="quiz-opt" data-key="a">It becomes flatter, so outputs get more diverse</button>
+      <button class="quiz-opt" data-key="b">It becomes sharper: probability concentrates on the most likely tokens</button>
+      <button class="quiz-opt" data-key="c">The model is retrained to be more careful</button>
+      <button class="quiz-opt" data-key="d">Nothing changes unless top-k is also changed</button>
+      <div class="quiz-explain">Softmax divides the logits by \(T\) before normalising: with \(T &lt; 1\) the differences
+        between logits grow, so the top tokens take almost all the probability. Temperature changes decoding, never the weights.</div>
+    </div>
+    <aside class="notes">
+      [0:02 · 2 min] Poll, then click. Link to today: temperature acts at inference time; today we
+      look at what happens at training time, when the weights themselves change.
+    </aside>
+  </section>
+
+  <!-- 5 · Warm-up Q2 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q2</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">Andes Bank's agents need answers from 2,000 pages of product manuals that change every month. Best position on the adaptation spectrum?</p>
+      <button class="quiz-opt" data-key="a">Prompting only, pasting nothing from the manuals</button>
+      <button class="quiz-opt" data-key="b">Fine-tuning a model on the manuals every month</button>
+      <button class="quiz-opt" data-key="c">RAG: retrieve the relevant pages and add them to the prompt</button>
+      <button class="quiz-opt" data-key="d">Training a model from scratch on the manuals</button>
+      <div class="quiz-explain">The knowledge lives in documents that change: retrieving them at question time keeps answers
+        current without retraining. Fine-tuning is for behaviour, format and jargon, and would go stale every month.</div>
+    </div>
+    <aside class="notes">
+      [0:04 · 2 min] This was scenario 2 of last week's breakout. Today is about the right half of
+      the spectrum: what actually happens when we change weights (fine-tuning, training).
+    </aside>
+  </section>
+
+  <!-- 6 · Warm-up Q3 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q3</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Which model family compresses each example into a latent code and decodes new samples from that code space?</p>
+      <button class="quiz-opt" data-key="a">GAN: a generator competing with a discriminator</button>
+      <button class="quiz-opt" data-key="b">VAE: variational autoencoder</button>
+      <button class="quiz-opt" data-key="c">Autoregressive Transformer (GPT-style)</button>
+      <button class="quiz-opt" data-key="d">Diffusion model</button>
+      <div class="quiz-explain">A VAE has an encoder (data → latent code) and a decoder (latent code → data). Sampling a new
+        code and decoding it produces new data. You will train one today on images of clothes.</div>
+    </div>
+    <aside class="notes">
+      [0:06 · 2 min] Bridge to Part 3. If people hesitate between VAE and diffusion: diffusion also
+      starts from noise, but it has no encoder that compresses each example into a small code.
+      [0:08] Two minutes of buffer for late joiners and questions about the S01 challenge.
+    </aside>
+  </section>
+
+  <!-- 7 · Learning objectives -->
+  <section>
+    <p class="kicker">Learning objectives</p>
+    <h2>By the end of this session you can…</h2>
+    <ol>
+      <li>Write the training loop (forward → loss → backward → step) in PyTorch <span class="pill">RAE 1</span></li>
+      <li>Choose a loss and an optimizer, and diagnose learning-rate problems <span class="pill">RAE 1</span></li>
+      <li>Read training and validation curves to detect overfitting and decide when to stop <span class="pill">RAE 2</span></li>
+      <li>Spot preprocessing pitfalls and data leakage in business data <span class="pill">RAE 2</span></li>
+      <li>Explain how a VAE learns (ELBO, reparameterization, β) and train one <span class="pill">RAE 1</span></li>
+    </ol>
+    <p class="small muted">RAE numbers refer to the learning outcomes in the course syllabus (guía de asignatura).</p>
+    <aside class="notes">
+      [0:09 · 1 min] RAE 1 (design and train) and RAE 2 (evaluate). The challenge assesses
+      objectives 1, 3 and 5 directly: students train their own VAE, compare it with a baseline and
+      fix a buggy training loop.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 1 · THE TRAINING LOOP                                     -->
+  <!-- ===================================================================== -->
+
+  <!-- 8 · Part 1 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 1</p>
+    <h2>The training loop</h2>
+    <p>Losses, gradients, learning rates and optimizers: the engine under every model you will train.</p>
+    <span class="block-tag" data-block="theory">Theory · 60'</span>
+    <aside class="notes">
+      [0:10] Theory block: three parts of about 20 minutes, with a quiz, a simulator or a breakout
+      roughly every 8 minutes.
+    </aside>
+  </section>
+
+  <!-- 9 · What training means -->
+  <section>
+    <p class="kicker">What does “training” mean?</p>
+    <h2>Search for weights that make the loss small</h2>
+    <p>A model is a function \(f_\theta\) with parameters \(\theta\) (the weights). A <strong>loss</strong> measures how wrong it is on the training data:</p>
+    $$ \mathcal{L}(\theta) = \frac{1}{N} \sum_{i=1}^{N} \ell\big(f_\theta(x_i),\, y_i\big) \qquad \text{training:}\ \ \theta^\star \approx \arg\min_\theta \mathcal{L}(\theta) $$
+    <p class="center" style="margin: 4px 0 16px">
+      <span class="tag">mini-batch</span> → <span class="pill">1 · forward</span> → <span class="pill">2 · loss</span> →
+      <span class="pill">3 · backward (gradients)</span> → <span class="pill">4 · step (update θ)</span> ↺
+    </p>
+    <div class="cols">
+      <div class="card"><h4>Generative twist</h4><p class="small">The “label” is often the data itself: the next token for a language model, the input image for an autoencoder. That is why unlabelled data is enough (self-supervision).</p></div>
+      <div class="card"><h4>Vocabulary</h4><p class="small"><strong>Step</strong> (iteration): one mini-batch update. <strong>Epoch</strong>: one full pass over the training set. 20,000 images in batches of 128 ≈ 157 steps per epoch.</p></div>
+    </div>
+    <aside class="notes">
+      [0:10 · 2 min] The goal is not the minimum on training data per se: we want low loss on data
+      the model has never seen (generalization, Part 2). Arithmetic for the step count: 20,000 / 128
+      = 156.25, so 157 mini-batches with the last one smaller. Goodfellow et al. (2016), chapter 8,
+      is the reference for this part.
+    </aside>
+  </section>
+
+  <!-- 10 · Loop in PyTorch -->
+  <section>
+    <p class="kicker">The loop in PyTorch</p>
+    <h2>Five lines you will write in every project</h2>
+    <pre><code class="language-python" data-trim data-noescape data-line-numbers="6-12|4,13">
+model = VAE(latent_dim=8).to(DEVICE)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+for epoch in range(EPOCHS):
+    model.train()                        # training mode: dropout on
+    for x, _ in train_loader:            # one mini-batch at a time
+        x = x.to(DEVICE)
+        optimizer.zero_grad()            # 1 · clear the previous gradients
+        logits, mu, logvar = model(x)    # 2 · forward pass
+        loss = vae_loss(logits, x, mu, logvar)   # 3 · loss on this batch
+        loss.backward()                  # 4 · backward: gradients for every weight
+        optimizer.step()                 # 5 · update the weights
+    val_loss = evaluate(model, val_loader)       # 6 · check unseen data
+    </code></pre>
+    <p class="small"><code>evaluate()</code> switches to <code>model.eval()</code> and <code>torch.no_grad()</code>: no dropout, no gradients. Forget <code>zero_grad()</code> and gradients from old batches pile up.</p>
+    <aside class="notes">
+      [0:12 · 3 min] Press the right arrow to step through the highlights: first the five core lines,
+      then the train/eval modes. This loop is the same for a VAE, a classifier or GPT-2; only the
+      model and the loss change. The Hugging Face Trainer (Session 04) runs exactly this loop for you.
+      Plant the seed: in today's challenge an "AI assistant" wrote this loop with three bugs.
+    </aside>
+  </section>
+
+  <!-- 11 · Losses -->
+  <section>
+    <p class="kicker">Loss functions</p>
+    <h2>Three losses you will meet all semester</h2>
+    <table class="compact">
+      <thead>
+        <tr><th>Loss</th><th>Formula</th><th>Use it when…</th><th>In generative models</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Cross-entropy</strong></td><td>\(-\sum_k y_k \log p_k\)</td><td>The target is a category (a class, a token)</td><td>Next-token prediction in every LLM; binary cross-entropy for pixels in [0, 1]</td></tr>
+        <tr><td><strong>MSE</strong></td><td>\(\frac{1}{n}\sum_i (y_i - \hat{y}_i)^2\)</td><td>The target is a continuous value</td><td>Reconstructing real-valued data; diffusion models predict the added noise with MSE</td></tr>
+        <tr><td><strong>KL divergence</strong></td><td>\(D_{\mathrm{KL}}(q \,\|\, p) = \sum_z q(z) \log \frac{q(z)}{p(z)}\)</td><td>You compare two probability distributions</td><td>The VAE regulariser; keeping a fine-tuned model close to the original one</td></tr>
+      </tbody>
+      <caption>KL is always ≥ 0 and equals 0 only when \(q = p\). It is not symmetric: \(D_{\mathrm{KL}}(q\|p) \neq D_{\mathrm{KL}}(p\|q)\) in general.</caption>
+    </table>
+    <div class="callout tip"><strong>Key idea:</strong> minimising cross-entropy is the same as maximising the likelihood of the training data (maximum likelihood).</div>
+    <aside class="notes">
+      [0:15 · 3 min] Keep it intuitive. Cross-entropy punishes putting low probability on what
+      actually happened. MSE punishes squared distance. KL measures how much one distribution
+      differs from a reference one. Diffusion: Ho et al. (2020) train with a simple MSE on the noise.
+      Remember "KL is never negative": if your logs show a negative KL, you have a sign bug.
+    </aside>
+  </section>
+
+  <!-- 12 · Quiz: which loss -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · losses</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">A language model is pretrained to predict the next token among 50,000 possible tokens. Which loss fits?</p>
+      <button class="quiz-opt" data-key="a">MSE between the predicted and the true token id</button>
+      <button class="quiz-opt" data-key="b">Cross-entropy between the predicted distribution and the true token</button>
+      <button class="quiz-opt" data-key="c">KL divergence between two images</button>
+      <button class="quiz-opt" data-key="d">Accuracy of the top-1 token</button>
+      <div class="quiz-explain">Token ids are categories, not quantities: token 812 is not “closer” to 813 than to 40,000.
+        Cross-entropy on the softmax output is the standard choice. Accuracy is a useful metric, but it is not differentiable,
+        so it cannot drive gradient descent.</div>
+    </div>
+    <aside class="notes">
+      [0:18 · 2 min] Poll, then click. Distinguish loss (what we optimise, must be differentiable)
+      from metric (what we report to the business). They often differ; Session 05 is all about metrics.
+    </aside>
+  </section>
+
+  <!-- 13 · Gradient descent -->
+  <section>
+    <p class="kicker">Gradient descent</p>
+    <h2>Walk downhill, one step at a time</h2>
+    $$ \theta_{t+1} = \theta_t - \eta \, \nabla_\theta \mathcal{L}(\theta_t) $$
+    <p>The gradient points uphill; we step the other way. The <strong>learning rate</strong> \(\eta\) sets the step size.</p>
+    <div class="cols-3">
+      <div class="card"><h4>🐢 Too small</h4><p class="small">Safe but slow: many epochs, more compute, and it may stop in the first valley it finds.</p></div>
+      <div class="card"><h4>✅ About right</h4><p class="small">The loss falls quickly and then settles near a minimum.</p></div>
+      <div class="card"><h4>💥 Too large</h4><p class="small">Steps overshoot the valley: the loss oscillates, or grows until it becomes <code>inf</code> or <code>nan</code>.</p></div>
+    </div>
+    <p class="small muted" style="margin-top: 12px"><strong>Stochastic</strong> gradient descent estimates the gradient on a mini-batch: noisier, but far cheaper than using all the data at every step.</p>
+    <aside class="notes">
+      [0:20 · 1.5 min] Real losses have millions of dimensions, but the intuition from one dimension
+      transfers. Next slide: try it yourself. The noise of mini-batches is not only a cost; it also
+      helps escape small bumps.
+    </aside>
+  </section>
+
+  <!-- 14 · Simulator: learning-rate playground -->
+  <section>
+    <p class="kicker">Simulator · learning-rate playground</p>
+    <h2>Find the learning rate that reaches the global minimum</h2>
+    <div class="sim">
+      <div class="sim-controls">
+        <div class="control">
+          <label for="lr-eta">Learning rate η <output id="lr-eta-out">–</output></label>
+          <input type="range" id="lr-eta" min="-3" max="0.2" step="0.05" value="-1.3">
+        </div>
+        <div class="control">
+          <label for="lr-steps">Steps <output id="lr-steps-out">–</output></label>
+          <input type="range" id="lr-steps" min="1" max="60" step="1" value="25">
+        </div>
+        <div class="control">
+          <label for="lr-x0">Starting point x₀ <output id="lr-x0-out">–</output></label>
+          <input type="range" id="lr-x0" min="-4" max="4" step="0.1" value="3.5">
+        </div>
+        <div class="control">
+          <label for="lr-mom">Momentum <output id="lr-mom-out">–</output></label>
+          <input type="range" id="lr-mom" min="0" max="0.95" step="0.05" value="0">
+        </div>
+        <div>
+          <button class="btn btn-sm" id="lr-view-land" type="button">Landscape</button>
+          <button class="btn btn-sm btn-ghost" id="lr-view-steps" type="button">Loss per step</button>
+        </div>
+      </div>
+      <div class="sim-output">
+        <div id="lr-chart"></div>
+        <p class="stat" style="margin-bottom: 4px">After <strong id="lr-n">–</strong> steps: x = <strong id="lr-x">–</strong> · loss = <strong id="lr-loss">–</strong></p>
+        <p class="small" id="lr-verdict" style="margin: 0"></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:21 · 5 min] Interaction. Toy loss f(x) = 0.05x⁴ − 0.5x² + 0.3x + 2: global minimum near
+      x = −2.37 (loss ≈ 0.06), local minimum near x = 2.07 (loss ≈ 1.40). Start at x₀ = 3.5.
+      1) η = 0.05 (default): still descending. 2) η ≈ 0.1: stuck in the local minimum.
+      3) η ≈ 0.7: the first big step jumps over the hump and lands in the global valley (luck, not skill).
+      4) η ≈ 1.0: oscillates between two points. 5) η above ≈ 1.4: diverges. 6) Back to η = 0.05 with
+      momentum 0.9: the "heavy ball" rolls past the bump. Switch to "Loss per step" to see what a
+      loss curve looks like in each case. Ask in the chat: "Which curve would worry you in a real run?"
+    </aside>
+  </section>
+
+  <!-- 15 · Optimizers -->
+  <section>
+    <p class="kicker">Optimizers</p>
+    <h2>From plain SGD to AdamW</h2>
+    <table class="compact">
+      <thead>
+        <tr><th>Optimizer</th><th>Update idea</th><th>In practice</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>SGD</strong></td><td>\(\theta \leftarrow \theta - \eta\, g\)</td><td>Simple and well understood; needs a well-tuned learning rate and schedule</td></tr>
+        <tr><td><strong>SGD + momentum</strong></td><td>\(v \leftarrow \mu v + g,\ \ \theta \leftarrow \theta - \eta\, v\)</td><td>A “heavy ball” (Polyak, 1964): smooths zig-zags and rolls past small bumps</td></tr>
+        <tr><td><strong>Adam</strong></td><td>Step per weight from running averages of \(g\) and \(g^2\)</td><td>Robust default; the paper's default rate is \(10^{-3}\) (Kingma &amp; Ba, 2015)</td></tr>
+        <tr><td><strong>AdamW</strong></td><td>Adam + weight decay applied directly to the weights</td><td>Standard for Transformers and fine-tuning (Loshchilov &amp; Hutter, 2019)</td></tr>
+      </tbody>
+      <caption>\(g\) = gradient of the loss on the current mini-batch; \(\mu\) = momentum coefficient (often 0.9).</caption>
+    </table>
+    <p class="small">Adam adapts the step size of every weight separately, which is why it usually makes progress faster than SGD with the same learning rate. In the lab you will compare both for one epoch.</p>
+    <aside class="notes">
+      [0:26 · 2 min] No need to derive Adam. Intuition: weights with consistently small gradients
+      get relatively bigger steps, and noisy ones get smaller steps. AdamW fixes how weight decay
+      interacts with Adam: "decoupled" means the decay is applied to the weights directly instead of
+      being added to the gradient. It is the default optimizer in the Hugging Face Trainer.
+    </aside>
+  </section>
+
+  <!-- 16 · Schedules and batch size -->
+  <section>
+    <p class="kicker">Learning-rate schedules and batch size</p>
+    <h2>The learning rate does not have to stay fixed</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr)">
+      <div id="sched-chart"></div>
+      <div>
+        <ul class="small">
+          <li><strong>Warm-up:</strong> start small for the first steps, while the optimizer's statistics are still unreliable.</li>
+          <li><strong>Decay:</strong> big steps early to make progress, small steps late to settle. Cosine decay: Loshchilov &amp; Hutter (2017).</li>
+          <li><strong>Batch size:</strong> larger batches give smoother gradients and use the GPU better, but need more memory and give fewer steps per epoch. If you change it a lot, re-tune the learning rate.</li>
+        </ul>
+        <div class="callout tip small"><strong>Start from known defaults:</strong> Adam at \(10^{-3}\) for small models trained from scratch; smaller rates for fine-tuning (Session 04).</div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:28 · 1.5 min] The chart is illustrative: learning rate as a fraction of its peak value over
+      100 steps. Warm-up plus cosine decay is common for Transformers. Do not spend long here; the
+      point is that the learning rate is a schedule, not a single number.
+    </aside>
+  </section>
+
+  <!-- 17 · Business lens 1 -->
+  <section>
+    <p class="kicker">Cost of experimentation</p>
+    <h2>Every training run has a price</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">96 runs</span>
+        <p class="caption muted">for a small grid: 4 learning rates × 4 batch sizes × 2 optimizers × 3 random seeds
+          (illustrative arithmetic). At 2 GPU-hours per run, that is 192 GPU-hours before the first result reaches a customer.</p>
+        <div class="prompt-card" data-kind="chat">
+          <h4>Your stopping rule</h4>
+          <p class="small">What would convince you to stop paying for more tuning?</p>
+        </div>
+      </div>
+      <div class="callout business">
+        <p><strong>NovaTel</strong> (a fictional telecom) trains a model to draft replies to customers. The team asks for
+          “one more week of tuning”, again and again.</p>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Start from known defaults; run a pilot on a data subset.</li>
+          <li>Use early stopping and log every run (settings, curves, cost).</li>
+          <li>Agree on a stopping rule: the metric the business needs, and a budget.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:29 · 2 min] Business lens for Part 1. The numbers are illustrative arithmetic, not a
+      benchmark. Hyperparameter search multiplies cost; a disciplined experiment log (Session 11) is
+      what turns spending into learning. Read two or three chat answers aloud.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 2 · GENERALIZATION AND DATA                               -->
+  <!-- ===================================================================== -->
+
+  <!-- 18 · Part 2 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 2</p>
+    <h2>Generalization and data</h2>
+    <p>Overfitting, regularization, early stopping, and the data mistakes that no optimizer can fix.</p>
+    <aside class="notes">
+      [0:31] Part 2: a low training loss is not the goal; good behaviour on new data is.
+    </aside>
+  </section>
+
+  <!-- 19 · Under/overfitting -->
+  <section>
+    <p class="kicker">Generalization</p>
+    <h2>Underfitting, good fit, overfitting</h2>
+    <div class="cols-3">
+      <div class="card"><h4>Underfitting</h4><p class="small">Training and validation loss both stay high. The model is too simple or trained too little.</p></div>
+      <div class="card"><h4>Good fit</h4><p class="small">Both losses are low and close to each other; validation loss is flat near its minimum.</p></div>
+      <div class="card"><h4>Overfitting</h4><p class="small">Training loss keeps falling while validation loss rises: the model memorises the training set.</p></div>
+    </div>
+    <table class="compact" style="margin-top: 18px">
+      <thead><tr><th>Split</th><th>Used to…</th><th>Typical share</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Train</strong></td><td>Fit the weights</td><td class="num">70–80%</td></tr>
+        <tr><td><strong>Validation</strong></td><td>Choose hyperparameters and when to stop</td><td class="num">10–15%</td></tr>
+        <tr><td><strong>Test</strong></td><td>Estimate final performance, once, at the end</td><td class="num">10–15%</td></tr>
+      </tbody>
+      <caption>Shares are common conventions, not rules. If you tune on the test set, it stops being a test.</caption>
+    </table>
+    <aside class="notes">
+      [0:31 · 2 min] The validation set is what we look at while developing; the test set is a
+      sealed envelope. Fashion-MNIST ships a fixed train/test split (60,000 / 10,000); in the lab we
+      use part of the test split as validation for speed, and say so explicitly.
+    </aside>
+  </section>
+
+  <!-- 20 · Simulator: overfitting explorer -->
+  <section>
+    <p class="kicker">Simulator · overfitting explorer</p>
+    <h2>How big should the model be?</h2>
+    <div class="sim">
+      <div class="sim-controls">
+        <div class="control">
+          <label for="of-cap">Model capacity <output id="of-cap-out">–</output></label>
+          <input type="range" id="of-cap" min="1" max="7" step="1" value="4">
+        </div>
+        <div class="control">
+          <label for="of-reg">Regularization <output id="of-reg-out">–</output></label>
+          <input type="range" id="of-reg" min="0" max="1" step="0.1" value="0">
+        </div>
+        <p class="stat" style="margin: 0">Early stopping picks: <strong id="of-best">–</strong></p>
+        <p class="stat" style="margin: 0">Gap at epoch 30 (val − train): <strong id="of-gap">–</strong></p>
+        <p class="small" id="of-verdict" style="margin: 0"></p>
+        <p class="small muted" style="margin: 0">Synthetic curves precomputed in the browser to illustrate typical shapes; not real training runs.</p>
+      </div>
+      <div class="sim-output"><div id="of-chart"></div></div>
+    </div>
+    <aside class="notes">
+      [0:33 · 4 min] Interaction. Capacity 1: both curves stay high (underfitting). Capacity 3–4:
+      good fit. Capacity 6–7: validation loss bottoms out early and then climbs (overfitting), even
+      though training loss looks great. Now raise regularization to 1 at capacity 7: the gap shrinks
+      and the best validation loss is similar to the medium model. The amber dot is where early
+      stopping would keep the checkpoint. Ask: "Which of these would you ship, and why?"
+    </aside>
+  </section>
+
+  <!-- 21 · Regularization toolbox -->
+  <section>
+    <p class="kicker">Regularization</p>
+    <h2>Tools to close the gap</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <div class="cols" style="gap: 14px">
+        <div class="card"><h4>Weight decay</h4><p class="small">Penalise large weights (L2). In AdamW, the <code>weight_decay</code> argument.</p></div>
+        <div class="card"><h4>Dropout</h4><p class="small">Randomly switch off units during training only (Srivastava et al., 2014).</p></div>
+        <div class="card"><h4>More or augmented data</h4><p class="small">Often the strongest regulariser, when you can get it.</p></div>
+        <div class="card"><h4>Smaller model</h4><p class="small">Less capacity to memorise. Fewer parameters also run cheaper.</p></div>
+      </div>
+      <div class="card">
+        <h4>Early stopping</h4>
+        <p class="small">Watch validation loss; keep the best checkpoint; stop after <em>patience</em> epochs without improvement.</p>
+        <pre style="margin: 8px 0 0; font-size: 17px"><code class="language-python" data-trim data-noescape>
+if val_loss &lt; best - 1e-4:
+    best, bad = val_loss, 0
+    save_checkpoint(model)
+else:
+    bad += 1
+if bad &gt;= patience:
+    break
+        </code></pre>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:37 · 2 min] Dropout is active only in model.train() mode: this is why forgetting to switch
+      modes matters (you will see it in the challenge). Early stopping is also a cost saver: it ends
+      runs that are no longer improving.
+    </aside>
+  </section>
+
+  <!-- 22 · Quiz: early stopping -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · curves</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Training loss keeps falling. Validation loss reached its minimum at epoch 6 and has risen ever since. You are at epoch 15. What do you do?</p>
+      <button class="quiz-opt" data-key="a">Keep training: the training loss shows it is still learning</button>
+      <button class="quiz-opt" data-key="b">Restore the epoch-6 checkpoint (early stopping) and consider more regularization</button>
+      <button class="quiz-opt" data-key="c">Raise the learning rate to escape the problem</button>
+      <button class="quiz-opt" data-key="d">Check the test set every epoch and stop when it looks best</button>
+      <div class="quiz-explain">Rising validation loss with falling training loss is the signature of overfitting. Keep the best
+        validation checkpoint. Option d turns the test set into a second validation set: its number is no longer an honest estimate.</div>
+    </div>
+    <aside class="notes">
+      [0:39 · 1.5 min] Poll, then click. Many people choose d: explain why tuning on the test set
+      inflates results (a mild form of leakage), which leads straight into the next slides.
+    </aside>
+  </section>
+
+  <!-- 23 · Preprocessing pipeline -->
+  <section>
+    <p class="kicker">Data preprocessing</p>
+    <h2>Most training problems start in the data</h2>
+    <div class="cols-3" style="grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+      <div class="card"><h4>1 · Clean</h4><p class="small">Duplicates, missing values, impossible values, inconsistent formats and units.</p></div>
+      <div class="card"><h4>2 · Split</h4><p class="small">Before any fitting. By customer or by time when rows are related.</p></div>
+      <div class="card"><h4>3 · Normalise</h4><p class="small">Fit scalers on train only, then apply them to validation and test. Pixels: divide by 255 → [0, 1].</p></div>
+      <div class="card"><h4>4 · Encode</h4><p class="small">Text → tokens (S01); categories → ids or one-hot; images → tensors.</p></div>
+    </div>
+    <div class="cols" style="margin-top: 16px">
+      <div class="callout"><strong>Why normalise?</strong> Features on very different scales (age vs. balance in pesos) make gradients unbalanced and training slow or unstable.</div>
+      <div class="callout warn"><strong>Order matters:</strong> computing a mean, a vocabulary or a scaler on all the data <em>before</em> splitting leaks test information into training.</div>
+    </div>
+    <aside class="notes">
+      [0:40 · 2 min] Split early is the key habit. In the lab the pixels are divided by 255: this is a
+      fixed transform, not fitted on data, so it cannot leak. A z-score scaler, by contrast, learns a
+      mean and a standard deviation, so it must be fitted on training data only.
+    </aside>
+  </section>
+
+  <!-- 24 · Data leakage -->
+  <section>
+    <p class="kicker">Data leakage</p>
+    <h2>When the model sees the answer in advance</h2>
+    <p class="small">Leakage: information is available during training that will not be available when the model is used (Kaufman et al., 2012).</p>
+    <table class="compact">
+      <thead><tr><th>Type</th><th>Example in a CRM</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Target leakage</strong></td><td>A “cancellation call date” feature, recorded only after the customer asked to leave</td><td>Keep only fields that exist at prediction time</td></tr>
+        <tr><td><strong>Train–test contamination</strong></td><td>The same customer appears in both sets; a scaler fitted on all rows</td><td>Split by customer; fit preprocessing on train only</td></tr>
+        <tr><td><strong>Temporal leakage</strong></td><td>A random split of monthly snapshots: the model trains on 2024 to “predict” 2023</td><td>Split by time: train on the past, validate on the future</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn"><strong>Symptom:</strong> validation results that look too good to be true, then collapse in production.</div>
+    <aside class="notes">
+      [0:42 · 2 min] Kaufman, Rosset, Perlich and Stitelman (2012) is the classic reference; they
+      describe leakage in data-mining competitions and industry. The rule of thumb: for every
+      feature, ask "would I know this value at the moment I make the prediction?"
+    </aside>
+  </section>
+
+  <!-- 25 · Breakout -->
+  <section>
+    <p class="kicker">Apply it</p>
+    <h2>Find the pitfalls in Andes Bank's churn dataset</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr)">
+      <div class="prompt-card" data-kind="breakout">
+        <h4>Find 5 pitfalls · 6 min</h4>
+        <p class="small" style="margin-bottom: 6px">A teammate prepared 250,000 rows (one per customer per month, Jan 2023–Dec 2024) to predict churn and to generate retention emails. Columns: <code>customer_id</code>, <code>full_name</code>, <code>national_id</code>, <code>age</code>, <code>income</code>, <code>balance</code>, <code>complaint_text</code>, <code>retention_call_date</code>, <code>churned</code>. Steps taken:</p>
+        <ol class="small" style="margin-bottom: 6px; font-size: 19px">
+          <li>Filled missing <code>income</code> with 0.</li>
+          <li>Standardised every numeric column with the mean and std of all 250,000 rows.</li>
+          <li>Split rows at random: 80% train, 20% test.</li>
+          <li>Kept <code>retention_call_date</code>: “the most predictive feature!”</li>
+          <li>Passed <code>full_name</code>, <code>national_id</code> and <code>complaint_text</code> to the email generator.</li>
+          <li>Reported 97% test accuracy; 3% of customers churn.</li>
+        </ol>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="6" data-label="Breakout rooms"></div>
+        <p class="small">For each pitfall: what goes wrong, and one fix. One room reports in 30 seconds.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:44 · 6 min + 2 min debrief] Rooms of 3–4, mixed profiles. Andes Bank is fictional.
+      Debrief (there are six; five is enough):
+      1) income = 0 confuses "unknown" with "no income": impute with a statistic fitted on train and
+      add a "missing" flag. 2) Scaler fitted on all rows: contamination; fit on train only.
+      3) Random row split: the same customer lands in both sets and future months train the model
+      for past months; split by customer and by time. 4) retention_call_date exists only once the
+      bank already knows the customer is leaving: target leakage; drop it. 5) Names, ID numbers and
+      raw complaint text sent to a generator: personal data (Ley 1581 de 2012), remove or
+      pseudonymise and minimise. 6) 97% accuracy is what "nobody churns" gets with a 3% churn rate;
+      report recall, precision or PR-AUC and compare with a trivial baseline.
+    </aside>
+  </section>
+
+  <!-- 26 · Business lens 2 -->
+  <section>
+    <p class="kicker">Decisions built on leaks</p>
+    <h2>A 97% model that catches nobody</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>Andes Bank</strong> (fictional) funds a retention campaign because the churn model “scored 97%”. In
+          production it flags almost no one who actually leaves: the score came from leaked fields and a trivial baseline.</p>
+        <p class="small">The cost is not the model: it is the campaign budget, the lost customers and the lost trust in data projects.</p>
+      </div>
+      <div>
+        <h4>Questions a manager should ask</h4>
+        <ul class="small">
+          <li>Which fields exist at the moment of prediction?</li>
+          <li>How was the split made: by customer? by time?</li>
+          <li>What does a trivial baseline score on the same data?</li>
+          <li>Was the test set used only once, at the end?</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:52 · 1 min] Business lens for Part 2. These four questions work for any vendor or internal
+      team presenting a model, including the final projects in this course (the rubric asks for a
+      baseline and at least two justified metrics).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 3 · FROM AUTOENCODERS TO VAES                             -->
+  <!-- ===================================================================== -->
+
+  <!-- 27 · Part 3 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 3</p>
+    <h2>From autoencoders to VAEs</h2>
+    <p>A latent space you can sample from: the model you will train in the lab.</p>
+    <aside class="notes">
+      [0:53] Part 3: the variational autoencoder, step by step, then how it compares to GANs and diffusion.
+    </aside>
+  </section>
+
+  <!-- 28 · Autoencoder -->
+  <section>
+    <p class="kicker">Autoencoders</p>
+    <h2>Compress, then rebuild</h2>
+    <p class="center" style="margin: 8px 0 18px">
+      <span class="tag">x · 784 pixels</span> → <span class="pill">encoder</span> → <span class="tag">z · 8 numbers</span> →
+      <span class="pill">decoder</span> → <span class="tag">x̂ · 784 pixels</span>
+    </p>
+    <div class="cols">
+      <div class="card">
+        <h4>What it learns</h4>
+        <p class="small">Trained to make \(\hat{x} \approx x\) through a narrow bottleneck, the network must keep only the essential features.</p>
+        <p class="small muted">Uses: compression, denoising, anomaly detection (unusual inputs reconstruct badly).</p>
+      </div>
+      <div class="card">
+        <h4>Why it is not (yet) a good generator</h4>
+        <p class="small">Nothing organises the latent space: codes can sit anywhere, with gaps between them. Decode a random \(z\) and you often get noise.</p>
+        <p class="small muted">Goodfellow et al. (2016), ch. 14.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:53 · 1.5 min] 784 = 28 × 28 pixels, the Fashion-MNIST image size. The bottleneck of 8
+      numbers is today's lab setting. Anomaly detection is a real business use: fraud or defect
+      detection by reconstruction error.
+    </aside>
+  </section>
+
+  <!-- 29 · VAE -->
+  <section>
+    <p class="kicker">Variational autoencoder</p>
+    <h2>Encode to a distribution, not to a point</h2>
+    <p class="center" style="margin: 6px 0 16px">
+      <span class="tag">x</span> → <span class="pill">encoder</span> → <span class="tag">μ(x), σ(x)</span> →
+      <span class="pill">z = μ + σ ⊙ ε</span> → <span class="pill">decoder</span> → <span class="tag">x̂</span>
+    </p>
+    <div class="cols-3">
+      <div class="card"><h4>Encoder \(q_\phi(z \mid x)\)</h4><p class="small">Outputs a Gaussian \(\mathcal{N}(\mu(x), \operatorname{diag}\sigma^2(x))\) for each input: a small cloud in latent space.</p></div>
+      <div class="card"><h4>Prior \(p(z)\)</h4><p class="small">A standard normal \(\mathcal{N}(0, I)\). Training pulls every cloud towards it, so the space has no gaps.</p></div>
+      <div class="card"><h4>Decoder \(p_\theta(x \mid z)\)</h4><p class="small">Turns a latent code into data. To generate: sample \(z \sim \mathcal{N}(0, I)\) and decode it.</p></div>
+    </div>
+    <p class="small muted" style="margin-top: 12px">Kingma &amp; Welling (2014); a longer tutorial is Kingma &amp; Welling (2019).</p>
+    <aside class="notes">
+      [0:55 · 2 min] The key change from a plain autoencoder: each input maps to a small region, not
+      a point, and all regions are pulled towards the same standard normal. Result: nearby codes
+      decode to similar images, and random codes from N(0, I) decode to plausible images.
+    </aside>
+  </section>
+
+  <!-- 30 · ELBO -->
+  <section>
+    <p class="kicker">The training objective</p>
+    <h2>ELBO = reconstruction − KL</h2>
+    $$ \log p_\theta(x) \;\ge\; \underbrace{\mathbb{E}_{q_\phi(z\mid x)}\big[\log p_\theta(x \mid z)\big]}_{\text{reconstruction}} \;-\; \underbrace{D_{\mathrm{KL}}\big(q_\phi(z \mid x)\,\|\,p(z)\big)}_{\text{regulariser}} \;=\; \text{ELBO} $$
+    <div class="cols">
+      <div class="card">
+        <h4>Loss = −ELBO = recon + KL</h4>
+        <p class="small"><strong>Reconstruction:</strong> binary cross-entropy summed over the 784 pixels (pixel values in [0, 1]).</p>
+        <p class="small"><strong>KL</strong> for Gaussians, in closed form:</p>
+        <p class="small">\( D_{\mathrm{KL}} = -\tfrac{1}{2}\sum_{j=1}^{d}\big(1 + \log\sigma_j^2 - \mu_j^2 - \sigma_j^2\big) \)</p>
+      </div>
+      <div class="card">
+        <h4>A tug of war</h4>
+        <p class="small">Reconstruction wants precise, well-separated codes. KL wants every code close to \(\mathcal{N}(0, I)\). Training finds a balance.</p>
+        <div class="callout warn small" style="margin-bottom: 0"><strong>Sanity check:</strong> KL ≥ 0 always. A negative KL in your logs means a sign error.</div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:57 · 3 min] ELBO = evidence lower bound: a lower bound on the log-likelihood of the data.
+      Maximising it pushes the likelihood up. We minimise its negative. Per image we sum over pixels
+      and over latent dimensions, then average over the batch. Point out the d in the KL sum: the
+      latent dimension, 8 in the lab. The sign check is exactly one of the bugs in the challenge.
+    </aside>
+  </section>
+
+  <!-- 31 · Reparameterization -->
+  <section>
+    <p class="kicker">The reparameterization trick</p>
+    <h2>Move the randomness out of the way</h2>
+    <p class="small">We cannot back-propagate through “draw \(z\) at random from \(\mathcal{N}(\mu, \sigma^2)\)”. Rewrite the sample as a deterministic function plus independent noise:</p>
+    $$ z = \mu + \sigma \odot \varepsilon, \qquad \varepsilon \sim \mathcal{N}(0, I) $$
+    <div class="cols" style="grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: start">
+      <pre style="margin: 0"><code class="language-python" data-trim data-noescape>
+def reparameterize(mu, logvar):
+    std = torch.exp(0.5 * logvar)  # σ
+    eps = torch.randn_like(std)    # ε ~ N(0, I)
+    return mu + std * eps          # z = μ + σ ⊙ ε
+      </code></pre>
+      <div>
+        <p class="small">The randomness now lives in \(\varepsilon\); gradients flow through \(\mu\) and \(\sigma\) back to the encoder.</p>
+        <p class="small muted">The encoder predicts \(\log \sigma^2\) (any real number) instead of \(\sigma\) (must be positive), and \(\sigma = \exp(\tfrac{1}{2}\log \sigma^2)\): simpler and numerically stable.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:00 · 2 min] Kingma and Welling's key technical contribution. Analogy for non-technical
+      participants: instead of asking "which random number came out?", we ask "how far from the
+      centre, in units of spread?" and learn the centre and the spread.
+    </aside>
+  </section>
+
+  <!-- 32 · β-VAE -->
+  <section>
+    <p class="kicker">β-VAE</p>
+    <h2>One knob for the trade-off</h2>
+    $$ \mathcal{L}_\beta = \text{recon} + \beta \cdot D_{\mathrm{KL}} \qquad \text{(Higgins et al., 2017)} $$
+    <table class="compact">
+      <thead><tr><th>Setting</th><th>Reconstruction</th><th>Latent space</th><th>Samples from the prior</th></tr></thead>
+      <tbody>
+        <tr><td>\(\beta &lt; 1\)</td><td>Sharper</td><td>Less regular, can have gaps</td><td>More often implausible</td></tr>
+        <tr><td>\(\beta = 1\)</td><td colspan="3">The standard VAE: the loss is exactly −ELBO</td></tr>
+        <tr><td>\(\beta &gt; 1\)</td><td>Blurrier</td><td>Smoother; fewer active dimensions</td><td>Smoother, less detailed</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><strong>Compare models with the same yardstick:</strong> report reconstruction and KL separately, plus recon + KL (−ELBO with β = 1). The β-weighted loss is not comparable across different β.</div>
+    <aside class="notes">
+      [1:02 · 2 min] Higgins and colleagues showed that β above 1 encourages disentangled latent
+      factors. An "active" latent dimension is one whose mean actually varies with the input; with a
+      strong KL weight, some dimensions give up and simply copy the prior. The latent size interacts
+      with β: more dimensions allow better reconstruction, but not all of them will be used.
+      In the challenge, each student gets a β and a latent size and compares against β = 1, latent 8.
+    </aside>
+  </section>
+
+  <!-- 33 · Flip cards -->
+  <section>
+    <p class="kicker">Self-check · define it before you flip it</p>
+    <h2>VAE vocabulary</h2>
+    <div class="cols-3">
+      <div class="flip-card"><div class="front">Reconstruction term</div><div class="back">How well the decoder rebuilds \(x\) from \(z\); here binary cross-entropy summed over pixels.</div></div>
+      <div class="flip-card"><div class="front">KL term</div><div class="back">How far each encoded Gaussian is from the prior \(\mathcal{N}(0, I)\). Never negative.</div></div>
+      <div class="flip-card"><div class="front">Reparameterization</div><div class="back">\(z = \mu + \sigma \odot \varepsilon\): sampling rewritten so gradients reach the encoder.</div></div>
+      <div class="flip-card"><div class="front">Sampling from the prior</div><div class="back">Draw \(z \sim \mathcal{N}(0, I)\) and decode it: a brand-new example.</div></div>
+      <div class="flip-card"><div class="front">Latent interpolation</div><div class="back">Decode points on the line between two codes: one garment morphs into another.</div></div>
+      <div class="flip-card"><div class="front">Active dimension</div><div class="back">A latent dimension whose mean changes with the input; inactive ones just copy the prior.</div></div>
+    </div>
+    <aside class="notes">
+      [1:04 · 1.5 min] Read a front, let the room answer in the chat, flip. Go fast. The last three
+      are exactly what students will do in the lab: sample, interpolate and count active dimensions.
+    </aside>
+  </section>
+
+  <!-- 34 · Quiz: β -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · VAEs</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Your VAE reconstructs test images well, but images decoded from random \(z \sim \mathcal{N}(0, I)\) look like noise. Which change is most likely to help?</p>
+      <button class="quiz-opt" data-key="a">Set β to 0 so the model focuses only on reconstruction</button>
+      <button class="quiz-opt" data-key="b">Increase β, giving the KL term more weight</button>
+      <button class="quiz-opt" data-key="c">Remove the encoder and train only the decoder</button>
+      <button class="quiz-opt" data-key="d">Raise the learning rate tenfold</button>
+      <div class="quiz-explain">Good reconstructions with poor samples mean the codes the decoder learned sit far from the prior:
+        the KL term is too weak. A larger β pulls the codes towards \(\mathcal{N}(0, I)\), where we sample, at some cost in sharpness.
+        β = 0 is a plain autoencoder: the worst option for sampling.</div>
+    </div>
+    <aside class="notes">
+      [1:05 · 1.5 min] Poll, then click. This is the reconstruction-versus-KL trade-off that students
+      must interpret with their own numbers in challenge task 2.
+    </aside>
+  </section>
+
+  <!-- 35 · VAE vs GAN vs diffusion -->
+  <section>
+    <p class="kicker">Three families of image generators</p>
+    <h2>VAE vs GAN vs diffusion</h2>
+    <table class="compact">
+      <thead><tr><th></th><th>VAE</th><th>GAN</th><th>Diffusion</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Training</strong></td><td>Maximise the ELBO (recon + KL)</td><td>Generator vs discriminator game</td><td>Learn to remove noise step by step (MSE on the noise)</td></tr>
+        <tr><td><strong>Stability</strong></td><td>Stable, one loss</td><td>Can be unstable; mode collapse</td><td>Stable</td></tr>
+        <tr><td><strong>Samples</strong></td><td>Often blurry</td><td>Sharp</td><td>Sharp and diverse</td></tr>
+        <tr><td><strong>Sampling cost</strong></td><td>One decoder pass</td><td>One generator pass</td><td>Many denoising passes (1,000 in Ho et al., 2020)</td></tr>
+        <tr><td><strong>Latent space</strong></td><td>Explicit and smooth, with an encoder</td><td>No encoder by default</td><td>Noise of the same size as the data</td></tr>
+      </tbody>
+      <caption>Kingma &amp; Welling (2014) · Goodfellow et al. (2014) · Ho et al. (2020). Latent diffusion (Rombach et al., 2022) combines them: diffusion runs inside an autoencoder's latent space.</caption>
+    </table>
+    <aside class="notes">
+      [1:06 · 2 min] No family wins on every row. Faster diffusion samplers exist that use far
+      fewer steps; the 1,000 steps are those of the original DDPM paper. Many text-to-image systems
+      use latent diffusion, so the autoencoder idea from today lives on inside them.
+    </aside>
+  </section>
+
+  <!-- 36 · Business lens 3 -->
+  <section>
+    <p class="kicker">Choosing a generator</p>
+    <h2>Product mock-ups for a fashion retailer</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>Hilo Norte</strong> (a fictional apparel retailer) wants quick mock-ups of new garments so designers can explore ideas
+          and blend two best-sellers.</p>
+        <p class="small">A small VAE on its own catalogue is cheap, fast to retrain, private and controllable (interpolate
+          between two products). Photo-realistic images call for diffusion, with higher compute and licensing review.</p>
+      </div>
+      <div>
+        <h4>Questions before choosing</h4>
+        <ul class="small">
+          <li>Sketch-level or photo-level fidelity?</li>
+          <li>Who owns the training images, and may we use them?</li>
+          <li>How often must the model be retrained, and at what cost?</li>
+          <li>Who reviews outputs before they reach a customer?</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:08 · 2 min] Business lens for Part 3 and the setting of challenge task 3: students recommend
+      a configuration for Hilo Norte using their own numbers. Stress data rights: training on
+      scraped images from other brands is a legal and reputational risk.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- BREAK                                                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 37 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Stretch, refill your coffee, and switch on the GPU accelerator in Kaggle before the lab.</p>
+    <div class="timer" data-minutes="10" data-label="Break"></div>
+    <aside class="notes">
+      [1:10 · 10 min] Press Start before you mute. Stay on the call for students with Kaggle
+      verification or accelerator problems.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- LAB                                                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 38 · Lab divider -->
+  <section class="section-slide" data-block="lab">
+    <p class="kicker">Hands-on</p>
+    <h2>Guided lab</h2>
+    <p>Train a variational autoencoder on Fashion-MNIST and make it draw new clothes.</p>
+    <span class="block-tag" data-block="lab">Lab · 60'</span>
+    <aside class="notes">
+      [1:20] Lab block. Share your screen with the notebook and code along; students run each cell
+      after you.
+    </aside>
+  </section>
+
+  <!-- 39 · Lab bridge -->
+  <section>
+    <p class="kicker">Lab bridge</p>
+    <h2>What we will build</h2>
+    <div class="cols">
+      <table class="compact">
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Fashion-MNIST → tensors in [0, 1]; train and validation splits</td><td class="num">10'</td></tr>
+          <tr><td><strong>2</strong></td><td>An MLP VAE (latent 8), the reparameterization trick and the ELBO loss</td><td class="num">12'</td></tr>
+          <tr><td><strong>3</strong></td><td>The training loop and its loss curves</td><td class="num">13'</td></tr>
+          <tr><td><strong>4</strong></td><td>Reconstructions, samples from the prior and latent interpolation</td><td class="num">15'</td></tr>
+          <tr><td><strong>5</strong></td><td>SGD vs Adam: one epoch each</td><td class="num">10'</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h4>Open the notebook</h4>
+        <p class="small">Kaggle checklist: Settings → Accelerator → GPU T4 x2 · Internet on. CPU also works, only slower.</p>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/02-training-generative-models/lab.ipynb" target="_blank" rel="noopener">Open in Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/02-training-generative-models/lab.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:20 · 3 min] Everyone opens the notebook now. Common blockers: phone not verified (no GPU,
+      no Internet), accelerator off (the first cell prints "cpu"; the lab still runs). Timing: Part 1
+      until 1:30, Part 2 until 1:42, Part 3 until 1:55, Part 4 until 2:10, Part 5 until 2:20.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CHALLENGE                                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 40 · Challenge divider -->
+  <section class="section-slide" data-block="challenge">
+    <h2>Session challenge</h2>
+    <p>Individual, graded, 40 minutes in class. Submit by 23:59 today.</p>
+    <aside class="notes">
+      [2:20] Challenge block. The next slide is the only slide in Spanish.
+    </aside>
+  </section>
+
+  <!-- 41 · Challenge briefing (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Challenge de la sesión · evaluado</p>
+    <h2>Challenge S02: tu propio VAE</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr)">
+      <div>
+        <ol class="small">
+          <li><strong>Ejecución:</strong> entrena un VAE con tu <code>latent_dim</code>, tu β, tu tasa de aprendizaje y tus 3 prendas asignadas; reporta reconstrucción y KL.</li>
+          <li><strong>Análisis:</strong> compáralo con la línea base (latente 8, β = 1) e interpreta el equilibrio reconstrucción–KL con <em>tus</em> números.</li>
+          <li><strong>Explica y decide:</strong> configura el generador de bocetos de producto de Hilo Norte.</li>
+          <li><strong>Crítica a la IA:</strong> encuentra y corrige 3 errores en un ciclo de entrenamiento escrito por una IA, y vuelve a entrenar.</li>
+        </ol>
+        <ul class="small">
+          <li><strong>Rúbrica:</strong> ejecución 40% · análisis 40% · reflexión y registro de IA 20%.</li>
+          <li><strong>IA permitida</strong> con registro; <strong>micro-sustentaciones</strong>: si no explicas tu entrega, máximo 3.0.</li>
+          <li><strong>Entrega:</strong> Archivo → Descargar notebook → e-Aulas como <code>S02_&lt;codigo&gt;.ipynb</code>, 23:59.</li>
+        </ul>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="40" data-label="Challenge"></div>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/02-training-generative-models/challenge.ipynb" target="_blank" rel="noopener">Abrir en Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/02-training-generative-models/challenge.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:20 · 38 min] This briefing slide is in Spanish by course convention. Remind students to type
+      their STUDENT_ID in the first cell (their configuration depends on it) and to turn on the GPU.
+      The four trainings take a few minutes on a GPU; start them early and write the analysis while
+      they run. During the block, run 3–4 random micro-vivas (2–3 minutes, screen shared, no AI help).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WRAP-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 42 · Wrap-up -->
+  <section>
+    <p class="kicker">Wrap-up</p>
+    <h2>Key takeaways</h2>
+    <div class="cols">
+      <ul>
+        <li>Every model trains with the same loop: forward, loss, backward, step.</li>
+        <li>The learning rate is the first knob to check when a loss curve looks wrong.</li>
+        <li>Judge a model on validation data; stop early, regularise, and hunt for leakage.</li>
+        <li>A VAE balances reconstruction against KL; β moves the balance.</li>
+      </ul>
+      <div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">Which data from your organisation would you trust to train a model today, and which leakage risk worries you most?</p>
+        </div>
+        <p class="small"><strong>Next session:</strong> Pretrained models and transfer learning. Final-project groups of 3 are formed in S03 (milestone H1).
+          <span class="muted">Pre-work: finish the challenge by 23:59 and read the session 03 guide.</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:58 · 2 min] Collect exit answers in the chat while students finish the challenge. Remind
+      them of the 23:59 deadline, the file name S02_codigo.ipynb, and that project groups must be
+      registered at Session 03.
+    </aside>
+  </section>
+
+  <!-- 43 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Sources for this session</h2>
+    <div class="cols" style="font-size: 18px; line-height: 1.35">
+      <ul>
+        <li>Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). <em>Deep learning</em>. MIT Press. Ch. 8 (optimization), 14 (autoencoders), 20 (generative models).</li>
+        <li>Kingma, D. P., &amp; Welling, M. (2014). Auto-encoding variational Bayes. <em>ICLR</em>. arXiv:1312.6114.</li>
+        <li>Kingma, D. P., &amp; Welling, M. (2019). An introduction to variational autoencoders. <em>Foundations and Trends in Machine Learning, 12</em>(4). arXiv:1906.02691.</li>
+        <li>Higgins, I., et al. (2017). β-VAE: Learning basic visual concepts with a constrained variational framework. <em>ICLR</em>.</li>
+        <li>Kingma, D. P., &amp; Ba, J. (2015). Adam: A method for stochastic optimization. <em>ICLR</em>. arXiv:1412.6980.</li>
+        <li>Loshchilov, I., &amp; Hutter, F. (2019). Decoupled weight decay regularization. <em>ICLR</em>. arXiv:1711.05101.</li>
+        <li>Loshchilov, I., &amp; Hutter, F. (2017). SGDR: Stochastic gradient descent with warm restarts. <em>ICLR</em>.</li>
+        <li>Polyak, B. T. (1964). Some methods of speeding up the convergence of iteration methods. <em>USSR Computational Mathematics and Mathematical Physics, 4</em>(5).</li>
+      </ul>
+      <ul>
+        <li>Srivastava, N., Hinton, G., Krizhevsky, A., Sutskever, I., &amp; Salakhutdinov, R. (2014). Dropout. <em>JMLR, 15</em>.</li>
+        <li>Kaufman, S., Rosset, S., Perlich, C., &amp; Stitelman, O. (2012). Leakage in data mining: Formulation, detection, and avoidance. <em>ACM TKDD, 6</em>(4).</li>
+        <li>Goodfellow, I., et al. (2014). Generative adversarial nets. <em>NeurIPS</em>.</li>
+        <li>Ho, J., Jain, A., &amp; Abbeel, P. (2020). Denoising diffusion probabilistic models. <em>NeurIPS</em>.</li>
+        <li>Rombach, R., et al. (2022). High-resolution image synthesis with latent diffusion models. <em>CVPR</em>.</li>
+        <li>Xiao, H., Rasul, K., &amp; Vollgraf, R. (2017). Fashion-MNIST: A novel image dataset for benchmarking machine learning algorithms. arXiv:1708.07747.</li>
+        <li>PyTorch. Learn the Basics (tutorial): <a href="https://pytorch.org/tutorials/beginner/basics/intro.html" target="_blank" rel="noopener">pytorch.org/tutorials</a></li>
+      </ul>
+    </div>
+    <aside class="notes">
+      Primary sources for every claim in the deck. Higgins et al. (2017) and Perlich's work on
+      leakage (Kaufman et al., 2012) are recommended readings. The PyTorch "Learn the Basics"
+      tutorial is the best follow-up for students new to PyTorch.
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "02" });
+  Course.onReady(() => {
+    // --- Simulator 1: learning-rate playground --------------------------------------------
+    // Toy 1-D non-convex loss: global minimum near x = -2.37, local minimum near x = 2.07.
+    const f = (x) => 0.05 * x ** 4 - 0.5 * x ** 2 + 0.3 * x + 2;
+    const df = (x) => 0.2 * x ** 3 - x + 0.3;
+    const X_MIN = -4, X_MAX = 4, Y_MAX = 8, BLOWUP = 6, GLOBAL_X = -2.373, GLOBAL_F = f(GLOBAL_X);
+    const lrIn = {
+      eta: document.getElementById("lr-eta"),
+      steps: document.getElementById("lr-steps"),
+      x0: document.getElementById("lr-x0"),
+      mom: document.getElementById("lr-mom")
+    };
+    const lrChart = document.getElementById("lr-chart");
+    const btnLand = document.getElementById("lr-view-land");
+    const btnSteps = document.getElementById("lr-view-steps");
+    const clampX = (x) => Math.max(X_MIN, Math.min(X_MAX, x));
+    let lrView = "landscape";
+    const LANDSCAPE = [];
+    for (let x = X_MIN; x <= X_MAX + 1e-9; x += 0.05) LANDSCAPE.push([+x.toFixed(2), +f(x).toFixed(4)]);
+
+    function gradientDescent(eta, steps, x0, mom) {
+      const xs = [x0];
+      let x = x0, v = 0;
+      for (let t = 0; t < steps; t++) {
+        v = mom * v - eta * df(x);   // heavy-ball momentum; mom = 0 is plain gradient descent
+        x = x + v;
+        xs.push(x);
+        if (!isFinite(x) || Math.abs(x) > BLOWUP) break;
+      }
+      return xs;
+    }
+
+    function verdict(xs, steps) {
+      const last = xs[xs.length - 1];
+      if (!isFinite(last) || Math.abs(last) > BLOWUP) {
+        return "💥 <strong>Diverged:</strong> each step overshoots further and the loss explodes. Lower the learning rate.";
+      }
+      const moves = [];
+      for (let i = Math.max(1, xs.length - 5); i < xs.length; i++) moves.push(xs[i] - xs[i - 1]);
+      const lastMove = Math.abs(moves[moves.length - 1] || 0);
+      if (Math.abs(df(last)) < 0.02 && lastMove < 0.01) {
+        return last < 0
+          ? "✅ <strong>Converged to the global minimum.</strong>"
+          : "⚠️ <strong>Stuck in a local minimum:</strong> the gradient is zero here, but a lower valley exists on the left.";
+      }
+      let flips = 0;
+      for (let i = 1; i < moves.length; i++) if (moves[i] * moves[i - 1] < 0) flips++;
+      if (moves.length >= 3 && flips >= moves.length - 1) {
+        return "↔️ <strong>Oscillating:</strong> the steps jump across the valley. A smaller learning rate would settle it.";
+      }
+      return "🐢 <strong>Still moving:</strong> not converged after " + steps + " steps. More steps or a larger learning rate.";
+    }
+
+    function updateLr() {
+      const eta = Math.pow(10, Number(lrIn.eta.value));
+      const steps = Number(lrIn.steps.value);
+      const x0 = Number(lrIn.x0.value);
+      const mom = Number(lrIn.mom.value);
+      const xs = gradientDescent(eta, steps, x0, mom);
+      const last = xs[xs.length - 1];
+      const diverged = !isFinite(last) || Math.abs(last) > BLOWUP;
+      if (lrView === "landscape") {
+        const path = xs.map((x) => [clampX(x), Math.min(Y_MAX, f(clampX(x)))]);
+        Course.lineChart(lrChart, [
+          { name: "Loss f(x)", points: LANDSCAPE, markers: false },
+          { name: "Gradient-descent path", points: path, markers: true }
+        ], { xLabel: "Parameter x", yLabel: "Loss", xMin: X_MIN, xMax: X_MAX, yMin: 0, yMax: Y_MAX,
+             width: 640, height: 360, title: "Loss landscape and gradient-descent path" });
+      } else {
+        const losses = xs.map((x, t) => [t, Math.min(Y_MAX, isFinite(x) ? f(x) : Y_MAX)]);
+        Course.lineChart(lrChart, [
+          { name: "Loss at step t", points: losses, markers: xs.length <= 31 },
+          { name: "Global minimum", points: [[0, GLOBAL_F], [Math.max(1, steps), GLOBAL_F]], dashed: true, markers: false }
+        ], { xLabel: "Step", yLabel: "Loss", xMin: 0, xMax: Math.max(1, steps), yMin: 0, yMax: Y_MAX,
+             width: 640, height: 360, title: "Loss per step" });
+      }
+      document.getElementById("lr-n").textContent = String(xs.length - 1);
+      document.getElementById("lr-x").textContent = diverged ? "out of range" : last.toFixed(3);
+      document.getElementById("lr-loss").textContent = diverged ? "∞" : f(last).toFixed(3);
+      document.getElementById("lr-verdict").innerHTML = verdict(xs, steps);
+    }
+
+    function setView(view) {
+      lrView = view;
+      btnLand.classList.toggle("btn-ghost", view !== "landscape");
+      btnSteps.classList.toggle("btn-ghost", view !== "steps");
+      updateLr();
+    }
+    btnLand.addEventListener("click", () => setView("landscape"));
+    btnSteps.addEventListener("click", () => setView("steps"));
+
+    Course.bindRange(lrIn.eta, document.getElementById("lr-eta-out"),
+      (v) => Number(Math.pow(10, v).toPrecision(2)).toString(), updateLr);
+    Course.bindRange(lrIn.steps, document.getElementById("lr-steps-out"), String, updateLr);
+    Course.bindRange(lrIn.x0, document.getElementById("lr-x0-out"), (v) => v.toFixed(1), updateLr);
+    Course.bindRange(lrIn.mom, document.getElementById("lr-mom-out"),
+      (v) => (v === 0 ? "0 · off" : v.toFixed(2)), updateLr);
+
+    // --- Chart: learning-rate schedules (illustrative) --------------------------------------
+    const constant = [], stepDecay = [], cosine = [];
+    for (let t = 0; t <= 100; t += 2) {
+      constant.push([t, 1]);
+      stepDecay.push([t, t < 40 ? 1 : t < 70 ? 0.3 : 0.1]);
+      const warm = 10;
+      cosine.push([t, t < warm ? t / warm : 0.5 * (1 + Math.cos(Math.PI * (t - warm) / (100 - warm)))]);
+    }
+    Course.lineChart(document.getElementById("sched-chart"), [
+      { name: "Constant", points: constant, markers: false },
+      { name: "Step decay", points: stepDecay, markers: false, dashed: true },
+      { name: "Warm-up + cosine", points: cosine, markers: false }
+    ], { xLabel: "Training step (%)", yLabel: "LR (× peak)", yMin: 0, yMax: 1.1, width: 640, height: 420,
+         title: "Learning-rate schedules" });
+
+    // --- Simulator 2: overfitting explorer ------------------------------------------------
+    // Synthetic learning curves, precomputed once for every capacity (1..7) and regularization
+    // level (0..1 in steps of 0.1). Shapes follow the textbook picture; numbers are illustrative.
+    const EPOCHS = 30;
+    const CAP_LABEL = ["", "tiny", "small", "medium-small", "medium", "large", "very large", "huge"];
+    const noise = Course.seededRandom(2025);
+    const JITTER = Array.from({ length: EPOCHS + 1 }, () => noise() - 0.5);
+    function makeCurves(c, r) {
+      const floor = 0.08 + 0.95 * Math.exp(-0.55 * (c - 1)) + 0.12 * r * (c / 7);
+      const speed = 0.12 + 0.03 * c;
+      const over = 0.0012 * Math.pow(Math.max(0, c - 2), 1.6) * (1 - 0.85 * r);
+      const onset = 14 - 1.5 * c;
+      const train = [], val = [];
+      for (let e = 1; e <= EPOCHS; e++) {
+        const tr = floor + (2.3 - floor) * Math.exp(-speed * e) + 0.01 * JITTER[e];
+        const gap = 0.06 + 0.04 * (1 - Math.exp(-0.2 * e)) + over * Math.pow(Math.max(0, e - onset), 1.35);
+        train.push([e, +tr.toFixed(3)]);
+        val.push([e, +(tr + gap + 0.025 * JITTER[EPOCHS - e]).toFixed(3)]);
+      }
+      return { train, val };
+    }
+    const CURVES = {};
+    for (let c = 1; c <= 7; c++) for (let r = 0; r <= 10; r++) CURVES[c + ":" + r] = makeCurves(c, r / 10);
+
+    const ofCap = document.getElementById("of-cap");
+    const ofReg = document.getElementById("of-reg");
+    function updateOverfit() {
+      const c = Number(ofCap.value);
+      const r = Math.round(Number(ofReg.value) * 10);
+      const { train, val } = CURVES[c + ":" + r];
+      const best = val.reduce((b, p) => (p[1] < b[1] ? p : b));
+      const finalTrain = train[EPOCHS - 1][1], finalVal = val[EPOCHS - 1][1];
+      Course.lineChart(document.getElementById("of-chart"), [
+        { name: "Training loss", points: train, markers: false },
+        { name: "Validation loss", points: val, dashed: true, markers: false },
+        { name: "Early stop", points: [best], markers: true, color: "var(--accent-2)" }
+      ], { xLabel: "Epoch", yLabel: "Loss", xMin: 1, xMax: EPOCHS, yMin: 0, yMax: 2.5, width: 640, height: 430,
+           title: "Training vs validation loss" });
+      document.getElementById("of-best").textContent = `epoch ${best[0]} (val ${best[1].toFixed(2)})`;
+      document.getElementById("of-gap").textContent = (finalVal - finalTrain).toFixed(2);
+      const rise = finalVal - best[1];
+      let msg;
+      if (best[1] > 0.9) {
+        msg = "📉 <strong>Underfitting:</strong> both losses stay high. Try more capacity or more training.";
+      } else if (best[1] > 0.6) {
+        msg = "📉 <strong>Mild underfitting:</strong> no overfitting, but a bigger model would reach a lower loss.";
+      } else if (rise > 0.2) {
+        msg = `📈 <strong>Overfitting:</strong> validation loss rises after epoch ${best[0]}. Stop early or regularise.`;
+      } else if (rise > 0.08) {
+        msg = `👀 <strong>Early signs of overfitting</strong> after epoch ${best[0]}: early stopping handles it.`;
+      } else {
+        msg = "✅ <strong>Good fit:</strong> validation loss stays close to its minimum.";
+      }
+      document.getElementById("of-verdict").innerHTML = msg;
+    }
+    Course.bindRange(ofCap, document.getElementById("of-cap-out"), (v) => `${v} · ${CAP_LABEL[v]}`, updateOverfit);
+    Course.bindRange(ofReg, document.getElementById("of-reg-out"), (v) => (v === 0 ? "0 · none" : v.toFixed(1)), updateOverfit);
+  });
+</script>
+</body>
+</html>

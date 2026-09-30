@@ -1,0 +1,1357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S04 · Fine-Tuning Generative Models</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ===================================================================== -->
+  <!-- OPENING                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="04">
+    <div class="title-main">
+      <h1>Fine-Tuning Generative Models</h1>
+      <p class="subtitle">Afinamiento de modelos generativos</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome to Session 04. Today is the first session where students change the
+      weights of a pretrained model themselves: a full fine-tune of an encoder classifier and a LoRA
+      fine-tune of a small chat model. Ask everyone to switch Kaggle to GPU during the break (the lab
+      and the challenge train models). Keys: S speaker view, F fullscreen, Esc overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Warm-up: transfer learning recap + your S1–S3 balance <span class="time">10'</span></li>
+      <li data-block="theory">Theory: full fine-tuning vs PEFT, instruction data, hyperparameters, when to fine-tune <span class="time">60'</span></li>
+      <li data-block="break">Break <span class="time">10'</span></li>
+      <li data-block="lab">Guided lab: DistilBERT on Banking77 with Trainer · LoRA on SmolLM2 <span class="time">60'</span></li>
+      <li data-block="challenge">Session challenge (graded, individual) <span class="time">40'</span></li>
+    </ol>
+    <p class="small muted" style="margin-top: 18px">Kaggle today: Settings → Accelerator → GPU T4 x2 · Internet on.</p>
+    <aside class="notes">
+      [0:01 · 1 min] Walk through the blocks. Unlike S01–S03, today's lab and challenge benefit from a
+      GPU: ask students to check that their Kaggle phone number is verified. Everything also runs on
+      CPU, only more slowly.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WARM-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 3 · Warm-up divider -->
+  <section class="section-slide" data-block="warmup">
+    <h2>Warm-up</h2>
+    <p>Three questions on Session 03: what changed in the model, and what did not?</p>
+    <span class="block-tag" data-block="warmup">Warm-up · 10'</span>
+    <aside class="notes">
+      [0:02] Retrieval practice on S03 (transfer learning). Each question sets up an idea we extend
+      today: frozen vs trained weights, in-context learning vs weight updates, and token length.
+    </aside>
+  </section>
+
+  <!-- 4 · Warm-up Q1 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q1</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">In the S03 lab you trained a logistic regression on MiniLM sentence embeddings (feature extraction). Which weights changed?</p>
+      <button class="quiz-opt" data-key="a">All the Transformer weights, plus the classifier</button>
+      <button class="quiz-opt" data-key="b">Only the classifier on top: the encoder stayed frozen</button>
+      <button class="quiz-opt" data-key="c">None: feature extraction is a form of zero-shot prompting</button>
+      <button class="quiz-opt" data-key="d">Only the tokenizer's vocabulary</button>
+      <div class="quiz-explain">Feature extraction freezes the encoder and trains a small head on its outputs. Today we
+        go further: <strong>full fine-tuning</strong> updates every weight, and <strong>LoRA</strong> trains a small set of new
+        weights while the original ones stay frozen.</div>
+    </div>
+    <aside class="notes">
+      [0:02 · 2 min] Zoom poll first, then click the majority answer. Keep the three levels in mind:
+      frozen encoder + head (S03), all weights (full fine-tuning), a few added weights (PEFT). The whole
+      theory block is about moving along that line.
+    </aside>
+  </section>
+
+  <!-- 5 · Warm-up Q2 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q2</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">In S03 you classified news with Qwen2.5 using 4 labelled examples in the prompt (few-shot). What happened to the model's weights?</p>
+      <button class="quiz-opt" data-key="a">They were updated slightly by each example in the prompt</button>
+      <button class="quiz-opt" data-key="b">They were updated once, at the end of the prompt</button>
+      <button class="quiz-opt" data-key="c">Nothing: the examples only condition the model at inference time</button>
+      <button class="quiz-opt" data-key="d">The examples were stored in the model for the next user</button>
+      <div class="quiz-explain">In-context learning changes the <em>input</em>, not the weights: remove the examples and the
+        behaviour disappears. Fine-tuning bakes behaviour into the weights, so it persists without long prompts.</div>
+    </div>
+    <aside class="notes">
+      [0:04 · 2 min] Poll, then click. Follow-up: "So why would anyone fine-tune if few-shot works?"
+      Collect two or three answers in the chat (consistency, shorter prompts, cost, behaviours that are
+      hard to describe). We answer this properly in Part 4.
+    </aside>
+  </section>
+
+  <!-- 6 · Warm-up Q3 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q3</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">The same customer message often needs more tokens in Spanish than in English. Why does that matter when you fine-tune?</p>
+      <button class="quiz-opt" data-key="a">It does not matter: training cost depends only on the number of examples</button>
+      <button class="quiz-opt" data-key="b">Longer sequences cost more compute and memory, and may be cut by max_length</button>
+      <button class="quiz-opt" data-key="c">Spanish text cannot be used to fine-tune English models</button>
+      <button class="quiz-opt" data-key="d">Tokens only matter for API prices, never for your own GPU</button>
+      <div class="quiz-explain">Tokenizers trained mostly on English split Spanish words into more pieces. Compute and
+        memory grow with sequence length, and text beyond <code>max_length</code> is truncated, so check your token
+        lengths before you choose it (you will do that in the lab).</div>
+    </div>
+    <aside class="notes">
+      [0:06 · 1.5 min] Poll, then click. Link to S03's token-cost calculator: the same tokens that cost
+      money in an API also cost GPU time and memory when you train your own model.
+    </aside>
+  </section>
+
+  <!-- 7 · Formative check-in -->
+  <section>
+    <p class="kicker">Formative check-in · weeks 4–6</p>
+    <h2>Your balance after challenges S1–S3</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>📬 This week in e-Aulas</h4>
+        <ul class="small">
+          <li>Your grades for S1–S3, with individual feedback for each rubric component.</li>
+          <li>Compare them with your own self-assessments: where did you over- or under-estimate?</li>
+          <li>Pick <strong>one</strong> habit to change from S04 on (e.g., cite your own numbers, fill the AI log as you go).</li>
+        </ul>
+      </div>
+      <div>
+        <div class="callout tip"><strong>Need to talk?</strong> Book a short conversation in office hours between weeks 4 and 6.</div>
+        <div class="callout"><strong>Project:</strong> your group's proposal canvas (H2) is due before S06; written feedback comes back in S06.</div>
+        <p class="small muted">This is formative: it has no grade of its own. Details in the course guide (diálogo formativo).</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:07 · 2 min] Formative dialogue ("diálogo formativo"), weeks 4 to 6. Share the S1–S3 balance
+      with individual feedback through e-Aulas this week (have it published before class). Stress the
+      pattern seen most often in the first challenges (typically: generic answers that do not cite the
+      student's own numbers, or incomplete AI logs). Remind groups that H2 (proposal canvas) is due at
+      23:59 the day before S06.
+    </aside>
+  </section>
+
+  <!-- 8 · Learning objectives -->
+  <section>
+    <p class="kicker">Learning objectives</p>
+    <h2>By the end of this session you can…</h2>
+    <ol>
+      <li>Contrast full fine-tuning with PEFT (adapters, prompt tuning, LoRA, QLoRA) and compute LoRA's trainable parameters <span class="pill">RAE 1</span></li>
+      <li>Fine-tune an encoder with <span class="tag">Trainer</span> and report accuracy and macro-F1 on a held-out test set <span class="pill">RAE 1</span> <span class="pill">RAE 2</span></li>
+      <li>Adapt a small chat model to a brand voice with LoRA and compare outputs before and after <span class="pill">RAE 1</span></li>
+      <li>Diagnose underfitting, overfitting and divergence from learning curves <span class="pill">RAE 2</span></li>
+      <li>Decide between prompting, RAG and fine-tuning for a business case <span class="pill">RAE 1</span></li>
+    </ol>
+    <p class="small muted">RAE numbers refer to the learning outcomes in the course syllabus (guía de asignatura).</p>
+    <aside class="notes">
+      [0:09 · 1 min] RAE 1 (design and train) and RAE 2 (evaluate performance). The challenge assesses
+      objectives 2, 4 and 5 directly: two training configurations, their curves and a decision.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 1 · FULL FINE-TUNING VS PEFT                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 9 · Part 1 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 1</p>
+    <h2>How much of the model should change?</h2>
+    <p>Full fine-tuning, parameter-efficient fine-tuning, and the maths of LoRA.</p>
+    <span class="block-tag" data-block="theory">Theory · 60'</span>
+    <aside class="notes">
+      [0:10] Theory block: four parts. Part 1 (20 min) ends with the LoRA calculator and a quiz.
+    </aside>
+  </section>
+
+  <!-- 10 · What fine-tuning is -->
+  <section>
+    <p class="kicker">Fine-tuning in one line</p>
+    <h2>Start from pretrained weights, keep training on your task</h2>
+    <p>Pretraining gives weights \(\theta_0\). Fine-tuning minimises the loss on <em>your</em> labelled data, starting from \(\theta_0\) instead of random numbers:</p>
+    $$ \theta^{*} = \arg\min_{\theta} \; \frac{1}{N} \sum_{i=1}^{N} \mathcal{L}\big(f_\theta(x_i),\, y_i\big), \qquad \theta \leftarrow \theta_0 \text{ at the start} $$
+    <div class="cols-3">
+      <div class="card"><h4>1 · General LM</h4><p class="small">Pretrain a language model on a large general corpus.</p></div>
+      <div class="card"><h4>2 · Target-domain LM</h4><p class="small">Continue language modelling on text from your domain.</p></div>
+      <div class="card"><h4>3 · Task head</h4><p class="small">Fine-tune a classifier, unfreezing layers gradually, with layer-specific learning rates.</p></div>
+    </div>
+    <p class="small muted" style="margin-top: 12px">ULMFiT (Howard &amp; Ruder, 2018) made this recipe standard in NLP: with 100 labelled examples it matched training from scratch on 100× more data.</p>
+    <aside class="notes">
+      [0:10 · 3 min] The formula is the same supervised objective as always; the only difference is
+      the starting point. ULMFiT's three stages and its tricks (discriminative fine-tuning = different
+      learning rates per layer; slanted triangular learning rates; gradual unfreezing) are the ancestors
+      of today's warmup schedules and of the idea that lower layers should change less. The 100-example
+      result is from the ULMFiT abstract. Stage 2 is what S03 called domain adaptation.
+    </aside>
+  </section>
+
+  <!-- 11 · Full vs PEFT -->
+  <section>
+    <p class="kicker">Two strategies</p>
+    <h2>Full fine-tuning vs parameter-efficient fine-tuning</h2>
+    <table class="compact">
+      <thead>
+        <tr><th></th><th>Full fine-tuning</th><th>PEFT (adapters, LoRA, prompt tuning…)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>What trains</strong></td><td>Every weight of the model</td><td>A small set of new weights; the original weights stay frozen</td></tr>
+        <tr><td><strong>Training memory</strong></td><td>Weights + gradients + optimizer state for all parameters</td><td>Frozen weights + gradients and optimizer state for a tiny fraction</td></tr>
+        <tr><td><strong>What you store per task</strong></td><td>A full copy of the model</td><td>A small adapter file (often a few MB)</td></tr>
+        <tr><td><strong>Forgetting risk</strong></td><td>Higher: all weights can drift</td><td>Lower, and the base can be recovered by removing the adapter</td></tr>
+        <tr><td><strong>Typical use</strong></td><td>Small encoders (DistilBERT, BERT) and plenty of compute</td><td>LLMs, many tasks on one base model, limited GPUs</td></tr>
+      </tbody>
+    </table>
+    <p class="small">Today's lab does both: full fine-tuning of DistilBERT (67 M parameters) and LoRA on SmolLM2 (135 M).</p>
+    <aside class="notes">
+      [0:13 · 2 min] Go row by row. Lower forgetting risk with PEFT is a tendency, not a guarantee:
+      a LoRA adapter can still change behaviour a lot (we will see it in the lab). The "base can be
+      recovered" point is literal: in the lab we switch the adapter off with one line of code.
+    </aside>
+  </section>
+
+  <!-- 12 · Memory -->
+  <section>
+    <p class="kicker">Why full fine-tuning is expensive</p>
+    <h2>About 16 bytes per parameter, before activations</h2>
+    <div class="cols">
+      <div>
+        <table class="compact">
+          <thead><tr><th>Training with AdamW in fp32</th><th class="num">Bytes / parameter</th></tr></thead>
+          <tbody>
+            <tr><td>Weights</td><td class="num">4</td></tr>
+            <tr><td>Gradients</td><td class="num">4</td></tr>
+            <tr><td>Adam first moment \(m\)</td><td class="num">4</td></tr>
+            <tr><td>Adam second moment \(v\)</td><td class="num">4</td></tr>
+            <tr><td><strong>Total</strong></td><td class="num"><strong>16</strong></td></tr>
+          </tbody>
+          <caption>Mixed precision also totals about 16 bytes (Rajbhandari et al., 2020). Activations come on top and grow with batch size × sequence length.</caption>
+        </table>
+      </div>
+      <div>
+        <span class="big-number">≈ 108 GB</span>
+        <p class="caption muted">to fully fine-tune a 6.7 B-parameter model: 6.74 × 10⁹ × 16 bytes, before activations. A free Kaggle T4 has 16 GB.</p>
+        <p class="small">DistilBERT: 67 M × 16 B ≈ 1.1 GB, which is why we can fully fine-tune it today.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:15 · 2 min] Arithmetic, not a benchmark. The point: optimizer state dominates, so training a
+      model needs several times the memory of running it. For inference in 16-bit you only need about
+      2 bytes per parameter (about 13.5 GB for 6.7 B). That gap is exactly what PEFT attacks: if only
+      0.1% of the parameters train, gradients and Adam states almost disappear.
+    </aside>
+  </section>
+
+  <!-- 13 · PEFT family -->
+  <section>
+    <p class="kicker">The PEFT family</p>
+    <h2>Four ways to train a few weights</h2>
+    <div class="cols" style="gap: 18px">
+      <div class="card">
+        <h4>🔌 Adapters</h4>
+        <p class="small">Small bottleneck layers inserted in every Transformer block; only they train. Within 0.4% of full fine-tuning on GLUE with 3.6% extra parameters per task.</p>
+        <p class="small muted">Houlsby et al. (2019)</p>
+      </div>
+      <div class="card">
+        <h4>🧩 Prefix &amp; prompt tuning</h4>
+        <p class="small">Learn a few continuous "virtual tokens" prepended to the input; the model is frozen. Close to full fine-tuning for very large models.</p>
+        <p class="small muted">Li &amp; Liang (2021) · Lester et al. (2021)</p>
+      </div>
+      <div class="card">
+        <h4>🪶 LoRA</h4>
+        <p class="small">Add a trainable low-rank update \(BA\) to chosen weight matrices. Can be merged after training: no extra inference latency.</p>
+        <p class="small muted">Hu et al. (2021)</p>
+      </div>
+      <div class="card">
+        <h4>🗜️ QLoRA</h4>
+        <p class="small">LoRA on top of a base model quantized to 4 bits (NF4). Fine-tuned a 65 B model on a single 48 GB GPU.</p>
+        <p class="small muted">Dettmers et al. (2023)</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:17 · 3 min] One sentence per family; figures come from each paper's abstract. Adapters add
+      layers (a small inference cost); prompt/prefix tuning adds tokens (uses context length); LoRA
+      modifies existing matrices and can be merged away; QLoRA saves memory on the frozen base, not on
+      the adapter. Hugging Face's PEFT library implements all of them with the same API; we use LoRA.
+    </aside>
+  </section>
+
+  <!-- 14 · LoRA math -->
+  <section>
+    <p class="kicker">LoRA · the maths</p>
+    <h2>Freeze \(W_0\), learn a low-rank update</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr)">
+      <div>
+        $$ W = W_0 + \Delta W = W_0 + BA, \qquad B \in \mathbb{R}^{d \times r},\; A \in \mathbb{R}^{r \times k},\; r \ll \min(d, k) $$
+        $$ h = W_0 x + \frac{\alpha}{r}\, B A x $$
+        <ul class="small">
+          <li>\(W_0\) (\(d \times k\)) is frozen; only \(A\) and \(B\) train.</li>
+          <li>\(A\) starts random, \(B\) starts at zero, so \(\Delta W = 0\) at step 0: training starts exactly from the pretrained model.</li>
+          <li>\(\alpha / r\) scales the update (in the lab: \(\alpha = 16,\ r = 8\) → ×2).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Parameters per matrix</h4>
+        <p class="small">Full update: \(d \cdot k\) · LoRA: \(r\,(d + k)\)</p>
+        <p class="small">Example: \(d = k = 576\) (SmolLM2's query projection), \(r = 8\):</p>
+        <p class="small">\(576^2 = 331{,}776\) vs \(8 \times 1{,}152 = 9{,}216\)</p>
+        <p class="stat" style="font-size: 30px; margin: 6px 0 0"><strong>36× fewer</strong></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:20 · 3 min] The hypothesis behind LoRA (Hu et al.) is that the change needed to adapt a model
+      has low "intrinsic rank": a few directions are enough. Walk through the zero initialisation of B:
+      at step 0 the model is exactly the pretrained one. After training, W0 + (alpha/r)·BA can be merged
+      into a single matrix, so inference costs the same as the base model. In PEFT, target_modules says
+      which matrices get an update; in SmolLM2 they are called q_proj, k_proj, v_proj, o_proj and the MLP
+      gate_proj, up_proj, down_proj.
+    </aside>
+  </section>
+
+  <!-- 15 · Simulator: LoRA calculator -->
+  <section>
+    <p class="kicker">Simulator · LoRA calculator</p>
+    <h2>How many weights will you actually train?</h2>
+    <div class="sim">
+      <div class="sim-controls" style="gap: 12px">
+        <div class="control">
+          <label for="lc-preset">Model</label>
+          <select id="lc-preset">
+            <option value="smol" selected>SmolLM2-135M (today's lab)</option>
+            <option value="qwen">Qwen2.5-0.5B</option>
+            <option value="l7b">7B decoder (Llama 2 7B shape)</option>
+            <option value="custom">Custom (Llama-style)</option>
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
+          <div class="control">
+            <label for="lc-d">Hidden size <output id="lc-d-out">–</output></label>
+            <input type="range" id="lc-d" min="256" max="8192" step="64" value="576">
+          </div>
+          <div class="control">
+            <label for="lc-l">Layers <output id="lc-l-out">–</output></label>
+            <input type="range" id="lc-l" min="2" max="80" step="1" value="30">
+          </div>
+        </div>
+        <div class="control">
+          <label for="lc-r">LoRA rank r <output id="lc-r-out">–</output></label>
+          <input type="range" id="lc-r" min="0" max="7" step="1" value="3">
+        </div>
+        <div class="control">
+          <span style="font-weight: 600">Target matrices</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 20px">
+            <label style="gap: 6px; font-weight: 500"><input type="checkbox" class="lc-t" value="q" checked> q</label>
+            <label style="gap: 6px; font-weight: 500"><input type="checkbox" class="lc-t" value="k"> k</label>
+            <label style="gap: 6px; font-weight: 500"><input type="checkbox" class="lc-t" value="v" checked> v</label>
+            <label style="gap: 6px; font-weight: 500"><input type="checkbox" class="lc-t" value="o"> o</label>
+            <label style="gap: 6px; font-weight: 500"><input type="checkbox" class="lc-t" value="mlp"> MLP (3)</label>
+          </div>
+        </div>
+        <div class="control">
+          <label for="lc-prec">Frozen base stored in</label>
+          <select id="lc-prec">
+            <option value="4" selected>fp32 · 4 bytes (lab)</option>
+            <option value="2">16-bit · 2 bytes</option>
+            <option value="0.5">4-bit · 0.5 bytes (QLoRA)</option>
+          </select>
+        </div>
+      </div>
+      <div class="sim-output">
+        <div id="lc-chart"></div>
+        <p class="stat" style="margin-bottom: 4px">Trainable: <strong id="lc-train">–</strong> · <strong id="lc-share">–</strong> of <strong id="lc-total">–</strong></p>
+        <p class="stat" style="margin-bottom: 4px">Adapter file (fp32): <strong id="lc-adapter">–</strong> · full copy (fp32): <strong id="lc-copy">–</strong></p>
+        <p class="small muted" style="margin: 0">Memory = weights + gradients + AdamW states; activations excluded. Parameter counts ignore norms and biases (≈).</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:23 · 5 min] Interaction. Default = the lab: SmolLM2-135M, r = 8 on q and v gives 460,800
+      trainable weights, about 0.34% of the model; PEFT prints the same number in the lab. Then:
+      1) tick k, o and MLP: trainable parameters grow about 10× but are still a small share.
+      2) Switch to the 7B preset with q, v and r = 8: about 4.2 M trainable (≈0.06%). Full fine-tuning
+      needs about 108 GB; LoRA with a 16-bit base about 13.5 GB; with a 4-bit base (QLoRA) about 3.4 GB,
+      which is why QLoRA fits on one consumer GPU. 3) Move r from 8 to 64: parameters grow linearly in r.
+      Formulas: per targeted matrix r·(in + out); memory full = 16 B × params; LoRA = base bytes ×
+      params + 16 B × trainable. Grouped-query attention (GQA) makes k and v smaller than q in SmolLM2
+      and Qwen2.5 (k/v width 192 and 128), and the calculator accounts for that in the presets.
+    </aside>
+  </section>
+
+  <!-- 16 · Quiz: LoRA share -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · LoRA</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">LoRA with r = 8 on the query and value projections of SmolLM2-135M. Roughly what share of the model's weights is trained?</p>
+      <button class="quiz-opt" data-key="a">About 34%</button>
+      <button class="quiz-opt" data-key="b">About 3.4%</button>
+      <button class="quiz-opt" data-key="c">About 0.34%</button>
+      <button class="quiz-opt" data-key="d">100%: LoRA still updates every weight, only faster</button>
+      <div class="quiz-explain">30 layers × 8 × [(576 + 576) + (576 + 192)] = 460,800 trainable weights out of ≈134.5 M,
+        about 0.34%. The value projection is narrower (192) because SmolLM2 shares keys and values across heads (GQA).</div>
+    </div>
+    <aside class="notes">
+      [0:28 · 1 min] Poll, then click. If people chose b, redo the arithmetic on the calculator. The lab
+      prints "trainable params: 460,800 || all params: 134,975,808 || trainable%: 0.3414" (PEFT counts
+      the LoRA weights in the total).
+    </aside>
+  </section>
+
+  <!-- 17 · Business lens 1 -->
+  <section>
+    <p class="kicker">One base model, many products</p>
+    <h2>Adapters change the economics of customization</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">≈ 1.8 MB</span>
+        <p class="caption muted">per LoRA adapter (460,800 weights × 4 bytes) vs ≈ 538 MB for a full fp32 copy of SmolLM2-135M
+          (134.5 M × 4 bytes). Illustrative arithmetic; the lab prints the real file size.</p>
+      </div>
+      <div class="callout business">
+        <p><strong>Andes Bank</strong> (fictional) wants five assistants: collections, onboarding, card support, complaints and
+          internal HR. With full fine-tuning it maintains five full models; with LoRA, one base model and five small adapters.</p>
+        <ul class="small">
+          <li>Serve one base and swap adapters per request.</li>
+          <li>Version, audit and roll back each adapter separately.</li>
+          <li>But: five adapters still need five evaluation sets.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:29 · 1 min] Business lens for Part 1. Storage is rarely the real cost; operations are: every
+      model version must be evaluated, monitored and documented. Adapters make versioning cheaper but
+      do not remove the need to evaluate each one (S05).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 2 · INSTRUCTION TUNING AND DATA                           -->
+  <!-- ===================================================================== -->
+
+  <!-- 18 · Part 2 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 2</p>
+    <h2>Instruction tuning and your own data</h2>
+    <p>How chat models are made, what the training data looks like, and how to build a dataset you can trust.</p>
+    <aside class="notes">
+      [0:30] Part 2 (20 min) includes the breakout. Keep the first two slides brisk.
+    </aside>
+  </section>
+
+  <!-- 19 · Base to assistant -->
+  <section>
+    <p class="kicker">From base model to assistant</p>
+    <h2>Pretraining → SFT → preference tuning</h2>
+    <div style="display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 14px; align-items: center">
+      <div class="card"><h4>Pretraining</h4><p class="small">Next-token prediction on huge unlabelled text. Knows language, not how to follow requests.</p></div>
+      <span class="big-number" style="font-size: 48px">→</span>
+      <div class="card"><h4>Supervised fine-tuning</h4><p class="small">Instruction → ideal response pairs written or checked by people. Learns to follow instructions and a format.</p></div>
+      <span class="big-number" style="font-size: 48px">→</span>
+      <div class="card"><h4>Preference tuning</h4><p class="small">People rank several answers; the model is optimised towards preferred ones (RLHF).</p></div>
+    </div>
+    <div class="callout" style="margin-top: 20px"><strong>InstructGPT</strong> (Ouyang et al., 2022): labelers preferred the outputs of a
+      <strong>1.3 B</strong> instruction-tuned model over those of the <strong>175 B</strong> GPT-3, despite 100× fewer parameters.</div>
+    <p class="small">SmolLM2-135M-<strong>Instruct</strong> already went through these steps. Today we add one more, small SFT step for a brand voice.</p>
+    <aside class="notes">
+      [0:30 · 3 min] InstructGPT: SFT on demonstrations, then a reward model trained on human rankings,
+      then reinforcement learning (PPO). The headline result shows that alignment data can matter more
+      than size for what users perceive as quality. Mention that preference tuning today has simpler
+      variants (e.g., DPO) but we do not cover them. The lab performs SFT only.
+    </aside>
+  </section>
+
+  <!-- 20 · SFT format + chat template -->
+  <section>
+    <p class="kicker">SFT data format</p>
+    <h2>From a JSON line to training tokens</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr)">
+      <div>
+        <p class="small"><strong>1 · One example per line</strong> (<code>brand_voice.jsonl</code>)</p>
+        <pre><code class="language-json" data-trim>
+{"instruction": "How do I change my PIN?",
+ "response": "Easy! In the Andes app, go to Cards → Security → …"}
+        </code></pre>
+        <p class="small"><strong>2 · As chat messages</strong>: <code>system</code>, <code>user</code>, <code>assistant</code></p>
+        <p class="small"><strong>3 · Through the model's chat template</strong> (SmolLM2 uses ChatML):</p>
+      </div>
+      <div>
+        <pre><code class="language-plaintext" data-trim>
+&lt;|im_start|&gt;system
+You are the virtual assistant of Andes Bank…&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+How do I change my PIN?&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+Easy! In the Andes app, go to Cards → …&lt;|im_end|&gt;
+        </code></pre>
+        <div class="callout tip small"><strong>Loss masking:</strong> labels = −100 for the system and user tokens, so the model
+          learns to write answers, not to predict questions.</div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:33 · 3 min] Always format fine-tuning data with the same chat template the model uses at
+      inference: tokenizer.apply_chat_template does it. A mismatch (different tags, missing end token)
+      is one of the most common silent bugs. In PyTorch, label −100 is ignored by the cross-entropy loss.
+      Keep the end-of-turn token in the labels: that is how the model learns to stop.
+    </aside>
+  </section>
+
+  <!-- 21 · Building a dataset -->
+  <section>
+    <p class="kicker">Building a custom dataset</p>
+    <h2>Five steps, quality over quantity</h2>
+    <div class="cols-3" style="grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px">
+      <div class="card"><h4>1 · Collect</h4><p class="small">Real inputs: tickets, chats, emails. Cover rare but important cases.</p></div>
+      <div class="card"><h4>2 · Define</h4><p class="small">Labelling guidelines: definitions, examples, edge cases, "other".</p></div>
+      <div class="card"><h4>3 · Label</h4><p class="small">Two people label a sample; measure agreement (e.g., Cohen's κ) and fix the guide.</p></div>
+      <div class="card"><h4>4 · Split</h4><p class="small">Stratified train / validation / test. No duplicates across splits; split by customer or date if needed.</p></div>
+      <div class="card"><h4>5 · Protect</h4><p class="small">Remove personal data (names, IDs, account numbers) before labelling or training.</p></div>
+    </div>
+    <div class="cols" style="margin-top: 16px">
+      <div class="callout"><strong>Quality &gt; quantity:</strong> LIMA fine-tuned a 65 B model on only 1,000 carefully curated
+        examples (Zhou et al., 2023). Noisy labels teach noise.</div>
+      <div class="callout warn"><strong>Colombia:</strong> personal data in training sets falls under Ley 1581 de 2012. Document
+        your dataset with a datasheet (Gebru et al., 2021).</div>
+    </div>
+    <aside class="notes">
+      [0:36 · 3 min] Step 3 is the most skipped: if two careful humans disagree on 20% of labels, no
+      model will reach 95% accuracy against either of them. Leakage in step 4: near-duplicate messages
+      from the same customer in train and test inflate scores. The test set is used once, at the end.
+      Datasheets for Datasets (Gebru et al.) is a template for documenting motivation, composition,
+      collection process and recommended uses; the project's model card builds on the same idea.
+    </aside>
+  </section>
+
+  <!-- 22 · Banking77 -->
+  <section>
+    <p class="kicker">Today's dataset · Banking77</p>
+    <h2>77 fine-grained intents from one bank</h2>
+    <p class="small"><span class="tag">legacy-datasets/banking77</span>: 13,083 customer queries (10,003 train · 3,080 test) labelled with 77 intents (Casanueva et al., 2020). Guess the intent, then flip:</p>
+    <div class="cols-3">
+      <div class="flip-card">
+        <div class="front">"I ordered a card last week and it still hasn't shown up."</div>
+        <div class="back"><strong>card_arrival</strong><br><span class="small">not <em>card_delivery_estimate</em>, which asks how long delivery takes before there is a problem</span></div>
+      </div>
+      <div class="flip-card">
+        <div class="front">"The rate you applied to my purchase in euros looks wrong."</div>
+        <div class="back"><strong>card_payment_wrong_exchange_rate</strong><br><span class="small">not <em>exchange_rate</em>, a general question about rates</span></div>
+      </div>
+      <div class="flip-card">
+        <div class="front">"Why did I pay a fee when I topped up with a bank transfer?"</div>
+        <div class="back"><strong>top_up_by_bank_transfer_charge</strong><br><span class="small">not <em>transfer_fee_charged</em>, a fee on an outgoing transfer</span></div>
+      </div>
+    </div>
+    <p class="small muted" style="margin-top: 14px">The messages above are paraphrases written for class. The dataset has no validation split: we carve one out of train with a stratified split.</p>
+    <aside class="notes">
+      [0:39 · 2 min] Read each card, collect guesses in the chat, then flip. The point: fine-grained
+      intents are hard even for humans, and that is exactly why labelling guidelines matter. In the
+      lab we use 10 of the 77 intents; in the challenge each student gets a personal set of 10.
+    </aside>
+  </section>
+
+  <!-- 23 · Breakout -->
+  <section>
+    <p class="kicker">Apply it</p>
+    <h2>Write labelling guidelines for Andes Bank</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr)">
+      <div class="prompt-card" data-kind="breakout">
+        <h4>Five intents, four hard messages · 7 min</h4>
+        <p class="small" style="margin-bottom: 6px">Intents: <span class="tag">card_not_received</span> <span class="tag">lost_or_stolen_card</span>
+          <span class="tag">transfer_problem</span> <span class="tag">unexpected_fee</span> <span class="tag">close_account</span></p>
+        <ol class="small" style="margin-bottom: 6px">
+          <li>Write a one-line definition and an exclusion rule ("not when…") per intent.</li>
+          <li>Decide a rule for messages with two intents, and when to use <em>other</em>.</li>
+          <li>Label: (a) "My new card never came and now I see a purchase I didn't make." (b) "You charged me for a transfer that bounced." (c) "Close my account, your fees are ridiculous." (d) "Hi, my ID is 1020304050, card lost."</li>
+          <li>Add one privacy rule for annotators.</li>
+        </ol>
+        <p class="small muted" style="margin: 0">Andes Bank is fictional. One person per room reports one rule.</p>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="7" data-label="Breakout rooms"></div>
+        <p class="small">Rooms of 3 (use your project groups). Write in a shared doc.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:41 · 7 min + 1 min debrief] Open breakout rooms by project group, then press Start.
+      Debrief points: (a) two intents; a sensible rule is "security first": lost_or_stolen_card (a
+      possible fraud outranks a delivery delay) and flag it as multi-intent. (b) transfer_problem vs
+      unexpected_fee: decide by what the customer wants resolved (the failed transfer); document the
+      tie-break. (c) close_account; the fee complaint is the reason, not the intent. (d)
+      lost_or_stolen_card, and the privacy rule: annotators must not see identity numbers; mask them
+      before labelling (e.g., replace with [ID]). Good guidelines contain definitions, positive and
+      negative examples, tie-break rules and privacy instructions.
+    </aside>
+  </section>
+
+  <!-- 24 · Business lens 2 -->
+  <section>
+    <p class="kicker">Data is the real cost</p>
+    <h2>Budget for labelling, not only for GPUs</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">≈ 33 h</span>
+        <p class="caption muted">of annotator time to double-label 2,000 messages at 30 seconds per label
+          (2,000 × 2 × 30 s = 120,000 s). Illustrative arithmetic: measure your own time per label on a pilot of 50.</p>
+      </div>
+      <div class="callout business">
+        <p>A fine-tuning run on a small model costs minutes of GPU. The dataset behind it costs weeks of expert time, and it is
+          the asset that is hardest for competitors to copy.</p>
+        <ul class="small">
+          <li>Pilot: label 50–100 examples, measure agreement, fix the guide.</li>
+          <li>Who labels? Experts are slow and expensive; crowd workers need a better guide.</li>
+          <li>Anonymize before any data leaves the organisation.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:49 · 1 min] Business lens for Part 2. The arithmetic is deliberately simple; the lesson is to
+      measure time per label in a pilot before promising a date. Synthetic data generated by an LLM can
+      help (S08), but it must be reviewed.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 3 · HYPERPARAMETERS AND FAILURE MODES                     -->
+  <!-- ===================================================================== -->
+
+  <!-- 25 · Part 3 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 3</p>
+    <h2>Training that works</h2>
+    <p>Hyperparameters, learning curves, overfitting and catastrophic forgetting.</p>
+    <aside class="notes">
+      [0:50] Part 3 (14 min). The tuning game is the core interaction; the challenge asks students to
+      interpret two real configurations with exactly this vocabulary.
+    </aside>
+  </section>
+
+  <!-- 26 · Hyperparameters -->
+  <section>
+    <p class="kicker">Hyperparameters</p>
+    <h2>The knobs, and sensible starting points</h2>
+    <table class="compact" style="font-size: 20px">
+      <thead>
+        <tr><th>Knob</th><th>What it controls</th><th>Full fine-tuning (BERT-size)</th><th>LoRA</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Learning rate</strong></td><td>Step size of each update</td><td>2e-5 – 5e-5</td><td>Higher: ≈ 1e-4 – 1e-3</td></tr>
+        <tr><td><strong>Epochs</strong></td><td>Passes over the training set</td><td>2 – 4</td><td>More on tiny sets; watch validation</td></tr>
+        <tr><td><strong>Batch size</strong></td><td>Examples per update; memory</td><td>16 or 32</td><td>As memory allows (or gradient accumulation)</td></tr>
+        <tr><td><strong>Warmup</strong></td><td>First steps with the learning rate rising from 0</td><td>≈ 5–10% of steps</td><td>Same</td></tr>
+        <tr><td><strong>Weight decay</strong></td><td>Pulls weights towards 0 (AdamW)</td><td>0 – 0.01</td><td>Often 0</td></tr>
+        <tr><td><strong>Max length</strong></td><td>Truncation; cost grows with length</td><td colspan="2">Cover ≈ 95% of your examples' token lengths</td></tr>
+        <tr><td><strong>r · α · dropout · targets</strong></td><td>LoRA capacity, scale α/r, regularisation, which matrices</td><td>—</td><td>r 4–16 · α = 2r · 0.05 · q,v (or all linear)</td></tr>
+      </tbody>
+      <caption>BERT's fine-tuning grid: batch {16, 32}, learning rate {5e-5, 3e-5, 2e-5}, epochs {2, 3, 4} (Devlin et al., 2019). LoRA ranges are common starting points, not rules.</caption>
+    </table>
+    <aside class="notes">
+      [0:50 · 3 min] Starting points, not laws. The learning rate is the most sensitive knob: too high
+      and the pretrained knowledge is destroyed within a few steps; too low and nothing happens in your
+      budget. AdamW decouples weight decay from the gradient update (Loshchilov &amp; Hutter, 2019).
+      LoRA tolerates and usually needs higher learning rates than full fine-tuning because far fewer
+      weights move; in today's lab we use 1e-3 for LoRA and 5e-5 for DistilBERT.
+    </aside>
+  </section>
+
+  <!-- 27 · Four curve shapes -->
+  <section>
+    <p class="kicker">Reading learning curves</p>
+    <h2>Four shapes you will meet</h2>
+    <div class="cols" style="gap: 16px">
+      <div class="card"><h4>📉 Underfitting</h4><p class="small">Training and validation loss both still high and falling when training stops.</p><p class="small muted">Fix: more epochs, higher learning rate, bigger model or LoRA rank.</p></div>
+      <div class="card"><h4>✅ Good fit</h4><p class="small">Validation loss reaches its minimum and flattens; small gap to training loss.</p><p class="small muted">Keep the checkpoint with the best validation score.</p></div>
+      <div class="card"><h4>📈 Overfitting</h4><p class="small">Training loss keeps falling while validation loss turns up.</p><p class="small muted">Fix: fewer epochs, early stopping, more data, weight decay, smaller r.</p></div>
+      <div class="card"><h4>💥 Divergence</h4><p class="small">Loss jumps, oscillates or becomes NaN; accuracy near chance.</p><p class="small muted">Fix: lower the learning rate, add warmup, clip gradients.</p></div>
+    </div>
+    <aside class="notes">
+      [0:53 · 2 min] Quick tour; the simulator on the next slide shows each shape. For a 10-class
+      problem, the initial loss of a random classifier head is about ln(10) ≈ 2.3: a loss that stays
+      around 2.3 means the model learned nothing (often after divergence it predicts a single class).
+    </aside>
+  </section>
+
+  <!-- 28 · Simulator: tuning game -->
+  <section>
+    <p class="kicker">Simulator · the tuning game</p>
+    <h2>Find a good fit in as few runs as possible</h2>
+    <div class="sim">
+      <div class="sim-controls" style="gap: 12px">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+          <div class="control">
+            <label for="tg-method">Method</label>
+            <select id="tg-method">
+              <option value="full" selected>Full fine-tuning</option>
+              <option value="lora">LoRA</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="tg-data">Training set</label>
+            <select id="tg-data">
+              <option value="200" selected>200 examples</option>
+              <option value="2000">2,000 examples</option>
+            </select>
+          </div>
+        </div>
+        <div class="control">
+          <label for="tg-lr">Learning rate <output id="tg-lr-out">–</output></label>
+          <input type="range" id="tg-lr" min="0" max="9" step="1" value="3">
+        </div>
+        <div class="control">
+          <label for="tg-ep">Epochs <output id="tg-ep-out">–</output></label>
+          <input type="range" id="tg-ep" min="0" max="6" step="1" value="2">
+        </div>
+        <div>
+          <button class="btn btn-sm" id="tg-run" type="button">▶ Train (simulated)</button>
+          <button class="btn btn-sm btn-ghost" id="tg-reset" type="button">↺ New game</button>
+        </div>
+        <p class="stat" style="margin: 0">Runs: <strong id="tg-runs">0</strong> · example-passes used: <strong id="tg-passes">0</strong></p>
+        <p class="small muted" style="margin: 0">Illustrative curves from a transparent rule (see notes), not real training runs.</p>
+      </div>
+      <div class="sim-output">
+        <div id="tg-chart"></div>
+        <p class="stat" style="margin-bottom: 4px">Verdict: <strong id="tg-verdict">press Train</strong> · best epoch: <strong id="tg-best">–</strong></p>
+        <p class="small" id="tg-why" style="margin: 0"></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:55 · 4 min] Game: "Full fine-tuning, 200 examples. Who finds a good fit in the fewest runs?"
+      Let the chat call out settings. Then show: 5e-2 and 50 epochs → divergence (the AI's suggestion in
+      today's challenge); 5e-5 and 20 epochs → overfitting; 1e-6 → underfitting; switch to LoRA with 5e-5
+      → underfitting, because LoRA needs higher learning rates. The rule: divergence above a threshold
+      (full ≥ 5e-4, LoRA ≥ 1e-2); learning units U = epochs × (N/200) × min(lr/ref, 2) with ref = 5e-5
+      (full) or 2e-4 (LoRA); U &lt; 2 → underfit; epochs ≥ 10 (200 examples) or ≥ 20 (2,000) → overfit;
+      otherwise good. Example-passes = epochs × examples: the compute you paid for.
+    </aside>
+  </section>
+
+  <!-- 29 · Overfitting on small data -->
+  <section>
+    <p class="kicker">Small data</p>
+    <h2>Overfitting: memorising 200 examples is easy</h2>
+    <div class="cols">
+      <div>
+        <p class="small">A 67 M-parameter model can memorise a few hundred sentences perfectly. Training accuracy then says nothing; only held-out data does.</p>
+        <ul class="small">
+          <li><strong>Evaluate every epoch</strong> on validation (<code>eval_strategy="epoch"</code>).</li>
+          <li><strong>Early stopping</strong>: keep the best validation checkpoint.</li>
+          <li><strong>Regularise</strong>: weight decay, dropout, fewer epochs, PEFT with a small r.</li>
+          <li><strong>More or better data</strong> beats clever tricks.</li>
+          <li><strong>Tiny validation sets are noisy</strong>: with 50 examples, one error moves accuracy by 2 points.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Three datasets, three jobs</h4>
+        <table class="compact" style="margin: 0; font-size: 19px">
+          <tbody>
+            <tr><td><strong>Train</strong></td><td>fit the weights</td></tr>
+            <tr><td><strong>Validation</strong></td><td>choose epochs, learning rate, configuration</td></tr>
+            <tr><td><strong>Test</strong></td><td>report once, at the end; never used to choose</td></tr>
+          </tbody>
+        </table>
+        <p class="small muted" style="margin: 10px 0 0">If you pick the configuration with the best test score, the test score is no longer an honest estimate.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:59 · 1.5 min] The right-hand card is the heart of the challenge's "Crítica a la IA" task: the
+      AI proposes to choose the best epoch on the test set. The noise point (1/N) comes back in task 2:
+      students must judge whether a 1-point difference between configurations is meaningful.
+    </aside>
+  </section>
+
+  <!-- 30 · Catastrophic forgetting -->
+  <section>
+    <p class="kicker">Catastrophic forgetting</p>
+    <h2>Learning task B can erase task A</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr)">
+      <div>
+        <p class="small">Fine-tuning pushes weights towards the new data; skills that are not in that data can degrade. Elastic weight consolidation (Kirkpatrick et al., 2017) penalises changes to weights that mattered for the old task:</p>
+        $$ \mathcal{L}(\theta) = \mathcal{L}_B(\theta) + \sum_i \frac{\lambda}{2}\, F_i \big(\theta_i - \theta^{*}_{A,i}\big)^2 $$
+        <p class="small muted">\(F_i\): Fisher information (importance of weight \(i\) for task A) · \(\lambda\): how much to protect A.</p>
+      </div>
+      <div class="card">
+        <h4>Practical defences</h4>
+        <ul class="small">
+          <li>Small learning rate and few epochs.</li>
+          <li>PEFT: the base stays frozen; switch the adapter off to recover it.</li>
+          <li>Mix some general examples into the training data (replay).</li>
+          <li>Run a "general skills" test set before and after every fine-tune.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:00 · 2 min] Intuition for EWC: some weights are important for old skills (high Fisher
+      information), so we tie them to their old values with a spring whose stiffness is F_i. Most
+      practitioners do not implement EWC; they use the practical defences on the right. In the lab,
+      students ask the LoRA model a general question to check for side effects, and switch the adapter
+      off to show that the base model is untouched.
+    </aside>
+  </section>
+
+  <!-- 31 · Quiz: curves -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · learning curves</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">Training loss keeps falling; validation loss has risen for the last 3 epochs; test accuracy has not been computed. What do you do?</p>
+      <button class="quiz-opt" data-key="a">Train for more epochs: training loss is still improving</button>
+      <button class="quiz-opt" data-key="b">Compute test accuracy for every epoch and keep the best one</button>
+      <button class="quiz-opt" data-key="c">Keep the checkpoint with the lowest validation loss (early stopping), then evaluate it on test once</button>
+      <button class="quiz-opt" data-key="d">Raise the learning rate to escape the plateau</button>
+      <div class="quiz-explain">Rising validation loss with falling training loss is overfitting. Choose with validation, report
+        with test. Option b turns the test set into a second validation set and makes the reported score optimistic.</div>
+    </div>
+    <aside class="notes">
+      [1:02 · 1 min] Poll, then click. Students who chose b have found the planted error of task 4 in
+      today's challenge; ask them to keep that in mind.
+    </aside>
+  </section>
+
+  <!-- 32 · Business lens 3 -->
+  <section>
+    <p class="kicker">Side effects are a business risk</p>
+    <h2>Re-test everything after every fine-tune</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>NovaTel</strong> (fictional) fine-tunes its support model on 500 friendly conversations. Tone improves, but
+          nobody re-runs the safety tests: the model now also answers requests it used to refuse.</p>
+        <p class="small">Qi et al. (2024) showed that fine-tuning aligned models, even on benign data, can weaken their safety behaviour.</p>
+      </div>
+      <div>
+        <h4>A release checklist for fine-tuned models</h4>
+        <ul class="small">
+          <li>Task metrics on the test set (accuracy, F1, human rating).</li>
+          <li>General skills and safety prompts: same answers as the base model?</li>
+          <li>Prompts in Spanish and English, short and long.</li>
+          <li>Model card: data, hyperparameters, known limits (S10).</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:03 · 1 min] Business lens for Part 3. Reference: Qi, Zeng, Xie, Chen, Jia, Mittal and
+      Henderson, "Fine-tuning aligned language models compromises safety, even when users do not intend
+      to!" (ICLR 2024). The fix is procedural: a fixed regression suite that runs before every release.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 4 · PROMPT, RAG OR FINE-TUNE                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 33 · Part 4 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 4</p>
+    <h2>Prompt, RAG or fine-tune?</h2>
+    <p>A decision guide, and hosted fine-tuning versus open-weights models.</p>
+    <aside class="notes">
+      [1:04] Part 4 (6 min). This is the reasoning expected in the challenge's "Explica y decide".
+    </aside>
+  </section>
+
+  <!-- 34 · Decision guide -->
+  <section>
+    <p class="kicker">Decision guide</p>
+    <h2>Climb the ladder only when the evidence says so</h2>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+      <div class="card">
+        <h4>1 · Prompting</h4>
+        <p class="small">Clear instructions + a few examples + an evaluation set of real cases.</p>
+        <p class="small muted">Always the baseline. Stop here if it passes your evaluation.</p>
+      </div>
+      <div class="card">
+        <h4>2 · RAG</h4>
+        <p class="small">Failures come from <strong>missing or changing knowledge</strong>: policies, prices, product manuals.</p>
+        <p class="small muted">Retrieve the facts at question time; update documents, not weights.</p>
+      </div>
+      <div class="card">
+        <h4>3 · Fine-tuning</h4>
+        <p class="small">Failures come from <strong>behaviour</strong>: format, tone, a narrow classification, jargon, or cost and latency at scale.</p>
+        <p class="small muted">Needs labelled examples, evaluation and maintenance.</p>
+      </div>
+    </div>
+    <div class="callout tip" style="margin-top: 18px"><strong>They combine:</strong> fine-tune for <em>how</em> to answer, RAG for <em>what</em> is true today.
+      Fine-tuning is a poor way to teach facts that change every month.</div>
+    <aside class="notes">
+      [1:04 · 2 min] Same ladder as the adaptation spectrum in S01, now with diagnostic questions.
+      OpenAI's optimisation guide describes the same loop: write evals first, try prompting, fine-tune
+      only when evals show a need, and repeat. Classification with many labelled examples (Banking77)
+      is a textbook case for fine-tuning a small encoder: cheaper and faster than prompting a large LLM.
+    </aside>
+  </section>
+
+  <!-- 35 · Hosted vs open -->
+  <section>
+    <p class="kicker">Where to fine-tune</p>
+    <h2>Hosted fine-tuning API vs open-weights model</h2>
+    <table class="compact" style="font-size: 20px">
+      <thead><tr><th></th><th>Hosted API (e.g., OpenAI)</th><th>Open weights + PEFT (today's lab)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Data format</strong></td><td>JSONL, one chat conversation (<code>messages</code>) per line</td><td>Any format you convert with the chat template</td></tr>
+        <tr><td><strong>Infrastructure</strong></td><td>None: upload data, create a job</td><td>Your GPUs (Kaggle, cloud or on-premise) and code</td></tr>
+        <tr><td><strong>Weights</strong></td><td>Stay with the provider</td><td>Yours: run them anywhere the licence allows</td></tr>
+        <tr><td><strong>Data leaves you?</strong></td><td>Yes, under the provider's terms</td><td>Not necessarily</td></tr>
+        <tr><td><strong>Continuity</strong></td><td>The provider decides which models and features remain</td><td>You decide when to update or retire</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn small"><strong>Real example:</strong> OpenAI's fine-tuning guide (consulted September 2026) says the platform is being wound down:
+      closed to new users, with existing fine-tuned models served until their base models are deprecated. The same guide recommends
+      starting with about 50 well-crafted examples (minimum 10).</div>
+    <aside class="notes">
+      [1:06 · 2 min] Source: OpenAI's supervised fine-tuning and model-optimization guides
+      (developers.openai.com). Check the current page before quoting it: provider offerings change,
+      which is exactly the continuity row. The 50-example recommendation is a useful order of magnitude
+      for style tasks; our brand-voice set has 40 examples.
+    </aside>
+  </section>
+
+  <!-- 36 · Quiz: decide -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · decide</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Banco Andino's assistant must quote current fees and interest rates, which change every month. The answers are fluent but often outdated. What should the team try first?</p>
+      <button class="quiz-opt" data-key="a">Fine-tune the model every month on the new fees</button>
+      <button class="quiz-opt" data-key="b">RAG: retrieve the current fee table at question time</button>
+      <button class="quiz-opt" data-key="c">A larger model, which will know the fees</button>
+      <button class="quiz-opt" data-key="d">Raise the temperature for more varied answers</button>
+      <div class="quiz-explain">The failure is missing, changing knowledge, so the fix is in the context, not the weights.
+        Fine-tuning could still help with tone or format, on top of RAG.</div>
+    </div>
+    <aside class="notes">
+      [1:08 · 1 min] Poll, then click. Banco Andino is fictional. Follow-up in the chat: "What failure
+      would make you add fine-tuning on top?" (a consistent format, tone, or a narrow task at volume).
+    </aside>
+  </section>
+
+  <!-- 37 · Business lens 4 -->
+  <section>
+    <p class="kicker">Cost at scale</p>
+    <h2>Long prompts are paid on every request</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">150 M → 10 M</span>
+        <p class="caption muted">input tokens per month for 100,000 requests if a 1,500-token few-shot prompt can be replaced by a 100-token prompt
+          to a fine-tuned model (illustrative arithmetic; outputs not included).</p>
+      </div>
+      <div class="callout business">
+        <p>Andes Bank classifies 100,000 messages a month. A fine-tuned DistilBERT runs on one small server with no per-token bill;
+          a large LLM with a long prompt pays for the examples every time.</p>
+        <p class="small">Put on the other side of the scale: labelling, training, evaluation, hosting and a person who maintains it.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:09 · 1 min] Business lens for Part 4. Prices change, so no prices here: students multiply
+      tokens by a current price if they need a number. The decision is total cost of ownership, not
+      the token bill alone (S01).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- BREAK                                                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 38 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Open the lab in Kaggle now and turn on the GPU: the session restarts when you change the accelerator.</p>
+    <div class="timer" data-minutes="10" data-label="Break"></div>
+    <aside class="notes">
+      [1:10 · 10 min] Press Start before you mute. Suggest opening the lab and switching to GPU T4 x2
+      during the break so model downloads start early.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- LAB                                                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 39 · Lab divider -->
+  <section class="section-slide" data-block="lab">
+    <p class="kicker">Hands-on</p>
+    <h2>Guided lab</h2>
+    <p>Full fine-tuning of DistilBERT on Banking77, then a LoRA brand voice for SmolLM2.</p>
+    <span class="block-tag" data-block="lab">Lab · 60'</span>
+    <aside class="notes">
+      [1:20] Lab block. Share your screen and code along; students run each cell after you.
+    </aside>
+  </section>
+
+  <!-- 40 · Lab bridge -->
+  <section>
+    <p class="kicker">Lab bridge</p>
+    <h2>What we will build</h2>
+    <div class="cols">
+      <table class="compact">
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Banking77: 10 intents, stratified validation split, TF-IDF baseline</td><td class="num">12'</td></tr>
+          <tr><td><strong>2</strong></td><td>Full fine-tuning of DistilBERT with <code>Trainer</code>: curves, test accuracy and macro-F1, new messages</td><td class="num">23'</td></tr>
+          <tr><td><strong>3</strong></td><td>LoRA SFT of SmolLM2-135M-Instruct on 40 Andes Bank examples: before vs after, adapter on/off</td><td class="num">22'</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h4>Open the notebook</h4>
+        <p class="small">Kaggle checklist: Settings → Accelerator → <strong>GPU T4 x2</strong> · Internet on.</p>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/04-fine-tuning/lab.ipynb" target="_blank" rel="noopener">Open in Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/04-fine-tuning/lab.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+        <pre><code class="language-python" data-trim>
+LoraConfig(r=8, lora_alpha=16, lora_dropout=0.05,
+           target_modules=["q_proj", "v_proj"],
+           task_type="CAUSAL_LM")
+        </code></pre>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:20 · 3 min] Everyone opens the notebook now. Common blockers: GPU not enabled (first cell prints
+      "Device: cpu"), Internet off, peft missing (the setup cell installs it). Timing: Part 1 until 1:35,
+      Part 2 until 1:58, Part 3 until 2:18. On CPU the lab still runs, but full training takes longer:
+      suggest reducing epochs if someone has no GPU quota left.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CHALLENGE                                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 41 · Challenge divider -->
+  <section class="section-slide" data-block="challenge">
+    <h2>Session challenge</h2>
+    <p>Individual, graded, 40 minutes in class. Submit by 23:59 today.</p>
+    <aside class="notes">
+      [2:20] Challenge block. The next slide is the only slide in Spanish.
+    </aside>
+  </section>
+
+  <!-- 42 · Challenge briefing (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Challenge de la sesión · evaluado</p>
+    <h2>Challenge S04: afina, compara y decide</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <div>
+        <ol class="small">
+          <li><strong>Ejecución:</strong> afina DistilBERT en <em>tus</em> 10 intents de Banking77 con tu configuración A; reporta accuracy y F1 macro.</li>
+          <li><strong>Análisis:</strong> entrena la configuración B, compara las curvas, diagnostica si hay sub- o sobreajuste (o ninguno) y elige con validación; evalúa en test una sola vez.</li>
+          <li><strong>Explica y decide:</strong> ¿afinamiento, RAG o prompting para tu dominio asignado?</li>
+          <li><strong>Crítica a la IA:</strong> encuentra, explica y corrige 4 errores en unos <code>TrainingArguments</code> propuestos por un asistente.</li>
+        </ol>
+        <ul class="small">
+          <li><strong>Rúbrica:</strong> ejecución 40% · análisis 40% · reflexión y registro de IA 20%.</li>
+          <li><strong>IA permitida</strong> con registro; <strong>micro-sustentaciones</strong>: si no explicas tu entrega, máximo 3.0.</li>
+          <li><strong>Entrega:</strong> Archivo → Descargar notebook → e-Aulas como <code>S04_&lt;codigo&gt;.ipynb</code>, 23:59.</li>
+        </ul>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="40" data-label="Challenge"></div>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/04-fine-tuning/challenge.ipynb" target="_blank" rel="noopener">Abrir en Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/04-fine-tuning/challenge.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+        <p class="small muted">Activa la GPU T4 x2 en Kaggle.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:20 · 38 min] This briefing slide is in Spanish by course convention. Read the rules aloud,
+      remind students to type their STUDENT_ID in the first cell (their intents and configurations
+      depend on it) and to enable the GPU, then start the 40' timer. Run 3–4 random micro-vivas during
+      the block (2–3 minutes each, screen shared, no AI help).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WRAP-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 43 · Wrap-up -->
+  <section>
+    <p class="kicker">Wrap-up</p>
+    <h2>Key takeaways</h2>
+    <div class="cols">
+      <ul>
+        <li>Full fine-tuning trains every weight (≈16 bytes per parameter); PEFT trains a tiny fraction.</li>
+        <li>LoRA: \(W = W_0 + BA\), rank \(r\) sets capacity; adapters are small, swappable and mergeable.</li>
+        <li>Choose with validation, report with test once; read the curves before trusting a number.</li>
+        <li>Prompt first, RAG for changing knowledge, fine-tune for behaviour, and re-test after every fine-tune.</li>
+      </ul>
+      <div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">For your project: what data would you fine-tune on, how many examples could you label in a week, and what is your baseline?</p>
+        </div>
+        <p class="small"><strong>Next session:</strong> Evaluating generative models (BLEU, ROUGE, chrF, human evaluation).
+          <span class="muted">Pre-work: read Hu et al. (2021), sections 1–4; draft your group's proposal canvas (H2, due before S06).</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:58 · 2 min] Collect exit answers in the chat; they feed the project proposal. Remind students
+      of the 23:59 deadline, the file name S04_codigo.ipynb, and to review their S1–S3 balance in e-Aulas.
+    </aside>
+  </section>
+
+  <!-- 44 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Sources for this session</h2>
+    <div class="cols" style="font-size: 17px; line-height: 1.3">
+      <ul>
+        <li>Howard, J., &amp; Ruder, S. (2018). Universal language model fine-tuning for text classification. <em>ACL</em>.</li>
+        <li>Houlsby, N., et al. (2019). Parameter-efficient transfer learning for NLP. <em>ICML</em>.</li>
+        <li>Li, X. L., &amp; Liang, P. (2021). Prefix-tuning: Optimizing continuous prompts for generation. <em>ACL</em>.</li>
+        <li>Lester, B., Al-Rfou, R., &amp; Constant, N. (2021). The power of scale for parameter-efficient prompt tuning. <em>EMNLP</em>.</li>
+        <li>Hu, E. J., et al. (2021). LoRA: Low-rank adaptation of large language models. arXiv:2106.09685 (<em>ICLR</em> 2022).</li>
+        <li>Dettmers, T., Pagnoni, A., Holtzman, A., &amp; Zettlemoyer, L. (2023). QLoRA: Efficient finetuning of quantized LLMs. <em>NeurIPS</em>.</li>
+        <li>Ouyang, L., et al. (2022). Training language models to follow instructions with human feedback. <em>NeurIPS</em>.</li>
+        <li>Zhou, C., et al. (2023). LIMA: Less is more for alignment. <em>NeurIPS</em>.</li>
+        <li>Devlin, J., Chang, M.-W., Lee, K., &amp; Toutanova, K. (2019). BERT. <em>NAACL</em>.</li>
+      </ul>
+      <ul>
+        <li>Casanueva, I., Temčinas, T., Gerz, D., Henderson, M., &amp; Vulić, I. (2020). Efficient intent detection with dual sentence encoders. <em>NLP4ConvAI Workshop, ACL</em>.</li>
+        <li>Kirkpatrick, J., et al. (2017). Overcoming catastrophic forgetting in neural networks. <em>PNAS</em>, 114(13).</li>
+        <li>Gebru, T., et al. (2021). Datasheets for datasets. <em>Communications of the ACM</em>, 64(12).</li>
+        <li>Qi, X., et al. (2024). Fine-tuning aligned language models compromises safety, even when users do not intend to! <em>ICLR</em>.</li>
+        <li>Rajbhandari, S., et al. (2020). ZeRO: Memory optimizations toward training trillion parameter models. <em>SC20</em>.</li>
+        <li>Loshchilov, I., &amp; Hutter, F. (2019). Decoupled weight decay regularization. <em>ICLR</em>.</li>
+        <li>Hugging Face. PEFT documentation: <a href="https://huggingface.co/docs/peft" target="_blank" rel="noopener">huggingface.co/docs/peft</a></li>
+        <li>OpenAI. Fine-tuning guide: <a href="https://developers.openai.com/api/docs/guides/supervised-fine-tuning" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/supervised-fine-tuning</a></li>
+      </ul>
+    </div>
+    <aside class="notes">
+      Primary sources for every claim in the deck. Kirkpatrick et al. (2017) and Gebru et al. (2021)
+      include women among their authors (e.g., Raia Hadsell, Claudia Clopath; Timnit Gebru, Hanna
+      Wallach, Kate Crawford). Spanish resources are listed in the session README.
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "04" });
+  Course.onReady(() => {
+    const fmtInt = (n) => Math.round(n).toLocaleString("en-US");
+    function fmtParams(n) {
+      if (n >= 1e9) return (n / 1e9).toFixed(2) + " B";
+      if (n >= 1e6) return (n / 1e6).toFixed(1) + " M";
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + " K";
+      return String(Math.round(n));
+    }
+    function fmtBytes(b) {
+      if (b >= 1e9) return (b / 1e9).toFixed(b >= 1e11 ? 0 : 1) + " GB";
+      if (b >= 1e6) return (b / 1e6).toFixed(1) + " MB";
+      return (b / 1e3).toFixed(1) + " KB";
+    }
+
+    // --- Simulator 1: LoRA parameter and memory calculator --------------------------------
+    // Decoder-only, Llama-style blocks: attention q (d→d), k (d→kv), v (d→kv), o (d→d);
+    // MLP gate (d→ff), up (d→ff), down (ff→d). Norms and biases are ignored (≈).
+    const PRESETS = {
+      smol: { d: 576, L: 30, kv: 192, ff: 1536, V: 49152, tied: true },   // SmolLM2-135M (GQA: 3 KV heads × 64)
+      qwen: { d: 896, L: 24, kv: 128, ff: 4864, V: 151936, tied: true },  // Qwen2.5-0.5B (GQA: 2 KV heads × 64)
+      l7b: { d: 4096, L: 32, kv: 4096, ff: 11008, V: 32000, tied: false } // Llama 2 7B shape (multi-head attention)
+    };
+    const RANKS = [1, 2, 4, 8, 16, 32, 64, 128];
+    const lcPreset = document.getElementById("lc-preset");
+    const lcD = document.getElementById("lc-d");
+    const lcL = document.getElementById("lc-l");
+    const lcR = document.getElementById("lc-r");
+    const lcPrec = document.getElementById("lc-prec");
+    const lcTargets = Array.from(document.querySelectorAll(".lc-t"));
+    let arch = Object.assign({}, PRESETS.smol);
+    let applyingPreset = false;
+
+    function customArch(d, L) {
+      // Llama-style defaults for a custom model: full multi-head attention, ff ≈ 8d/3, 32k vocabulary.
+      return { d: d, L: L, kv: d, ff: Math.round((8 * d) / 3 / 64) * 64, V: 32000, tied: false };
+    }
+
+    function updateLora() {
+      const r = RANKS[Number(lcR.value)];
+      const on = new Set(lcTargets.filter((c) => c.checked).map((c) => c.value));
+      const { d, L, kv, ff, V, tied } = arch;
+      const perLayerBase = 2 * d * d + 2 * d * kv + 3 * d * ff;
+      const total = L * perLayerBase + (tied ? 1 : 2) * V * d;
+      let perLayerLora = 0;
+      if (on.has("q")) perLayerLora += r * (d + d);
+      if (on.has("k")) perLayerLora += r * (d + kv);
+      if (on.has("v")) perLayerLora += r * (d + kv);
+      if (on.has("o")) perLayerLora += r * (d + d);
+      if (on.has("mlp")) perLayerLora += 3 * r * (d + ff);
+      const trainable = L * perLayerLora;
+      const baseBytes = Number(lcPrec.value);
+      const fullMem = 16 * total;
+      const loraMem = baseBytes * total + 16 * trainable;
+      Course.barChart(document.getElementById("lc-chart"), ["Full fine-tuning", "LoRA"], [fullMem / 1e9, loraMem / 1e9],
+        { format: (v) => (v >= 100 ? v.toFixed(0) : v >= 1 ? v.toFixed(1) : v.toFixed(2)) + " GB", highlight: 1,
+          title: "Training memory (GB), before activations", width: 640, rowHeight: 56 });
+      document.getElementById("lc-train").textContent = fmtInt(trainable);
+      document.getElementById("lc-share").textContent = (100 * trainable / total).toFixed(trainable / total < 0.001 ? 3 : 2) + "%";
+      document.getElementById("lc-total").textContent = "≈" + fmtParams(total);
+      document.getElementById("lc-adapter").textContent = fmtBytes(4 * trainable);
+      document.getElementById("lc-copy").textContent = fmtBytes(4 * total);
+    }
+
+    function onArchSlider() {
+      if (applyingPreset) return;
+      lcPreset.value = "custom";
+      arch = customArch(Number(lcD.value), Number(lcL.value));
+      updateLora();
+    }
+
+    Course.bindRange(lcD, document.getElementById("lc-d-out"), (v) => fmtInt(v), onArchSlider);
+    Course.bindRange(lcL, document.getElementById("lc-l-out"), (v) => String(v), onArchSlider);
+    Course.bindRange(lcR, document.getElementById("lc-r-out"), (v) => String(RANKS[v]), updateLora);
+    lcTargets.forEach((c) => c.addEventListener("change", updateLora));
+    lcPrec.addEventListener("change", updateLora);
+    lcPreset.addEventListener("change", () => {
+      const p = PRESETS[lcPreset.value];
+      arch = p ? Object.assign({}, p) : customArch(Number(lcD.value), Number(lcL.value));
+      if (p) {
+        applyingPreset = true;
+        lcD.value = String(p.d);
+        lcL.value = String(p.L);
+        lcD.dispatchEvent(new Event("input"));
+        lcL.dispatchEvent(new Event("input"));
+        applyingPreset = false;
+      }
+      updateLora();
+    });
+    // bindRange fired onArchSlider once on bind and switched the menu to "custom": restore the lab preset.
+    lcPreset.value = "smol";
+    arch = Object.assign({}, PRESETS.smol);
+    updateLora();
+
+    // --- Simulator 2: the hyperparameter tuning game ---------------------------------------
+    // Transparent teaching rule (illustrative curves, not real runs):
+    //   diverge   if lr >= 5e-4 (full) or >= 1e-2 (LoRA)
+    //   U = epochs × (N / 200) × min(lr / ref, 2), ref = 5e-5 (full) or 2e-4 (LoRA)
+    //   underfit  if U < 2
+    //   overfit   if epochs >= 10 (N = 200) or >= 20 (N = 2,000)
+    //   good      otherwise
+    const LRS = [1e-6, 1e-5, 2e-5, 5e-5, 1e-4, 2e-4, 5e-4, 1e-3, 1e-2, 5e-2];
+    const EPOCHS = [1, 2, 3, 5, 10, 20, 50];
+    const L0 = Math.log(10); // loss of a random 10-class head ≈ ln(10) ≈ 2.30
+    const tgMethod = document.getElementById("tg-method");
+    const tgData = document.getElementById("tg-data");
+    const tgLr = document.getElementById("tg-lr");
+    const tgEp = document.getElementById("tg-ep");
+    const fmtLr = (v) => {
+      const [m, e] = v.toExponential(0).split("e");
+      return m + "e" + e.replace("+", "");
+    };
+    let runs = 0;
+    let passes = 0;
+
+    const EXPLAIN = {
+      underfit: "Both losses are still high and falling: the model has not learned enough. Train longer or raise the learning rate (LoRA needs higher rates than full fine-tuning).",
+      good: "Validation loss reaches its minimum and stays flat, with a small gap to training loss. Keep the best validation checkpoint and evaluate it on test once.",
+      overfit: "Training loss keeps falling while validation loss turns up: the model memorises the training set. Stop at the best validation epoch, use fewer epochs or more data.",
+      diverge: "The learning rate is so high that updates overshoot: the loss jumps and then stays near ln(10) ≈ 2.3, the level of a model that predicts one class. Lower it by 10–100×."
+    };
+    const LABEL = { underfit: "📉 underfitting", good: "✅ good fit", overfit: "📈 overfitting", diverge: "💥 divergence" };
+
+    function outcome(method, N, lr, E) {
+      const full = method === "full";
+      if (lr >= (full ? 5e-4 : 1e-2)) return "diverge";
+      const ref = full ? 5e-5 : 2e-4;
+      const U = E * (N / 200) * Math.min(lr / ref, 2);
+      if (U < 2) return "underfit";
+      if (E >= (N === 200 ? 10 : 20)) return "overfit";
+      return "good";
+    }
+
+    function curves(kind, method, N, lr, E) {
+      const ref = method === "full" ? 5e-5 : 2e-4;
+      const rate = Math.max(0.02, 0.9 * (N / 200) * Math.min(lr / ref, 2)); // progress per epoch
+      const overAt = (N === 200 ? 10 : 20) * 0.35;                            // epoch where validation turns up
+      const rng = Course.seededRandom(Math.round(lr * 1e7) + E * 13 + N);
+      const n = 40;
+      const train = [];
+      const val = [];
+      for (let i = 0; i <= n; i++) {
+        const x = (E * i) / n;
+        const p = 1 - Math.exp(-rate * x);
+        let tr, va;
+        if (kind === "diverge") {
+          const spike = x < E * 0.15 ? L0 + 3.5 * (x / (E * 0.15)) : L0 + 0.15 + 0.35 * rng();
+          tr = spike;
+          va = spike + 0.1 + 0.2 * rng();
+        } else {
+          tr = L0 - (L0 - 0.04) * p;
+          va = tr + 0.12 + 0.18 * p;
+          if (kind === "overfit" && x > overAt) va += 0.045 * Math.pow(x - overAt, 1.15);
+        }
+        train.push([+x.toFixed(3), +tr.toFixed(3)]);
+        val.push([+x.toFixed(3), +va.toFixed(3)]);
+      }
+      return [
+        { name: "Training loss", points: train, markers: false },
+        { name: "Validation loss", points: val, dashed: true, markers: false }
+      ];
+    }
+
+    function drawGame(show) {
+      const method = tgMethod.value;
+      const N = Number(tgData.value);
+      const lr = LRS[Number(tgLr.value)];
+      const E = EPOCHS[Number(tgEp.value)];
+      const chartEl = document.getElementById("tg-chart");
+      if (!show) {
+        Course.lineChart(chartEl, [{ name: "Training loss", points: [[0, L0]] }, { name: "Validation loss", points: [[0, L0 + 0.12]], dashed: true }],
+          { xLabel: "Epoch", yLabel: "Loss", yMin: 0, yMax: 6, xMin: 0, xMax: E, width: 640, height: 340, title: "Learning curves (illustrative)" });
+        document.getElementById("tg-verdict").textContent = "press Train";
+        document.getElementById("tg-best").textContent = "–";
+        document.getElementById("tg-why").textContent = "";
+        return;
+      }
+      const kind = outcome(method, N, lr, E);
+      const series = curves(kind, method, N, lr, E);
+      Course.lineChart(chartEl, series,
+        { xLabel: "Epoch", yLabel: "Loss", yMin: 0, yMax: 6, xMin: 0, xMax: E, width: 640, height: 340, title: "Learning curves (illustrative)" });
+      const best = series[1].points.reduce((b, p) => (p[1] < b[1] ? p : b));
+      document.getElementById("tg-verdict").textContent = LABEL[kind];
+      document.getElementById("tg-best").textContent = kind === "diverge" ? "none" : `${best[0].toFixed(1)} (val ${best[1].toFixed(2)})`;
+      document.getElementById("tg-why").textContent = EXPLAIN[kind];
+    }
+
+    Course.bindRange(tgLr, document.getElementById("tg-lr-out"), (v) => fmtLr(LRS[v]), () => drawGame(false));
+    Course.bindRange(tgEp, document.getElementById("tg-ep-out"), (v) => String(EPOCHS[v]), () => drawGame(false));
+    tgMethod.addEventListener("change", () => drawGame(false));
+    tgData.addEventListener("change", () => drawGame(false));
+    document.getElementById("tg-run").addEventListener("click", () => {
+      runs += 1;
+      passes += EPOCHS[Number(tgEp.value)] * Number(tgData.value);
+      document.getElementById("tg-runs").textContent = String(runs);
+      document.getElementById("tg-passes").textContent = fmtInt(passes);
+      drawGame(true);
+    });
+    document.getElementById("tg-reset").addEventListener("click", () => {
+      runs = 0;
+      passes = 0;
+      document.getElementById("tg-runs").textContent = "0";
+      document.getElementById("tg-passes").textContent = "0";
+      drawGame(false);
+    });
+  });
+</script>
+</body>
+</html>

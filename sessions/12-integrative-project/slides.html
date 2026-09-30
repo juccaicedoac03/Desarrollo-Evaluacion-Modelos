@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S12 · Integrative Project: Complete Solution</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+<style>
+  /* ---- S12 facilitation components (deck-specific; everything else comes from course.css) ---- */
+
+  /* Divider labels: course.css only names the five regular blocks, S12 has its own. */
+  .reveal .slides section.section-slide[data-label]::before { content: attr(data-label); }
+
+  /* 8' + 3' + 4' phase bar (rules slide: static and coloured; stage slides: live) */
+  .reveal .phase-bar { display: flex; gap: 6px; margin: 0 0 14px; }
+  .reveal .phase-bar > * {
+    box-sizing: border-box; padding: 8px 12px; border: 2px solid var(--line); border-radius: 10px;
+    background: var(--surface); color: var(--muted); font-size: 19px; font-weight: 600;
+    text-align: center; white-space: nowrap; transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .reveal .phase-bar > [data-phase="pitch"] { flex: 8 1 0; }
+  .reveal .phase-bar > [data-phase="demo"] { flex: 3 1 0; }
+  .reveal .phase-bar > [data-phase="qa"] { flex: 4 1 0; }
+  .reveal .phase-bar.is-static > * { border-color: transparent; color: #fff; font-size: 24px; padding: 14px 16px; }
+  .reveal .phase-bar.is-static > [data-phase="pitch"] { background: var(--brand); }
+  .reveal .phase-bar.is-static > [data-phase="demo"] { background: var(--accent); }
+  .reveal .phase-bar.is-static > [data-phase="qa"] { background: var(--accent-2); }
+  .reveal .phase-bar.is-static small { display: block; font-size: 17px; font-weight: 500; opacity: .92; }
+  .reveal .phase-bar > .is-active { border-color: var(--brand); background: var(--brand); color: #fff; }
+  .reveal .phase-bar > .is-past { color: var(--muted); text-decoration: line-through; }
+
+  /* Live draw: order grid */
+  .reveal .order-grid {
+    display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 8px;
+    margin: 0 0 10px; padding: 0; list-style: none;
+  }
+  .reveal .order-grid > li {
+    display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; column-gap: 8px;
+    margin: 0; padding: 6px 10px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; font-size: 19px;
+  }
+  .reveal .order-grid > li::marker { content: none; }
+  .reveal .order-grid .n { color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .reveal .order-grid .g { font-size: 22px; font-weight: 800; }
+  .reveal .order-grid .t { color: var(--muted); font-family: var(--font-mono); font-size: 16px; }
+  .reveal .order-grid .r { grid-column: 1 / -1; color: var(--muted); font-size: 16px; }
+  .reveal .order-grid > li.is-current { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 8%, white); }
+  .reveal .order-grid > li.is-current .g { color: var(--brand); }
+  .reveal .order-grid > li.is-done { background: var(--surface); }
+  .reveal .order-grid > li.is-done .g { color: var(--muted); text-decoration: line-through; }
+  .reveal .order-grid > li.is-done .g::after { content: " ✓"; color: var(--ok); text-decoration: none; display: inline-block; margin-left: 4px; }
+  .reveal .order-grid > li.brk {
+    grid-column: 1 / -1; display: block; padding: 3px 10px; border: 0; border-radius: 8px;
+    background: color-mix(in srgb, var(--block-break) 12%, white); color: var(--block-break); font-size: 16px; font-weight: 700; text-align: center;
+  }
+  /* More than 12 groups: compact cells so up to 20 groups fit on the canvas */
+  .reveal .order-grid.is-compact { gap: 5px; }
+  .reveal .order-grid.is-compact > li { padding: 2px 8px; font-size: 16px; line-height: 1.2; border-radius: 8px; }
+  .reveal .order-grid.is-compact .g { font-size: 18px; }
+  .reveal .order-grid.is-compact .t,
+  .reveal .order-grid.is-compact .r { font-size: 14px; }
+  .reveal .order-grid.is-compact > li.brk { padding: 1px 8px; font-size: 14px; }
+  .reveal .order-empty { color: var(--muted); font-size: 20px; }
+  .reveal .draw-note { margin: 0; font-size: 16px; color: var(--muted); }
+  .reveal .draw-note.warn { color: var(--accent-2); font-weight: 600; }
+
+  /* Stage (now presenting) */
+  .reveal .stage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: 26px; align-items: start; }
+  .reveal .stage .card { padding: 16px 22px; }
+  .reveal .stage-group { display: block; margin: 0 0 6px; color: var(--brand); font-size: 84px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+  .reveal .stage-card p { margin: 0 0 6px; }
+  .reveal .stage-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .reveal .stage-actions .btn { margin: 0; font-size: 18px; }
+  .reveal .stage-actions .btn[disabled] { opacity: .45; cursor: not-allowed; filter: none; }
+  .reveal .stage-msg { min-height: 1.3em; margin: 8px 0 0; color: var(--accent-2); font-size: 17px; font-weight: 600; }
+  .reveal .stage .timer { display: flex; width: 100%; margin: 0 0 10px; }
+  .reveal .strip { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .reveal .strip > li {
+    margin: 0; padding: 1px 10px; border: 1.5px solid var(--line-strong); border-radius: 999px;
+    background: #fff; font-family: var(--font-mono); font-size: 16px; font-weight: 600;
+  }
+  .reveal .strip > li::marker { content: none; }
+  .reveal .strip > li.is-done { background: var(--surface); color: var(--muted); }
+  .reveal .strip > li.is-done::after { content: " ✓"; color: var(--ok); }
+  .reveal .strip > li.is-current { border-color: var(--brand); background: var(--brand); color: #fff; }
+
+  /* Break slide: two timers side by side */
+  .reveal .break-timers { display: flex; gap: 18px; flex-wrap: wrap; }
+
+  /* Course recap: 12 flip cards */
+  .reveal .recap { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .reveal .recap .flip-card { min-height: 136px; }
+  .reveal .recap .flip-card > .front {
+    justify-content: flex-start; padding: 10px 16px; border-top: 6px solid var(--st);
+    font-size: 19px; line-height: 1.25;
+  }
+  .reveal .recap .flip-card > .back { padding: 10px 16px; font-size: 17px; line-height: 1.3; }
+  .reveal .recap .rn { display: block; margin-bottom: 4px; color: var(--st); font-size: 15px; font-weight: 800; letter-spacing: .12em; }
+  .reveal .st-found { --st: var(--block-theory); }
+  .reveal .st-apps { --st: var(--block-lab); }
+  .reveal .st-resp { --st: var(--accent-2); }
+  .reveal .key { display: inline-block; width: 14px; height: 14px; border-radius: 4px; background: var(--st); vertical-align: -1px; }
+
+  /* Eight minimums */
+  .reveal .mins { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .reveal .mins .card { padding: 12px 16px; }
+  .reveal .mins h4 { margin: 0 0 4px; font-size: 21px; }
+  .reveal .mins p { margin: 0 0 6px; font-size: 18px; line-height: 1.3; }
+  .reveal .mins .pill { font-size: 15px; }
+
+  /* Formula box (Spanish assessment slides) */
+  .reveal .formula {
+    margin: 0 0 12px; padding: 12px 16px; border-radius: 12px; background: var(--surface);
+    font-family: var(--font-mono); font-size: 18px; line-height: 1.55; white-space: pre;
+  }
+  .reveal .pending-list .btn { margin: 0 8px 8px 0; font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ===================================================================== -->
+  <!-- OPENING                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="12">
+    <div class="title-main">
+      <h1>Integrative Project: Complete Solution</h1>
+      <p class="subtitle">Proyecto integrador: desarrollo de solución completa</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome to the final session. Today there is no lab and no challenge: every
+      group presents its final project. Ask everyone to keep the chat open, cameras on while they
+      present, and to have the peer-feedback template ready. Presentations are in Spanish; this
+      facilitation deck is in English except the assessment slides. Keys: S speaker view,
+      F fullscreen, Esc overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Opening: rules, criteria, live draw of the order <span class="time">10'</span></li>
+      <li data-block="challenge">Presentations · round 1 (first half of the groups) <span class="time">16' / group</span></li>
+      <li data-block="break">Break <span class="time">5–10'</span></li>
+      <li data-block="challenge">Presentations · round 2 (second half) <span class="time">16' / group</span></li>
+      <li data-block="theory">Closing: pending questions, course recap, what's next <span class="time">5'+</span></li>
+    </ol>
+    <p class="small muted" style="margin-top: 16px">Each slot is 15' on stage + 1' to switch screens. Time budget: 30' + 16' × groups;
+      from 10 groups on, the break and the closing shrink to 5'.</p>
+    <aside class="notes">
+      [0:01 · 1 min] Walk through the blocks. The exact start time of each group appears after the
+      live draw (slide "Presentation order"). With 9 groups or fewer everything fits with a 10' break;
+      with 10 groups the break and the closing are 5' each; with more groups you must have agreed an
+      extended slot beforehand (see the instructor guide). If a group's questions overflow, the
+      remaining individual-defense questions move to the end of the session, as the project brief allows.
+    </aside>
+  </section>
+
+  <!-- 3 · Opening divider -->
+  <section class="section-slide" data-block="warmup" data-label="Opening">
+    <h2>Showcase day</h2>
+    <p>Twelve sessions, one question: can you make a model your own, prove it with evidence, and explain every decision?</p>
+    <span class="block-tag" data-block="warmup">Opening · 10'</span>
+    <aside class="notes">
+      [0:02] Opening block. Keep it brisk: students already have the rules in the session guide.
+      The goal is that everyone knows the timing, the criteria and the order before minute 10.
+    </aside>
+  </section>
+
+  <!-- 4 · The question -->
+  <section>
+    <p class="kicker">What we evaluate today</p>
+    <h2>The question every project answers</h2>
+    <blockquote style="font-size: 30px; margin-bottom: 22px">Does our own model solve the problem better than the simplest
+      alternative, with acceptable cost and risk?</blockquote>
+    <div class="cols-3">
+      <div class="card">
+        <span class="icon">🔧</span>
+        <h4>Own model</h4>
+        <p class="small">Weights the group fine-tuned (full or LoRA) or trained, and evaluated. Prompting an API alone does not count.</p>
+      </div>
+      <div class="card">
+        <span class="icon">⚖️</span>
+        <h4>Fair comparison</h4>
+        <p class="small">Same held-out test set for the model and the baseline; decisions taken on validation, never on test.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🔍</span>
+        <h4>Honest analysis</h4>
+        <p class="small">Beating the baseline is not required: a well-explained negative result beats a positive one without evidence.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:02 · 1 min] This is the guiding question of the project brief (section 1). Stress the last
+      card: we grade the quality of the evaluation and the honesty of the analysis, not only the
+      final number. The audience today is mixed (business and technical), like a real steering committee.
+    </aside>
+  </section>
+
+  <!-- 5 · Stage rules -->
+  <section>
+    <p class="kicker">Stage rules</p>
+    <h2>15 minutes per group</h2>
+    <div class="phase-bar is-static" role="img" aria-label="Pitch 8 minutes, demo 3 minutes, questions 4 minutes">
+      <div data-phase="pitch">Pitch · 8' <small>problem → solution → evidence → value</small></div>
+      <div data-phase="demo">Demo · 3' <small>live</small></div>
+      <div data-phase="qa">Q&amp;A · 4' <small>individual defense</small></div>
+    </div>
+    <div class="cols-3">
+      <div class="card">
+        <h4>🗣️ Everyone speaks</h4>
+        <p class="small">Each member presents part of the pitch or the demo. Camera on during your part and your defense.</p>
+      </div>
+      <div class="card">
+        <h4>🎯 Individual defense</h4>
+        <p class="small">At least one question to each member, about any part of the project. No AI assistants, no prepared answers.</p>
+      </div>
+      <div class="card">
+        <h4>🎲 Random order</h4>
+        <p class="small">Drawn live in a moment. Not ready when called? The group moves to the end of the list, once.</p>
+      </div>
+    </div>
+    <div class="callout tip" style="margin-top: 16px"><strong>Timing:</strong> at minute 8 I ask you to switch to the demo; at minute 11 questions start.
+      If the live demo fails for technical reasons, play your backup video (≤ 3 min).</div>
+    <aside class="notes">
+      [0:03 · 1.5 min] These rules come from the project brief (section 5) and the rubric (section 3).
+      The time is controlled with the timer on the "On stage" slide. If the questions do not fit in
+      4 minutes, the pending defense questions are completed in a short slot at the end of the session.
+      Startti demos run live from the group's own account (I cannot use their Kaggle Secrets).
+    </aside>
+  </section>
+
+  <!-- 6 · Quiz: demo crashes -->
+  <section>
+    <span class="block-tag" data-block="warmup">Rules check</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Minute 9: your live Gradio demo throws an error and will not come back. What now?</p>
+      <button class="quiz-opt" data-key="a">Skip the demo and use the spare minutes for more questions</button>
+      <button class="quiz-opt" data-key="b">Play your backup video (≤ 3 min); the professor checks the demo later</button>
+      <button class="quiz-opt" data-key="c">Restart the notebook and retrain the model live</button>
+      <button class="quiz-opt" data-key="d">Nothing: presenting only the video from the start would have been safer</button>
+      <div class="quiz-explain">A technical failure of the live demo is not penalised if you switch to the backup video, and
+        the professor later verifies that the demo works with what you delivered. Showing <em>only</em> the video, without
+        trying live, caps the demo criterion at "Bueno" (below 4.5).</div>
+    </div>
+    <aside class="notes">
+      [0:04 · 1 min] Quick poll in the chat (a, b, c or d), then click the majority answer. The
+      point: always try live, but have the video one click away. Retraining live never fits in 3 minutes.
+    </aside>
+  </section>
+
+  <!-- 7 · Individual defense -->
+  <section>
+    <p class="kicker">Individual defense</p>
+    <h2>What the questions look like</h2>
+    <div class="cols">
+      <ul class="small">
+        <li>“Your F1 improved after the iteration: on which split did you take that decision?”</li>
+        <li>“Why this baseline and not a stronger one?”</li>
+        <li>“Pick one error category: what is your hypothesis for it?”</li>
+        <li>“If a false negative cost twice as much, what would you change?”</li>
+        <li>“Where could personal data leak in your pipeline, and what did you do about it?”</li>
+        <li>“Tell me about one thing an AI assistant got wrong and how you caught it.”</li>
+      </ul>
+      <div>
+        <div class="callout">
+          <p><strong>Any member, any part.</strong> The question may be about a part you did not lead: everyone must be able to explain the whole project, including what an AI generated.</p>
+        </div>
+        <div class="callout tip">
+          <p>“I don't know, but I would verify it like this…” is a better answer than improvising.</p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:05 · 1 min] Optional if short on time. These are examples of the kind of questions, not
+      the actual ones. Use the group's own numbers when you ask: the defense checks understanding
+      and judgement, not memory. No AI assistants and no reading prepared answers during the defense.
+    </aside>
+  </section>
+
+  <!-- 8 · Before your slot -->
+  <section>
+    <p class="kicker">Before your slot</p>
+    <h2>Ready when called</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>💻 Tech</h4>
+        <ul class="small">
+          <li>Screen sharing tested; pitch slides open.</li>
+          <li>Gradio: the share link only works while your notebook is running. Relaunch it shortly before your slot.</li>
+          <li>Startti: agent published, group account signed in.</li>
+          <li>Backup video link one click away.</li>
+          <li>Notifications off, camera and microphone on.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>🧠 Content</h4>
+        <ul class="small">
+          <li>2–3 demo cases: a typical one, a hard one and one where the model fails.</li>
+          <li>Who says what, and who shares the screen.</li>
+          <li>Your numbers at hand: model vs baseline, metrics, error categories, emissions.</li>
+          <li>Your recommendation in one sentence: go or no-go, and the next step.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:06 · 0.5 min] Give groups a minute during the opening to double-check. Groups that present
+      in the second round can re-launch their demo during the break. I have every group's slides PDF
+      from e-Aulas: if a screen share fails, I can project the PDF while the group talks.
+    </aside>
+  </section>
+
+  <!-- 9 · Evaluation criteria (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Evaluación del proyecto · 30%</p>
+    <h2>¿Cómo se califica hoy?</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Socialización y demo · 10% <span class="pill">grupal</span></h4>
+        <ol class="small" style="margin-bottom: 0">
+          <li>Claridad del pitch y valor de negocio · <strong>35%</strong></li>
+          <li>Demo funcional · <strong>30%</strong></li>
+          <li>Manejo del tiempo · <strong>15%</strong></li>
+          <li>Participación equitativa · <strong>20%</strong></li>
+        </ol>
+      </div>
+      <div class="card">
+        <h4>Defensa individual · 5% <span class="pill">individual</span></h4>
+        <ol class="small" style="margin-bottom: 0">
+          <li>Comprensión técnica de su parte y del todo · <strong>40%</strong></li>
+          <li>Capacidad de justificar decisiones · <strong>35%</strong></li>
+          <li>Uso crítico de IA · <strong>25%</strong></li>
+        </ol>
+      </div>
+    </div>
+    <p class="small" style="margin-top: 14px"><strong>Entregable técnico · 15%</strong> <span class="pill">grupal</span>
+      Se califica con lo entregado ayer a las 23:59: código, informe técnico, model card y registro de uso de IA.</p>
+    <p class="small muted">Niveles: Excelente 4.5–5.0 · Bueno 4.0–&lt;4.5 · Aceptable 3.0–&lt;4.0 · Insuficiente &lt;3.0.
+      Solo video, sin intentar la demo en vivo: el criterio 2 queda como máximo en Bueno.
+      Ausencia sin excusa válida: 0.0 en socialización y en defensa individual.</p>
+    <aside class="notes">
+      [0:06 · 1 min] Assessment slide, in Spanish by course convention. The weights are those of the
+      rubric (sections 3 and 4). The technical deliverable is graded after the session with the
+      rubric's section 2, on the version available at the deadline. Remind them that the absence of
+      a member (without a valid excuse) does not lower the group's equitable-participation score.
+    </aside>
+  </section>
+
+  <!-- 10 · Project grade and factor (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Evaluación del proyecto · nota individual</p>
+    <h2>Tu nota del proyecto</h2>
+    <div class="formula">Nota del proyecto             N  = (15 × T + 10 × S + 5 × D) / 30
+Nota individual del proyecto  NI = N × F
+Aporte a la nota final           = 0.30 × NI
+
+F = 0.7 + 0.3 × (P − 1) / 3, con tope en 1.0</div>
+    <p class="small"><strong>P</strong> = promedio de los puntajes (1–5) que recibes de tus compañeros de grupo en la coevaluación
+      (sin tu autoevaluación). F se redondea a dos decimales.</p>
+    <table class="compact" style="margin-bottom: 10px">
+      <thead>
+        <tr><th>P (promedio recibido)</th><th class="num">1.0</th><th class="num">1.5</th><th class="num">2.0</th><th class="num">2.5</th><th class="num">3.0</th><th class="num">3.5</th><th class="num">≥ 4.0</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>F</strong></td><td class="num">0.70</td><td class="num">0.75</td><td class="num">0.80</td><td class="num">0.85</td><td class="num">0.90</td><td class="num">0.95</td><td class="num"><strong>1.00</strong></td></tr>
+      </tbody>
+    </table>
+    <p class="small muted">T = entregable técnico: primero los descuentos por hitos (−0.3 por hito no entregado, máximo −1.2) y luego los topes
+      (3.0 si no hay modelo propio). S = socialización y demo · D = defensa individual.</p>
+    <aside class="notes">
+      [0:07 · 1 min] Same formulas as rubric section 1 and section 5, word for word. Key message: with
+      an average of 4 ("solid contribution") or more from your teammates you keep 100% of the project
+      grade; below 4, each point less subtracts 0.1 from the factor, down to 0.7. The full worked
+      example (group G03) is in rubric section 6.
+    </aside>
+  </section>
+
+  <!-- 11 · Quiz on F (Spanish) -->
+  <section lang="es">
+    <span class="block-tag" data-block="warmup">Verifica</span>
+    <div class="quiz grid-2" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Tus dos compañeros te asignan en promedio P = 3.5 en la coevaluación. ¿Cuál es tu factor F?</p>
+      <button class="quiz-opt" data-key="a">0.85</button>
+      <button class="quiz-opt" data-key="b">0.95</button>
+      <button class="quiz-opt" data-key="c">1.00</button>
+      <button class="quiz-opt" data-key="d">0.875</button>
+      <div class="quiz-explain">F = 0.7 + 0.3 × (3.5 − 1) / 3 = 0.7 + 0.25 = 0.95. Solo con P ≥ 4.0 el factor llega a 1.00.
+        Y si tú no entregas tu propia coevaluación, tu F baja 0.05 (sin bajar de 0.7).</div>
+    </div>
+    <div class="callout" style="margin-top: 6px">
+      <p class="small"><strong>Ejemplo de la rúbrica (G03, Ana):</strong> T = 4.10, S = 4.50, D = 4.00 → N = 4.2167 · P = 3.6 → F = 0.96 → NI = 4.05.</p>
+    </div>
+    <aside class="notes">
+      [0:08 · 0.5 min] Optional. Poll in the chat, then click. The example numbers come from the
+      rubric's section 6 (Ana: N = 126.5 / 30 = 4.2167; F = 0.7 + 0.3 × 2.6 / 3 = 0.96; NI = 4.05).
+    </aside>
+  </section>
+
+  <!-- 12 · Live draw -->
+  <section>
+    <p class="kicker">Live draw</p>
+    <h2>Presentation order</h2>
+    <div class="sim">
+      <div class="sim-controls" data-prevent-swipe>
+        <div class="control">
+          <label for="draw-n">Number of groups</label>
+          <input type="number" id="draw-n" min="2" max="20" step="1" value="10">
+        </div>
+        <div class="control">
+          <label for="draw-skip">Skip <span class="muted">(optional)</span></label>
+          <input type="text" id="draw-skip" placeholder="e.g. 04, 09" autocomplete="off">
+        </div>
+        <div class="control">
+          <label for="draw-seed">Seed <span class="muted">(a number from the chat)</span></label>
+          <input type="text" id="draw-seed" placeholder="blank = random" autocomplete="off">
+        </div>
+        <div>
+          <button class="btn btn-sm" id="draw-go" type="button">🎲 Draw</button>
+          <button class="btn btn-sm btn-ghost" id="draw-copy" type="button">📋 Copy for chat</button>
+          <button class="btn btn-sm btn-ghost" id="draw-clear" type="button">Clear</button>
+        </div>
+        <p class="stat" id="draw-summary" aria-live="polite">No draw yet.</p>
+      </div>
+      <div class="sim-output">
+        <ol class="order-grid" id="draw-order" aria-live="polite"></ol>
+        <p class="draw-note" id="draw-note">✍ = groups whose feedback form this group's members fill in (the next two in the order).
+          Times are minutes from the start of the session (0:00).</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:08 · 1.5 min] Ask a student to type a 4-digit number in the chat and use it as the seed: anyone
+      can re-run the draw with the same seed and get the same order, so the draw is verifiable. With the
+      seed blank the deck picks a random one and shows it. Use "Skip" for group numbers that no longer
+      exist. The order is kept in this browser (it survives a reload); "Clear" erases it. Click
+      "Copy for chat" and paste the order (in Spanish, with start times and feedback assignments) in
+      the chat: once groups start sharing their screens, the class no longer sees this deck.
+      The ✍ line is the default peer-feedback assignment: every student reviews the two groups that
+      present right after their own group (wrapping around at the end). Announce it now; you can
+      reassign by hand if needed. The summary line shows where the break falls and whether the plan
+      fits in 3 hours.
+    </aside>
+  </section>
+
+  <!-- 13 · Peer feedback (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Coevaluación y retroalimentación · individuales</p>
+    <h2>Dos formularios, hoy hasta las 23:59</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Coevaluación de tu grupo <span class="pill">cuenta para F</span></h4>
+        <ul class="small">
+          <li>Confidencial: solo la ve el profesor. Calificas a cada compañero y a ti en 5 criterios (1–5); tu autoevaluación no entra en F.</li>
+          <li>Un 1 o un 2 exige justificación con ejemplos.</li>
+          <li><strong>Obligatoria:</strong> si no la entregas, tu F baja 0.05 (sin bajar de 0.7).</li>
+          <li><code>PF_G&lt;NN&gt;_coev_&lt;codigo&gt;</code> (.md o PDF) · actividad “Coevaluación del proyecto”.</li>
+        </ul>
+        <p class="small" style="margin: 0"><a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/proyecto-final/plantillas/coevaluacion.md" target="_blank" rel="noopener">Plantilla de coevaluación</a></p>
+      </div>
+      <div class="card">
+        <h4>Retroalimentación entre grupos <span class="pill">formativa</span></h4>
+        <ul class="small">
+          <li>No se califica. Retroalimentas a los grupos que el profesor te asignó al inicio de la sesión (✍ en el sorteo).</li>
+          <li>Una ficha por grupo, durante o justo después de su presentación.</li>
+          <li>Se consolida y se comparte con cada grupo sin nombres.</li>
+          <li><code>PF_retro_&lt;codigo&gt;</code> (.md o PDF) · actividad “Retroalimentación entre grupos”.</li>
+        </ul>
+        <p class="small" style="margin: 0"><a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/proyecto-final/plantillas/retroalimentacion-pares.md" target="_blank" rel="noopener">Plantilla de retroalimentación</a></p>
+      </div>
+    </div>
+    <p class="small muted" style="margin-top: 10px">Ambos se suben a e-Aulas antes de las <strong>23:59 del día de la Sesión 12</strong>.
+      Buena retroalimentación: específica, basada en evidencia, útil y respetuosa.</p>
+    <aside class="notes">
+      [0:09 · 1 min] Assessment content, in Spanish. File names and deadlines are exactly those of the
+      project brief: PF_G&lt;NN&gt;_coev_&lt;codigo&gt; and PF_retro_&lt;codigo&gt;, both individual,
+      due 23:59 today. Point back to the ✍ assignment on the previous slide. Remind them that
+      participation problems should have been raised before S11: the coevaluation does not replace
+      that conversation.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PRESENTATIONS · ROUND 1                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 14 · Round 1 divider -->
+  <section class="section-slide" data-block="challenge" data-label="Presentations">
+    <h2>Round 1</h2>
+    <p>First half of the groups. First up: <strong data-now-label>—</strong> · then <strong data-next-label>—</strong>.</p>
+    <span class="block-tag" data-block="challenge">15' on stage + 1' switch</span>
+    <aside class="notes">
+      [0:10] Round 1 starts. Ask the first group to share their screen while you move to the next
+      slide. Everyone else: open the peer-feedback template for the groups assigned to you.
+    </aside>
+  </section>
+
+  <!-- 15 · Stage (round 1) -->
+  <section>
+    <p class="kicker">On stage · round 1</p>
+    <div class="stage">
+      <div>
+        <div class="card stage-card" data-prevent-swipe>
+          <p class="small muted" style="margin: 0">Now presenting</p>
+          <span class="stage-group" data-now-label>—</span>
+          <p class="small">Next: <strong data-next-label>—</strong></p>
+          <p class="small muted" data-progress>Draw the order first.</p>
+          <div class="stage-actions">
+            <button class="btn btn-sm" type="button" data-act="done">✓ Next group</button>
+            <button class="btn btn-sm btn-ghost" type="button" data-act="pending">✓ Next · defense pending</button>
+            <button class="btn btn-sm btn-ghost" type="button" data-act="defer">↓ Not ready</button>
+            <button class="btn btn-sm btn-ghost" type="button" data-act="undo">↶ Undo</button>
+          </div>
+          <p class="stage-msg" data-msg aria-live="polite"></p>
+        </div>
+        <div class="timer timer-sm" data-minutes="4" data-label="Q&amp;A · individual defense"></div>
+      </div>
+      <div>
+        <div class="timer" data-role="slot" data-minutes="15" data-label="Presentation slot"></div>
+        <div class="phase-bar" aria-hidden="true">
+          <div data-phase="pitch">Pitch 8'</div>
+          <div data-phase="demo">Demo 3'</div>
+          <div data-phase="qa">Q&amp;A 4'</div>
+        </div>
+        <ol class="strip" data-strip aria-label="Running order"></ol>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:10 → break] Loop for every group: (1) the group shares its screen (1'); (2) Start the 15' slot
+      timer; the phase bar follows it (pitch until 07:00 left, demo until 04:00 left, then Q&amp;A); (3) at
+      07:00 left say "pasen a la demo"; (4) when the demo ends, Start the 4' Q&amp;A timer and ask at
+      least one question to each member, starting with whoever spoke least; (5) click "✓ Next group"
+      (resets both timers), or "✓ Next · defense pending" if some member still owes a question: it is
+      listed on the "Pending questions" slide. "↓ Not ready" moves the current group to the end of the
+      list, once only. "↶ Undo" reverts the last click. Grade on the sheet during Q&amp;A and the 1' switch.
+      While a group shares its screen the class does not see this deck: keep it on your own screen and
+      announce the milestones aloud and in the chat ("1 minuto de pitch", "pasen a la demo").
+      Go to the break slide after the last group of round 1 (shown on the draw slide).
+    </aside>
+  </section>
+
+  <!-- 16 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Next up: <strong data-now-label>—</strong>. Round-2 groups: relaunch your demo and test your screen share now.</p>
+    <div class="break-timers">
+      <div class="timer timer-sm" data-minutes="10" data-label="Break"></div>
+      <div class="timer timer-sm" data-minutes="5" data-label="Short break (10+ groups)"></div>
+    </div>
+    <aside class="notes">
+      [≈1:14–1:30 · 10 or 5 min] Use the 10' timer with 9 groups or fewer and the 5' timer with 10 or
+      more (the draw slide says which). Stay on the call: this is the moment to catch up on the grading
+      sheet and to help round-2 groups test their screen share.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PRESENTATIONS · ROUND 2                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 17 · Round 2 divider -->
+  <section class="section-slide" data-block="challenge" data-label="Presentations">
+    <h2>Round 2</h2>
+    <p>Welcome back. Up now: <strong data-now-label>—</strong> · then <strong data-next-label>—</strong>.</p>
+    <span class="block-tag" data-block="challenge">15' on stage + 1' switch</span>
+    <aside class="notes">
+      [After the break] Same loop as round 1. Check that everyone is back and that peer-feedback forms
+      for round-1 groups are done while the memory is fresh.
+    </aside>
+  </section>
+
+  <!-- 18 · Stage (round 2) -->
+  <section>
+    <p class="kicker">On stage · round 2</p>
+    <div class="stage">
+      <div>
+        <div class="card stage-card" data-prevent-swipe>
+          <p class="small muted" style="margin: 0">Now presenting</p>
+          <span class="stage-group" data-now-label>—</span>
+          <p class="small">Next: <strong data-next-label>—</strong></p>
+          <p class="small muted" data-progress>Draw the order first.</p>
+          <div class="stage-actions">
+            <button class="btn btn-sm" type="button" data-act="done">✓ Next group</button>
+            <button class="btn btn-sm btn-ghost" type="button" data-act="pending">✓ Next · defense pending</button>
+            <button class="btn btn-sm btn-ghost" type="button" data-act="defer">↓ Not ready</button>
+            <button class="btn btn-sm btn-ghost" type="button" data-act="undo">↶ Undo</button>
+          </div>
+          <p class="stage-msg" data-msg aria-live="polite"></p>
+        </div>
+        <div class="timer timer-sm" data-minutes="4" data-label="Q&amp;A · individual defense"></div>
+      </div>
+      <div>
+        <div class="timer" data-role="slot" data-minutes="15" data-label="Presentation slot"></div>
+        <div class="phase-bar" aria-hidden="true">
+          <div data-phase="pitch">Pitch 8'</div>
+          <div data-phase="demo">Demo 3'</div>
+          <div data-phase="qa">Q&amp;A 4'</div>
+        </div>
+        <ol class="strip" data-strip aria-label="Running order"></ol>
+      </div>
+    </div>
+    <aside class="notes">
+      [After the break → closing] Same controls as round 1; the state is shared, so this slide picks up
+      where round 1 stopped. Groups moved to the end with "↓ Not ready" present here, after everyone
+      else. If a moved group is still not ready, it is graded as not ready (rubric: time management).
+    </aside>
+  </section>
+
+  <!-- 19 · Pending questions -->
+  <section>
+    <p class="kicker">Closing the presentations</p>
+    <h2>Pending questions and open floor</h2>
+    <div class="cols">
+      <div>
+        <p class="small">Groups with pending individual-defense questions. Click a group once its questions are done.</p>
+        <div class="pending-list" data-pending-list></div>
+        <p class="small muted" data-pending-empty>No pending questions.</p>
+      </div>
+      <div>
+        <div class="prompt-card" data-kind="chat">
+          <h4>One idea you will borrow</h4>
+          <p class="small">In the chat: one idea from another group's project that you would reuse in your own work, and why.</p>
+        </div>
+        <div class="callout tip">
+          <p class="small">Peer-feedback forms: finish them now for the last groups, while it is fresh.</p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      [Closing, first minutes] Ask the pending defense questions first (camera on, no AI, same rules),
+      one group at a time. While you do, the others write in the chat. If a student could not answer
+      because of a connection failure, note it: the instructor guide explains how to reschedule.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- COURSE RECAP                                                           -->
+  <!-- ===================================================================== -->
+
+  <!-- 20 · Recap divider -->
+  <section class="section-slide" data-block="theory" data-label="Course recap">
+    <h2>What you built in twelve sessions</h2>
+    <p>From sampling one token at a time to a model of your own, evaluated, documented and demoed.</p>
+    <aside class="notes">
+      [Closing] Shift the tone: from grading to celebrating what the cohort learned.
+    </aside>
+  </section>
+
+  <!-- 21 · Twelve sessions -->
+  <section>
+    <p class="kicker">Course recap</p>
+    <h2>Twelve sessions in one view</h2>
+    <div class="recap">
+      <div class="flip-card st-found"><div class="front"><span class="rn">01</span>Introduction to Generative and Pretrained Models</div>
+        <div class="back">Generative models learn p(x) and sample from it. Prompting → RAG → fine-tuning → from scratch: more control, more cost.</div></div>
+      <div class="flip-card st-found"><div class="front"><span class="rn">02</span>Training Generative Models</div>
+        <div class="back">Loss, optimizer, learning rate; watch validation loss. A VAE trained on Fashion-MNIST.</div></div>
+      <div class="flip-card st-found"><div class="front"><span class="rn">03</span>Pretrained Models and Transfer Learning</div>
+        <div class="back">Attention and self-supervised pretraining; transfer with embeddings, few-shot or fine-tuning.</div></div>
+      <div class="flip-card st-found"><div class="front"><span class="rn">04</span>Fine-Tuning Generative Models</div>
+        <div class="back">Full fine-tuning vs LoRA (W = W₀ + BA): adapt a small model with curated examples.</div></div>
+      <div class="flip-card st-found"><div class="front"><span class="rn">05</span>Evaluating Generative Models</div>
+        <div class="back">BLEU, ROUGE, chrF, perplexity, F1 and error analysis: no single metric is enough.</div></div>
+      <div class="flip-card st-apps"><div class="front"><span class="rn">06</span>Introduction to Basic Application Development</div>
+        <div class="back">From model to product: Gradio apps, confidence thresholds, human handoff, a first Startti agent.</div></div>
+      <div class="flip-card st-apps"><div class="front"><span class="rn">07</span>Implementing Basic Chatbots and Agents</div>
+        <div class="back">From rules to LLM agents: conversation design, prompt injection, test conversations.</div></div>
+      <div class="flip-card st-apps"><div class="front"><span class="rn">08</span>Building Classifiers with Generative Models</div>
+        <div class="back">Generative vs discriminative classifiers, zero-shot by label likelihood, synthetic data and its risks.</div></div>
+      <div class="flip-card st-apps"><div class="front"><span class="rn">09</span>Use Cases: Generative Models in Real Contexts</div>
+        <div class="back">Value × feasibility, KPIs and ROI; documented failures teach as much as successes.</div></div>
+      <div class="flip-card st-resp"><div class="front"><span class="rn">10</span>Ethics and Sustainability in Generative Models</div>
+        <div class="back">Bias, privacy (Ley 1581), regulation and carbon; model cards make them visible.</div></div>
+      <div class="flip-card st-resp"><div class="front"><span class="rn">11</span>Evaluation and Continuous Model Improvement</div>
+        <div class="back">Error analysis → hypothesis → change → decision; robustness tests, quantization, monitoring.</div></div>
+      <div class="flip-card st-resp"><div class="front"><span class="rn">12</span>Integrative Project</div>
+        <div class="back">Today: your own model, compared with a baseline, shown in a demo and defended.</div></div>
+    </div>
+    <p class="small muted" style="margin: 10px 0 0"><span class="key st-found"></span> Foundations ·
+      <span class="key st-apps"></span> Applications · <span class="key st-resp"></span> Responsible &amp; continuous · click a card to flip it.</p>
+    <aside class="notes">
+      [Closing · 2 min] Ask students to name, in the chat, the session number that helped their project
+      most. Flip the two or three most named cards and ask one person to say why. The three colours are
+      the three stages announced in Session 01.
+    </aside>
+  </section>
+
+  <!-- 22 · Eight minimums -->
+  <section>
+    <p class="kicker">Integration</p>
+    <h2>Eight minimums, eleven sessions</h2>
+    <div class="mins">
+      <div class="card"><h4>1 · Own model</h4><p class="muted">Fine-tuned or trained by the group</p>
+        <p><span class="pill">S02</span> <span class="pill">S03</span> <span class="pill">S04</span> <span class="pill">S08</span></p></div>
+      <div class="card"><h4>2 · Baseline</h4><p class="muted">Same test set, simple alternative</p>
+        <p><span class="pill">S03</span> <span class="pill">S05</span> <span class="pill">S08</span></p></div>
+      <div class="card"><h4>3 · Two metrics</h4><p class="muted">One technical, one tied to business or risk</p>
+        <p><span class="pill">S05</span> <span class="pill">S09</span></p></div>
+      <div class="card"><h4>4 · Error analysis</h4><p class="muted">Categories, counts, hypotheses</p>
+        <p><span class="pill">S05</span> <span class="pill">S11</span></p></div>
+      <div class="card"><h4>5 · Iteration</h4><p class="muted">Hypothesis → change → result → decision</p>
+        <p><span class="pill">S11</span></p></div>
+      <div class="card"><h4>6 · Ethics &amp; carbon</h4><p class="muted">Bias, privacy, misuse, emissions</p>
+        <p><span class="pill">S10</span></p></div>
+      <div class="card"><h4>7 · Model card</h4><p class="muted">Mitchell et al. (2019)</p>
+        <p><span class="pill">S10</span></p></div>
+      <div class="card"><h4>8 · Working demo</h4><p class="muted">Gradio app or Startti agent</p>
+        <p><span class="pill">S06</span> <span class="pill">S07</span></p></div>
+    </div>
+    <div class="prompt-card" data-kind="think" style="margin-top: 14px">
+      <h4>Which minimum was hardest for your group?</h4>
+      <p class="small">One word in the chat. It tells the next cohort where to start early.</p>
+    </div>
+    <aside class="notes">
+      [Closing · 1.5 min] The eight minimums of the project brief (section 2) mapped to the sessions
+      where each one was practised; S01 and S09 framed the problem and the value. Typical answers:
+      error analysis and the improvement iteration. Use the answers to adjust the next cohort's milestones.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WHAT'S NEXT                                                            -->
+  <!-- ===================================================================== -->
+
+  <!-- 23 · Learning paths -->
+  <section>
+    <p class="kicker">What's next</p>
+    <h2>Learning paths</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>🤗 Hugging Face courses</h4>
+        <p class="small">LLM Course (also in Spanish) and Agents Course: keep working with open models.</p>
+        <p class="small" style="margin: 0"><a href="https://huggingface.co/learn" target="_blank" rel="noopener">huggingface.co/learn</a></p>
+      </div>
+      <div class="card">
+        <h4>⚡ fast.ai</h4>
+        <p class="small">Practical Deep Learning for Coders: a code-first path through training and deployment.</p>
+        <p class="small" style="margin: 0"><a href="https://course.fast.ai" target="_blank" rel="noopener">course.fast.ai</a></p>
+      </div>
+      <div class="card">
+        <h4>🎓 DeepLearning.AI</h4>
+        <p class="small">Short courses on focused topics: RAG, agents, evaluation, fine-tuning.</p>
+        <p class="small" style="margin: 0"><a href="https://www.deeplearning.ai/short-courses/" target="_blank" rel="noopener">deeplearning.ai/short-courses</a></p>
+      </div>
+      <div class="card">
+        <h4>🏛️ Stanford CS224N &amp; CS230</h4>
+        <p class="small">Public materials: Transformers and NLP theory (CS224N), deep-learning practice (CS230).</p>
+        <p class="small" style="margin: 0"><a href="https://web.stanford.edu/class/cs224n/" target="_blank" rel="noopener">CS224N</a> ·
+          <a href="https://cs230.stanford.edu/" target="_blank" rel="noopener">CS230</a></p>
+      </div>
+      <div class="card">
+        <h4>🧩 Startti ADP docs</h4>
+        <p class="small">Turn your model into an agent: knowledge bases, tools, publishing and API.</p>
+        <p class="small" style="margin: 0"><a href="https://adp.startti.ai/docs" target="_blank" rel="noopener">adp.startti.ai/docs</a></p>
+      </div>
+      <div class="card">
+        <h4>🌎 In Spanish: SomosNLP</h4>
+        <p class="small">Spanish-speaking NLP community, with hackathons and open resources.</p>
+        <p class="small" style="margin: 0"><a href="https://somosnlp.org" target="_blank" rel="noopener">somosnlp.org</a></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [Closing · 1.5 min] Suggest one path per profile: business profiles → DeepLearning.AI short
+      courses and Startti; technical profiles → Hugging Face and fast.ai; those who want the theory →
+      CS224N and CS230. All links are on the session guide too.
+    </aside>
+  </section>
+
+  <!-- 24 · Keep the project alive -->
+  <section>
+    <p class="kicker">What's next</p>
+    <h2>Keep your project alive</h2>
+    <div class="cols">
+      <ol>
+        <li>Publish the model card, and the model if the data allow it, on the Hugging Face Hub.</li>
+        <li>Write a one-page go / no-go memo for your organization, with your numbers.</li>
+        <li>Re-run your evaluation on fresh data in three months: data drift is real.</li>
+        <li>Add the project to your portfolio, without private data or keys.</li>
+      </ol>
+      <div>
+        <div class="callout business">
+          <p>A prototype becomes a product when someone owns the metric, the data and the risk. Name that person before you pitch it internally.</p>
+        </div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">One sentence in the chat: what will you do differently at work because of this course?</p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      [Closing · 1.5 min] Read a few exit answers aloud. Remind them that publishing requires checking
+      the data licence and removing anything personal or confidential (Session 10).
+    </aside>
+  </section>
+
+  <!-- 25 · Before midnight (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Antes de las 23:59 de hoy</p>
+    <h2>Lo que falta por entregar</h2>
+    <table class="compact">
+      <thead>
+        <tr><th>Qué</th><th>Archivo</th><th>Actividad en e-Aulas</th><th>¿Cuenta?</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Coevaluación</strong> (individual y confidencial)</td><td><code>PF_G&lt;NN&gt;_coev_&lt;codigo&gt;</code></td><td>Coevaluación del proyecto</td><td>Obligatoria: sin ella, tu F baja 0.05</td></tr>
+        <tr><td><strong>Retroalimentación entre grupos</strong> (una ficha por grupo asignado)</td><td><code>PF_retro_&lt;codigo&gt;</code></td><td>Retroalimentación entre grupos</td><td>Formativa, no calificada</td></tr>
+      </tbody>
+    </table>
+    <p class="small">Formato: .md o PDF. Plazo: <strong>23:59 del día de la Sesión 12</strong>. Las notas y la retroalimentación se publican en e-Aulas.</p>
+    <aside class="notes">
+      [Closing · 0.5 min] Last reminder of the two individual forms, in Spanish (assessment content).
+    </aside>
+  </section>
+
+  <!-- 26 · Thank you -->
+  <section class="section-slide" data-block="challenge" data-label="Closing">
+    <h2>Thank you</h2>
+    <p>Twelve sessions ago we asked what it takes to make a model your own. Today you showed it, with evidence.</p>
+    <p lang="es">Gracias por su trabajo, su curiosidad y sus preguntas.</p>
+    <aside class="notes">
+      [2:58 · 2 min] Thank the cohort. Mention where grades and consolidated feedback will appear
+      (e-Aulas) and that the course materials stay online on the course portal.
+    </aside>
+  </section>
+
+  <!-- 27 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Sources and resources</h2>
+    <div class="cols" style="font-size: 18px; line-height: 1.35">
+      <ul>
+        <li>Course project kit: <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/proyecto-final/README.md" target="_blank" rel="noopener">project brief</a> ·
+          <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/proyecto-final/rubrica.md" target="_blank" rel="noopener">rubric</a> ·
+          <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/evaluacion.md" target="_blank" rel="noopener">course assessment</a>.</li>
+        <li>Mitchell, M., Wu, S., Zaldivar, A., Barnes, P., Vasserman, L., Hutchinson, B., Spitzer, E., Raji, I. D., &amp; Gebru, T. (2019). Model cards for model reporting. <em>FAT* '19</em>.</li>
+        <li>Gebru, T., et al. (2021). Datasheets for datasets. <em>Communications of the ACM, 64</em>(12), 86–92.</li>
+        <li>Amershi, S., et al. (2019). Guidelines for human-AI interaction. <em>CHI 2019</em>.</li>
+        <li>Huyen, C. (2022). <em>Designing machine learning systems</em>. O'Reilly.</li>
+        <li>Hattie, J., &amp; Timperley, H. (2007). The power of feedback. <em>Review of Educational Research, 77</em>(1), 81–112.</li>
+      </ul>
+      <ul>
+        <li>Hugging Face Learn: <a href="https://huggingface.co/learn" target="_blank" rel="noopener">huggingface.co/learn</a> · LLM Course in Spanish: <a href="https://huggingface.co/learn/llm-course/es/chapter1/1" target="_blank" rel="noopener">huggingface.co/learn/llm-course/es</a></li>
+        <li>fast.ai, Practical Deep Learning for Coders: <a href="https://course.fast.ai" target="_blank" rel="noopener">course.fast.ai</a></li>
+        <li>DeepLearning.AI short courses: <a href="https://www.deeplearning.ai/short-courses/" target="_blank" rel="noopener">deeplearning.ai/short-courses</a></li>
+        <li>Stanford CS224N: <a href="https://web.stanford.edu/class/cs224n/" target="_blank" rel="noopener">web.stanford.edu/class/cs224n</a> · CS230: <a href="https://cs230.stanford.edu/" target="_blank" rel="noopener">cs230.stanford.edu</a></li>
+        <li>Startti ADP documentation: <a href="https://adp.startti.ai/docs" target="_blank" rel="noopener">adp.startti.ai/docs</a></li>
+        <li>SomosNLP: <a href="https://somosnlp.org" target="_blank" rel="noopener">somosnlp.org</a></li>
+      </ul>
+    </div>
+    <aside class="notes">
+      Mitchell et al. (2019) and Gebru et al. (2021) underpin the model card and the data documentation
+      of the project; Amershi et al. (2019) the demo's product decisions; Huyen (2022) the improvement
+      loop; Hattie and Timperley (2007) the principles behind the peer-feedback form.
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "12" });
+  Course.onReady(() => {
+    // --- Shared state: presentation order, progress and pending defense questions ----------
+    // Kept in localStorage so a reload in the middle of the session does not lose the order.
+    const STORE = "course-s12-order-v1";
+    const OPENING = 10;     // minutes before the first group
+    const SLOT = 16;        // 15' on stage + 1' to switch screens
+    const DAY = 180;        // session length in minutes
+    const MAX_GROUPS = 20;
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+    const gid = (n) => "G" + String(n).padStart(2, "0");
+    const clock = (min) => Math.floor(min / 60) + ":" + String(min % 60).padStart(2, "0");
+    const blank = () => ({ order: [], reviews: {}, done: [], pending: [], moved: [], seed: "" });
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORE);
+        const s = raw ? JSON.parse(raw) : null;
+        return s && Array.isArray(s.order) ? Object.assign(blank(), s) : null;
+      } catch (e) { return null; }
+    }
+    function save() {
+      try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* storage is optional */ }
+    }
+
+    let state = load() || blank();
+    const history = [];                                   // snapshots for "Undo"
+    const snapshot = () => history.push(JSON.stringify(state));
+
+    const pendingOrder = () => state.order.filter((g) => !state.done.includes(g));
+    const current = () => pendingOrder()[0] || null;
+
+    // Schedule (minutes from 0:00). Up to 9 groups: 10' break, the rest of the day is the closing.
+    // 10 or more: 5' break and 5' closing; beyond 10 groups the plan runs over 3 hours.
+    function plan(count) {
+      const fits = OPENING + SLOT * count + 10 + 10 <= DAY;
+      const brk = fits ? 10 : 5;
+      const firstHalf = Math.ceil(count / 2);
+      const starts = [];
+      let t = OPENING;
+      for (let i = 0; i < count; i++) {
+        if (i === firstHalf) t += brk;
+        starts.push(t);
+        t += SLOT;
+      }
+      const closing = fits ? DAY - t : 5;
+      return { starts, brk, firstHalf, endTalks: t, closing, over: Math.max(0, t + closing - DAY) };
+    }
+
+    // --- Live draw ---------------------------------------------------------------------------
+    const nIn = document.getElementById("draw-n");
+    const skipIn = document.getElementById("draw-skip");
+    const seedIn = document.getElementById("draw-seed");
+    const goBtn = document.getElementById("draw-go");
+    const clearBtn = document.getElementById("draw-clear");
+    const orderEl = document.getElementById("draw-order");
+    const summaryEl = document.getElementById("draw-summary");
+    const noteEl = document.getElementById("draw-note");
+    const NOTE = noteEl.textContent;
+
+    function seedFrom(text) {
+      const t = String(text || "").trim();
+      if (!t) return null;
+      if (/^\d{1,9}$/.test(t)) return Number(t);
+      let h = 2166136261;                                  // FNV-1a hash, so a word also works as a seed
+      for (const ch of t) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); }
+      return h >>> 0;
+    }
+
+    function draw() {
+      const n = Math.max(2, Math.min(MAX_GROUPS, Math.round(Number(nIn.value) || 0)));
+      nIn.value = String(n);
+      const skip = new Set((skipIn.value.match(/\d+/g) || []).map(Number));
+      const groups = [];
+      for (let i = 1; i <= n; i++) if (!skip.has(i)) groups.push(gid(i));
+      if (groups.length < 2) { summaryEl.textContent = "At least two groups are needed."; return; }
+      if (!seedIn.value.trim()) seedIn.value = String(1000 + Math.floor(Math.random() * 9000));
+      const rng = Course.seededRandom(seedFrom(seedIn.value));
+      const order = groups.slice();
+      for (let i = order.length - 1; i > 0; i--) {         // Fisher–Yates shuffle
+        const j = Math.floor(rng() * (i + 1));
+        [order[i], order[j]] = [order[j], order[i]];
+      }
+      const k = Math.min(2, order.length - 1);
+      const reviews = {};
+      order.forEach((g, i) => { reviews[g] = Array.from({ length: k }, (_, d) => order[(i + d + 1) % order.length]); });
+      state = { order, reviews, done: [], pending: [], moved: [], seed: seedIn.value.trim() };
+      history.length = 0;
+      save();
+      renderAll();
+    }
+
+    const GO_LABEL = goBtn.textContent;
+    let confirmTimer = null;
+    goBtn.addEventListener("click", () => {
+      const inProgress = state.done.length > 0;
+      if (inProgress && !confirmTimer) {                    // two-click confirmation mid-session
+        goBtn.textContent = "Click again: progress is lost";
+        confirmTimer = setTimeout(() => { confirmTimer = null; goBtn.textContent = GO_LABEL; }, 4000);
+        return;
+      }
+      clearTimeout(confirmTimer); confirmTimer = null;
+      goBtn.textContent = GO_LABEL;
+      draw();
+    });
+
+    // Plain-text order for the chat (in Spanish, for students): the deck is hidden while groups share.
+    const copyBtn = document.getElementById("draw-copy");
+    const COPY_LABEL = copyBtn.textContent;
+    function chatText() {
+      const p = plan(state.order.length);
+      const lines = state.order.map((g, i) => {
+        const rev = (state.reviews[g] || []).join(" y ");
+        return `${i + 1}. ${g} (≈${clock(p.starts[i])})${rev ? " · retroalimenta a " + rev : ""}` +
+          (i === p.firstHalf - 1 ? `\n   — Descanso de ${p.brk}' —` : "");
+      });
+      return `Orden de presentación S12 (semilla ${state.seed}; horas desde el inicio de la sesión):\n` + lines.join("\n");
+    }
+    function flash(label) {
+      copyBtn.textContent = label;
+      setTimeout(() => { copyBtn.textContent = COPY_LABEL; }, 2500);
+    }
+    copyBtn.addEventListener("click", () => {
+      if (!state.order.length) { flash("Draw first"); return; }
+      const text = chatText();
+      const fallback = () => {                              // older browsers / non-secure contexts
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        let ok = false;
+        try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+        document.body.removeChild(ta);
+        flash(ok ? "✓ Copied" : "Copy failed");
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => flash("✓ Copied"), fallback);
+      } else {
+        fallback();
+      }
+    });
+    [nIn, skipIn, seedIn].forEach((el) => el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); goBtn.click(); }
+    }));
+    clearBtn.addEventListener("click", () => {
+      state = blank();
+      history.length = 0;
+      seedIn.value = "";
+      try { localStorage.removeItem(STORE); } catch (e) { /* ignore */ }
+      renderAll();
+    });
+
+    function renderDraw() {
+      orderEl.textContent = "";
+      const count = state.order.length;
+      if (!count) {
+        const li = document.createElement("li");
+        li.className = "order-empty";
+        li.style.gridColumn = "1 / -1";
+        li.textContent = "Set the number of groups, ask the chat for a seed, then draw.";
+        orderEl.appendChild(li);
+        orderEl.classList.remove("is-compact");
+        summaryEl.textContent = "No draw yet.";
+        noteEl.textContent = NOTE;
+        noteEl.classList.remove("warn");
+        return;
+      }
+      orderEl.style.setProperty("--cols", count <= 6 ? 2 : count <= 12 ? 3 : 4);
+      orderEl.classList.toggle("is-compact", count > 12);
+      const p = plan(count);
+      const now = current();
+      state.order.forEach((g, i) => {
+        if (i === p.firstHalf) {
+          const b = document.createElement("li");
+          b.className = "brk";
+          b.textContent = "☕ Break · " + p.brk + "'";
+          orderEl.appendChild(b);
+        }
+        const li = document.createElement("li");
+        li.classList.toggle("is-done", state.done.includes(g));
+        li.classList.toggle("is-current", g === now);
+        const rev = (state.reviews[g] || []).join(" · ");
+        li.innerHTML = `<span class="n">${i + 1}</span><span class="g">${g}</span><span class="t">≈${clock(p.starts[i])}</span>` +
+          `<span class="r">✍ ${rev || "—"}${state.moved.includes(g) ? " · moved to end" : ""}</span>`;
+        orderEl.appendChild(li);
+      });
+      summaryEl.innerHTML = `Seed <strong>${state.seed}</strong> · ${count} groups · break after #${p.firstHalf} (${p.brk}')` +
+        ` · talks end ≈<strong>${clock(p.endTalks)}</strong>`;
+      if (p.over > 0) {
+        noteEl.textContent = `⚠ ${p.over}' over the 3 hours with ${count} groups: keep every slot strict and use the extended slot agreed beforehand.`;
+        noteEl.classList.add("warn");
+      } else {
+        noteEl.textContent = `Closing ${p.closing}' (ends 3:00). ` + NOTE;
+        noteEl.classList.toggle("warn", p.brk === 5);
+      }
+    }
+
+    // --- Stage slides (now presenting + timers) ------------------------------------------------
+    function act(kind, stage) {
+      const now = current();
+      const msg = stage.querySelector("[data-msg]");
+      msg.textContent = "";
+      if (kind === "undo") {
+        if (!history.length) { msg.textContent = "Nothing to undo."; return; }
+        state = JSON.parse(history.pop());
+      } else if (!now) {
+        msg.textContent = state.order.length ? "All groups have presented." : "Draw the order first.";
+        return;
+      } else if (kind === "defer") {
+        if (state.moved.includes(now)) { msg.textContent = now + " was already moved once: it presents now."; return; }
+        snapshot();
+        state.order = state.order.filter((g) => g !== now).concat(now);
+        state.moved.push(now);
+        msg.textContent = now + " moves to the end of the list (once).";
+      } else {
+        snapshot();
+        state.done.push(now);
+        if (kind === "pending" && !state.pending.includes(now)) state.pending.push(now);
+      }
+      if (kind !== "defer") stage.querySelectorAll(".timer").forEach((t) => t.__courseTimer && t.__courseTimer.reset());
+      save();
+      renderAll();
+    }
+
+    $$(".stage").forEach((stage) => {
+      stage.addEventListener("click", (e) => {
+        const b = e.target instanceof Element ? e.target.closest("[data-act]") : null;
+        if (b && !b.disabled) act(b.getAttribute("data-act"), stage);
+      });
+      // Phase bar follows the 15' slot timer: pitch until 07:00 left, demo until 04:00 left, then Q&A.
+      const slot = stage.querySelector('.timer[data-role="slot"]');
+      const display = slot && slot.querySelector(".timer-display");
+      const segs = $$(".phase-bar [data-phase]", stage);
+      if (!display) return;
+      const PHASES = ["pitch", "demo", "qa"];
+      const update = () => {
+        const [m, s] = display.textContent.split(":").map(Number);
+        const left = m * 60 + s;
+        const started = slot.classList.contains("is-running") || left !== 15 * 60;
+        const phase = !started ? null : left > 420 ? "pitch" : left > 240 ? "demo" : "qa";
+        const idx = PHASES.indexOf(phase);
+        segs.forEach((el, i) => {
+          el.classList.toggle("is-active", i === idx);
+          el.classList.toggle("is-past", idx > -1 && i < idx);
+        });
+      };
+      new MutationObserver(update).observe(display, { childList: true, characterData: true, subtree: true });
+      update();
+    });
+
+    function renderStages() {
+      const left = pendingOrder();
+      const total = state.order.length;
+      $$("[data-now-label]").forEach((el) => { el.textContent = left[0] || (total ? "All done ✓" : "—"); });
+      $$("[data-next-label]").forEach((el) => { el.textContent = left[1] || "—"; });
+      $$("[data-progress]").forEach((el) => {
+        el.textContent = total ? `${state.done.length} of ${total} presented` : "Draw the order first (Presentation order slide).";
+      });
+      $$(".stage").forEach((stage) => {
+        const now = left[0];
+        stage.querySelector('[data-act="defer"]').disabled = !now || state.moved.includes(now);
+        stage.querySelector('[data-act="done"]').disabled = !now;
+        stage.querySelector('[data-act="pending"]').disabled = !now;
+        stage.querySelector('[data-act="undo"]').disabled = !history.length;
+      });
+      $$("[data-strip]").forEach((strip) => {
+        strip.textContent = "";
+        state.order.forEach((g) => {
+          const li = document.createElement("li");
+          li.textContent = g;
+          li.classList.toggle("is-done", state.done.includes(g));
+          li.classList.toggle("is-current", g === left[0]);
+          strip.appendChild(li);
+        });
+      });
+    }
+
+    // --- Pending individual-defense questions --------------------------------------------------
+    function renderPending() {
+      $$("[data-pending-list]").forEach((box) => {
+        box.textContent = "";
+        state.pending.forEach((g) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "btn btn-sm btn-ghost";
+          b.textContent = g + " · mark done";
+          b.title = "Mark " + g + "'s pending questions as done";
+          b.addEventListener("click", () => {
+            snapshot();
+            state.pending = state.pending.filter((x) => x !== g);
+            save();
+            renderAll();
+          });
+          box.appendChild(b);
+        });
+      });
+      $$("[data-pending-empty]").forEach((el) => { el.style.display = state.pending.length ? "none" : ""; });
+    }
+
+    function renderAll() {
+      renderDraw();
+      renderStages();
+      renderPending();
+    }
+
+    if (state.order.length) { nIn.value = String(Math.max(...state.order.map((g) => Number(g.slice(1))))); seedIn.value = state.seed; }
+    renderAll();
+  });
+</script>
+</body>
+</html>

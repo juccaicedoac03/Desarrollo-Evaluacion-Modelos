@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S00 · Deck Template &amp; Component Gallery</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+</head>
+<body>
+<!--
+  ============================================================================
+  AUTHORING GUIDE (reference deck for sessions 01–12)
+  ----------------------------------------------------------------------------
+  Copy this file to sessions/NN-slug/slides.html, change <title>, data-session,
+  Course.init({ session: "NN" }) and the content. Keep the <head> and <script>
+  tags exactly as they are. Every slide needs <aside class="notes"> (English,
+  with timing cues). Canvas is 1280×720: body ≈27px, h2 44px.
+
+  Layout      .title-slide[data-session]  .section-slide[data-block]  .cols  .cols-3
+              .card  .callout(.tip|.warn|.business)  .kicker  .small  .muted  .center
+              .big-number  .pill  .tag  .block-tag[data-block]  .btn  .btn-kaggle  .btn-colab
+              table.compact  ol.agenda[data-current] > li[data-block]
+  Blocks      warmup · theory · break · lab · challenge
+  Interactive .quiz[data-correct] > .quiz-q + button.quiz-opt[data-key] + .quiz-explain
+              (omit data-correct for an ungraded poll; add .grid-2 for two columns)
+              .timer[data-minutes][data-label]   (.timer-sm for a compact one)
+              .flip-card > .front + .back
+              .prompt-card[data-kind="poll|chat|breakout|think"] > h4 + p
+              .sim > .sim-controls (.control > label + input) + .sim-output
+  Math        KaTeX: $…$ or \( … \) inline, $$…$$ or \[ … \] display.
+              Literal dollar signs: wrap them in <span class="no-math">…</span>.
+  Code        <pre><code class="language-python" data-trim data-noescape>…</code></pre>
+  JS API      Course.softmax(logits, T) · Course.topK(probs, k) · Course.topP(probs, p)
+              Course.sample(probs, rng) · Course.seededRandom(seed)
+              Course.barChart(el, labels, values, {max, format, highlight, color, orientation, width})
+              Course.lineChart(el, [{name, points:[[x,y],…], dashed?, color?}], {xLabel, yLabel, yMin, yMax, width, height})
+              Course.bindRange(input, output, fmt, onChange) · Course.tokenize(text) · Course.ngrams(tokens, n)
+              Put deck-specific simulators inside Course.onReady(() => { … }).
+  Language    Auto labels (timer buttons, quiz feedback, prompt-card kind, business lens) are
+              English by default and Spanish inside any element with lang="es"
+              (e.g. <section lang="es">). Do not repeat them in your own headings or kickers.
+  Charts are sized by their viewBox (default 640 wide for bars, 800 for lines). In a
+  half-width column pass { width: 640 } or less so labels stay ≥16px on screen.
+  ============================================================================
+-->
+<div class="reveal"><div class="slides">
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="00">
+    <div class="title-main">
+      <h1>Deck Template &amp; Component Gallery</h1>
+      <p class="subtitle">Plantilla de presentación y galería de componentes</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome. This is the reference deck: every component used in the course
+      appears at least once. The session number comes from data-session on this section.
+      Press S to open the speaker view, F for fullscreen, Esc for the overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Warm-up: retrieval quiz <span class="time">10'</span></li>
+      <li data-block="theory">Theory: concepts, simulators and a breakout <span class="time">60'</span></li>
+      <li data-block="break">Break <span class="time">10'</span></li>
+      <li data-block="lab">Guided lab on Kaggle <span class="time">60'</span></li>
+      <li data-block="challenge">Session challenge (graded) <span class="time">40'</span></li>
+    </ol>
+    <aside class="notes">
+      [0:01 · 1 min] Walk through the five blocks. The agenda highlights the block named in
+      data-current; blocks before it are dimmed. Re-use this slide later in the deck with
+      data-current="lab" or "challenge" to show where we are.
+    </aside>
+  </section>
+
+  <!-- 3 · Warm-up divider -->
+  <section class="section-slide" data-block="warmup">
+    <h2>Warm-up</h2>
+    <p>Two quick questions to reactivate last session. Answer in the Zoom poll or shout it out.</p>
+    <span class="block-tag" data-block="warmup">Warm-up · 10'</span>
+    <aside class="notes">
+      [0:02] Section divider. The full-bleed colour comes from data-block; course.js sets it.
+    </aside>
+  </section>
+
+  <!-- 4 · Quiz (graded feedback) -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q1</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Which model family is trained to predict the next token?</p>
+      <button class="quiz-opt" data-key="a">Autoencoding models (BERT-style)</button>
+      <button class="quiz-opt" data-key="b">Autoregressive models (GPT-style)</button>
+      <button class="quiz-opt" data-key="c">Sequence-to-sequence models only</button>
+      <button class="quiz-opt" data-key="d">Clustering models such as k-means</button>
+      <div class="quiz-explain">GPT-style models factorise \(p(x)\) left to right:
+        \(p(x) = \prod_t p(x_t \mid x_{&lt;t})\). BERT-style models fill in masked tokens instead.</div>
+    </div>
+    <aside class="notes">
+      [0:03 · 3 min] Launch the matching Zoom poll first, wait ~45 s, then click the option
+      the majority chose. Wrong answers reveal the right one and the explanation; use
+      "Try again" to reset. Buttons are keyboard accessible (Tab, Enter).
+    </aside>
+  </section>
+
+  <!-- 5 · Quiz (ungraded diagnostic, two columns) -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q2</span>
+    <div class="quiz grid-2" style="margin-top: 18px">
+      <p class="quiz-q">How often do you use a generative AI assistant at work?</p>
+      <button class="quiz-opt" data-key="a">Daily</button>
+      <button class="quiz-opt" data-key="b">A few times a week</button>
+      <button class="quiz-opt" data-key="c">Occasionally</button>
+      <button class="quiz-opt" data-key="d">Not yet</button>
+      <div class="quiz-explain">No right answer here: this is a diagnostic. We will come back to
+        these answers when we discuss adoption in the business lens slides.</div>
+    </div>
+    <aside class="notes">
+      [0:06 · 2 min] A quiz without data-correct behaves like a poll: the chosen option is
+      marked, others dim, and the explanation appears. Use it for diagnostics in S01.
+    </aside>
+  </section>
+
+  <!-- 6 · Learning objectives -->
+  <section>
+    <p class="kicker">Learning objectives</p>
+    <h2>By the end of this session you can…</h2>
+    <ol>
+      <li>Explain how temperature and top-k change a model's output distribution <span class="pill">RAE 1</span></li>
+      <li>Run a small open model such as <span class="tag">SmolLM2-135M-Instruct</span> on Kaggle <span class="pill">RAE 2</span></li>
+      <li>Read learning curves and decide when to stop training <span class="pill">RAE 3</span></li>
+      <li>Translate a model metric into a business decision <span class="pill">RAE 5</span></li>
+    </ol>
+    <p class="small muted">RAE numbers refer to the learning outcomes in the course syllabus (guía de asignatura).</p>
+    <aside class="notes">
+      [0:08 · 2 min] Objectives map to RAE 1–6 from the syllabus. Use .pill for RAE labels and
+      .tag for code-like names (models, datasets, functions).
+    </aside>
+  </section>
+
+  <!-- 7 · Theory divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 1</p>
+    <h2>From scores to words</h2>
+    <p>How a language model turns raw logits into the next token.</p>
+    <aside class="notes">
+      [0:10] Theory block starts. Aim for an interaction every ~10 minutes.
+    </aside>
+  </section>
+
+  <!-- 8 · Two columns + cards -->
+  <section>
+    <p class="kicker">Layout · .cols + .card</p>
+    <h2>Two ways to use a pretrained model</h2>
+    <div class="cols">
+      <div class="card">
+        <span class="icon">🧊</span>
+        <h3>Use it as is</h3>
+        <p>Prompt a frozen model. Fast to try, no training data needed.</p>
+        <p class="small muted">Good for prototypes and low-volume tasks.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🔧</span>
+        <h3>Adapt it</h3>
+        <p>Fine-tune on your own examples to fit your domain and tone.</p>
+        <p class="small muted">Needs labelled data, compute and evaluation.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:11 · 3 min] .cols is a two-column grid; .card is a white panel. .kicker is the small
+      caps label above the title. .small and .muted are text utilities.
+    </aside>
+  </section>
+
+  <!-- 9 · Three columns + callouts -->
+  <section>
+    <p class="kicker">Layout · .cols-3 + .callout</p>
+    <h2>Three knobs of decoding</h2>
+    <div class="cols-3">
+      <div class="card"><h4>Temperature</h4><p class="small">Sharpens or flattens the distribution.</p></div>
+      <div class="card"><h4>Top-k</h4><p class="small">Keeps only the k most likely tokens.</p></div>
+      <div class="card"><h4>Seed</h4><p class="small">Makes random sampling reproducible.</p></div>
+    </div>
+    <div class="callout"><strong>Note:</strong> the default callout is for definitions and asides.</div>
+    <div class="callout tip"><strong>Tip:</strong> fix the seed whenever you compare two settings.</div>
+    <div class="callout warn"><strong>Watch out:</strong> a very high temperature produces fluent nonsense.</div>
+    <aside class="notes">
+      [0:14 · 2 min] .callout (indigo), .callout.tip (teal) and .callout.warn (amber). Keep
+      callouts to one or two lines.
+    </aside>
+  </section>
+
+  <!-- 10 · Business lens + big number -->
+  <section>
+    <p class="kicker">Cost of errors</p>
+    <h2>Small error rates, large volumes</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">500</span>
+        <p class="caption muted">answers per month to review for every extra percentage point of
+          errors, if a bot sends 50,000 answers a month (illustrative arithmetic).</p>
+      </div>
+      <div class="callout business">
+        <p><strong>Andes Bank</strong> (a fictional company) wants a support bot. Before choosing a
+          model, ask: what does one wrong answer cost, and who reviews it?</p>
+        <p class="small">Translate model metrics into review hours and customer risk.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:16 · 3 min] Every theory section needs at least one .callout.business slide. Use
+      fictional companies only. .big-number is for one headline figure per slide; state
+      clearly when numbers are illustrative.
+    </aside>
+  </section>
+
+  <!-- 11 · KaTeX -->
+  <section>
+    <p class="kicker">Math · KaTeX</p>
+    <h2>Softmax with temperature</h2>
+    <p>Given logits \(z_1, \dots, z_V\) and a temperature \(T &gt; 0\):</p>
+    $$ p_i = \frac{\exp(z_i / T)}{\sum_{j=1}^{V} \exp(z_j / T)} $$
+    <div class="cols">
+      <div class="card"><h4>\(T \to 0\)</h4><p class="small">All probability goes to the arg max (greedy decoding).</p></div>
+      <div class="card"><h4>\(T \to \infty\)</h4><p class="small">The distribution becomes uniform over the vocabulary.</p></div>
+    </div>
+    <p class="small muted">Prices stay as text when wrapped: <span class="no-math">US$ 20 per month vs US$ 35 per month</span>.</p>
+    <aside class="notes">
+      [0:19 · 3 min] Inline math uses \( \) or single dollar signs, display math uses double
+      dollar signs or \[ \]. Wrap currency in span.no-math so KaTeX leaves it alone.
+    </aside>
+  </section>
+
+  <!-- 12 · Code -->
+  <section>
+    <p class="kicker">Code · highlight.js</p>
+    <h2>The same idea in NumPy</h2>
+    <pre><code class="language-python" data-trim data-noescape data-line-numbers="5-6">
+import numpy as np
+
+def softmax(logits, temperature=1.0):
+    """Turn raw scores into probabilities (numerically stable)."""
+    z = np.asarray(logits, dtype=float) / temperature
+    z -= z.max()                      # subtract the max: no overflow
+    p = np.exp(z)
+    return p / p.sum()
+
+logits = [3.2, 2.6, 2.4, 1.6]
+for t in (0.5, 1.0, 1.5):
+    print(t, softmax(logits, t).round(3))
+    </code></pre>
+    <aside class="notes">
+      [0:22 · 3 min] data-line-numbers="5-6" highlights the two key lines. Subtracting the
+      maximum does not change the result but avoids overflow in exp.
+    </aside>
+  </section>
+
+  <!-- 13 · Simulator: temperature + top-k -->
+  <section>
+    <p class="kicker">Simulator</p>
+    <h2>Temperature &amp; top-k: shaping the next token</h2>
+    <div class="sim">
+      <div class="sim-controls">
+        <p class="small muted" style="margin:0">Prompt: <em>“The customer asked for a refund because the product was …”</em></p>
+        <div class="control">
+          <label for="sim-temp">Temperature <output id="sim-temp-out">1.00</output></label>
+          <input type="range" id="sim-temp" min="0" max="2" step="0.05" value="1">
+        </div>
+        <div class="control">
+          <label for="sim-topk">Top-k <output id="sim-topk-out">8</output></label>
+          <input type="range" id="sim-topk" min="1" max="8" step="1" value="8">
+        </div>
+        <div>
+          <button class="btn btn-sm" id="sim-sample" type="button">🎲 Sample 10 tokens</button>
+        </div>
+        <div class="token-row" id="sim-samples" aria-live="polite"></div>
+      </div>
+      <div class="sim-output">
+        <div id="sim-chart"></div>
+        <p class="stat">Most likely: <strong id="sim-top">–</strong> · Entropy: <strong id="sim-entropy">–</strong> bits</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:25 · 6 min] Interaction. Ask: "What happens at temperature 0?" (greedy, one bar).
+      Then 2.0 (flat). Set top-k to 3 and sample: only three words can appear. Sampling uses
+      Course.seededRandom(42), so the sequence is reproducible after a page reload.
+    </aside>
+  </section>
+
+  <!-- 14 · Line chart -->
+  <section>
+    <p class="kicker">Chart · Course.lineChart</p>
+    <h2>Reading learning curves</h2>
+    <div class="sim">
+      <div class="sim-controls">
+        <div class="control">
+          <label for="lc-reg">Regularisation <output id="lc-reg-out">0.30</output></label>
+          <input type="range" id="lc-reg" min="0" max="1" step="0.05" value="0.3">
+        </div>
+        <p class="stat">Lowest validation loss: <strong id="lc-best">–</strong></p>
+        <p class="small muted">Synthetic, illustrative curves generated in the browser, not real training runs.</p>
+      </div>
+      <div class="sim-output"><div id="lc-chart"></div></div>
+    </div>
+    <aside class="notes">
+      [0:31 · 4 min] Move the slider to 0: validation loss rises after a few epochs
+      (overfitting) while training loss keeps falling. Ask where they would stop training.
+    </aside>
+  </section>
+
+  <!-- 15 · Flip cards -->
+  <section>
+    <p class="kicker">Self-check · .flip-card</p>
+    <h2>Define it before you flip it</h2>
+    <div class="cols-3">
+      <div class="flip-card">
+        <div class="front">Logit</div>
+        <div class="back">The raw, unnormalised score a model gives each token before softmax.</div>
+      </div>
+      <div class="flip-card">
+        <div class="front">Greedy decoding</div>
+        <div class="back">Always pick the most likely token. Same as temperature 0.</div>
+      </div>
+      <div class="flip-card">
+        <div class="front">Overfitting</div>
+        <div class="back">Training loss keeps improving while validation loss gets worse.</div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:35 · 3 min] Ask a volunteer to define each term, then click (or Tab + Enter) to flip.
+    </aside>
+  </section>
+
+  <!-- 16 · Prompt cards -->
+  <section>
+    <p class="kicker">Interaction patterns · .prompt-card</p>
+    <h2>Four ways to involve the room</h2>
+    <div class="cols">
+      <div class="prompt-card" data-kind="poll">
+        <h4>Which setting for a legal summary?</h4>
+        <p class="small">Low, medium or high temperature? Vote in the Zoom poll.</p>
+      </div>
+      <div class="prompt-card" data-kind="chat">
+        <h4>One word in the chat</h4>
+        <p class="small">Name a task where you would never want randomness.</p>
+      </div>
+      <div class="prompt-card" data-kind="breakout">
+        <h4>Groups of 3 · 6 min</h4>
+        <p class="small">Pick a use case and agree on decoding settings.</p>
+      </div>
+      <div class="prompt-card" data-kind="think">
+        <h4>Think for 30 seconds</h4>
+        <p class="small">What would make you trust a model's answer?</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:38 · 2 min] Four kinds: poll, chat, breakout, think. The label and icon come from
+      data-kind. Use at least one every ~10 minutes.
+    </aside>
+  </section>
+
+  <!-- 17 · Breakout with timer -->
+  <section>
+    <p class="kicker">Breakout rooms</p>
+    <h2>Choose settings for a real use case</h2>
+    <div class="cols">
+      <div class="prompt-card" data-kind="breakout">
+        <h4>Pick the settings · 6 min</h4>
+        <ol class="small">
+          <li>Pick one: support replies, product descriptions or meeting minutes.</li>
+          <li>Choose a temperature and a top-k, and justify both.</li>
+          <li>Name one risk and how you would detect it.</li>
+        </ol>
+        <p class="small muted">One person reports back in 30 seconds.</p>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="6" data-label="Breakout rooms"></div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:40 · 8 min] Open breakout rooms, then press Start. The timer turns amber in the last
+      minute and flashes with a short beep at zero (the beep needs one click on Start first,
+      because browsers block audio without a user gesture). "+1 min" extends it.
+    </aside>
+  </section>
+
+  <!-- 18 · Table + tags -->
+  <section>
+    <p class="kicker">Reference · table.compact</p>
+    <h2>Small open models we will use</h2>
+    <table class="compact">
+      <thead>
+        <tr><th>Model</th><th>Type</th><th class="num">Size</th><th>Used for</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="tag">HuggingFaceTB/SmolLM2-135M-Instruct</span></td><td>Decoder</td><td class="num">135M</td><td>Text generation demos</td></tr>
+        <tr><td><span class="tag">HuggingFaceTB/SmolLM2-360M-Instruct</span></td><td>Decoder</td><td class="num">360M</td><td>Chat and instruction following</td></tr>
+        <tr><td><span class="tag">Qwen/Qwen2.5-0.5B-Instruct</span></td><td>Decoder</td><td class="num">0.5B</td><td>Stronger baseline</td></tr>
+        <tr><td><span class="tag">distilbert/distilbert-base-uncased</span></td><td>Encoder</td><td class="num">—</td><td>Classification fine-tuning</td></tr>
+        <tr><td><span class="tag">google/flan-t5-small</span></td><td>Encoder–decoder</td><td class="num">—</td><td>Summaries and rewriting</td></tr>
+      </tbody>
+      <caption>Sizes are taken from the model names; “—” means the name does not state it.</caption>
+    </table>
+    <p><span class="pill">Open weights</span> <span class="pill">No gating</span> <span class="pill">Runs on a free Kaggle GPU</span></p>
+    <aside class="notes">
+      [0:48 · 2 min] table.compact keeps dense tables readable. Right-align numbers with
+      class="num". Pills summarise shared properties.
+    </aside>
+  </section>
+
+  <!-- 19 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Stretch, refill your coffee, and come back for the lab.</p>
+    <div class="timer" data-minutes="10" data-label="Break"></div>
+    <aside class="notes">
+      [1:10 · 10 min] Press Start before you mute. The timer keeps running if you move to
+      another slide.
+    </aside>
+  </section>
+
+  <!-- 20 · Lab divider -->
+  <section class="section-slide" data-block="lab">
+    <p class="kicker">Hands-on</p>
+    <h2>Guided lab</h2>
+    <p>We will run a small open model on Kaggle and reproduce today's simulator in Python.</p>
+    <span class="block-tag" data-block="lab">Lab · 60'</span>
+    <aside class="notes">
+      [1:20] Lab block. Students open the notebook from the next slide.
+    </aside>
+  </section>
+
+  <!-- 21 · Lab bridge -->
+  <section>
+    <p class="kicker">Lab bridge</p>
+    <h2>What we will build</h2>
+    <div class="cols">
+      <ul>
+        <li>Load <span class="tag">SmolLM2-135M-Instruct</span> and generate text</li>
+        <li>Compare temperature and top-k on the same prompt</li>
+        <li>Plot the next-token distribution</li>
+      </ul>
+      <div class="card">
+        <h4>Open the notebook</h4>
+        <p class="small">Kaggle checklist: Settings → Accelerator → GPU T4 x2 · Internet on.</p>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/lab.ipynb" target="_blank" rel="noopener">Open in Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/lab.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:20 · 3 min] Replace 01-intro-generative-models with your session folder in both
+      links. Kaggle is the default; Colab is the fallback.
+    </aside>
+  </section>
+
+  <!-- 22 · Challenge divider -->
+  <section class="section-slide" data-block="challenge">
+    <h2>Session challenge</h2>
+    <p>Individual, graded, 40 minutes in class. Submit by 23:59 today.</p>
+    <aside class="notes">
+      [2:20] Challenge block. The next slide is the only slide in Spanish (assessment content).
+    </aside>
+  </section>
+
+  <!-- 23 · Challenge briefing (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Challenge de la sesión · evaluado</p>
+    <h2>Challenge S00: tu turno</h2>
+    <div class="cols">
+      <ul class="small">
+        <li><strong>Tareas:</strong> 3–4 tareas en el notebook, entre ellas “Explica y decide” y “Crítica a la IA”.</li>
+        <li><strong>Rúbrica:</strong> ejecución técnica 40% · análisis e interpretación 40% · reflexión y registro de IA 20%.</li>
+        <li><strong>IA permitida</strong> con registro obligatorio: sin registro, ese componente vale 0.</li>
+        <li><strong>Micro-sustentaciones</strong> aleatorias: si no puedes explicar tu entrega, la nota máxima es 3.0.</li>
+        <li><strong>Entrega:</strong> Archivo → Descargar notebook → súbelo a e-Aulas como <code>S00_&lt;codigo&gt;.ipynb</code> antes de las 23:59 de hoy.</li>
+      </ul>
+      <div class="center">
+        <div class="timer" data-minutes="40" data-label="Challenge"></div>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/challenge.ipynb" target="_blank" rel="noopener">Abrir en Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/challenge.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:20 · 40 min] This briefing slide is in Spanish by course convention; everything else
+      is in English. Read the rules aloud, start the 40' timer, and remind students of the
+      file name and deadline. Replace the session folder in both links.
+    </aside>
+  </section>
+
+  <!-- 24 · Wrap-up -->
+  <section>
+    <p class="kicker">Wrap-up</p>
+    <h2>Key takeaways</h2>
+    <div class="cols">
+      <ul>
+        <li>Softmax turns logits into probabilities; temperature rescales them first.</li>
+        <li>Top-k removes the long tail before sampling.</li>
+        <li>A fixed seed makes sampling reproducible and comparable.</li>
+      </ul>
+      <div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">Which decoding setting would you choose for your own use case, and why?</p>
+        </div>
+        <p class="small"><strong>Next session:</strong> training generative models.
+          <span class="muted">Pre-work: skim the lab notebook's Part 1.</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:58 · 2 min] Collect exit answers in the chat. Mention the pre-work for next time.
+    </aside>
+  </section>
+
+  <!-- 25 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Further reading</h2>
+    <ul class="small">
+      <li>Holtzman, A., Buys, J., Du, L., Forbes, M., &amp; Choi, Y. (2020). The curious case of neural text degeneration. <em>ICLR</em>. arXiv:1904.09751.</li>
+      <li>Hinton, G., Vinyals, O., &amp; Dean, J. (2015). Distilling the knowledge in a neural network. arXiv:1503.02531.</li>
+      <li>Bender, E. M., Gebru, T., McMillan-Major, A., &amp; Shmitchell, S. (2021). On the dangers of stochastic parrots: Can language models be too big? <em>FAccT</em>.</li>
+      <li>reveal.js documentation: <a href="https://revealjs.com" target="_blank" rel="noopener">revealjs.com</a></li>
+    </ul>
+    <aside class="notes">
+      Prefer primary sources and include women-authored work in every reference list.
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "00" });
+  Course.onReady(() => {
+    // --- Simulator: softmax temperature + top-k ---------------------------------
+    const VOCAB = ["broken", "late", "damaged", "expensive", "wrong", "missing", "fine", "delicious"];
+    const LOGITS = [3.2, 2.6, 2.4, 1.6, 1.3, 0.9, -0.2, -1.5];
+    const tempIn = document.getElementById("sim-temp");
+    const topkIn = document.getElementById("sim-topk");
+    const chartEl = document.getElementById("sim-chart");
+    const rng = Course.seededRandom(42);
+    const pct = (v) => (v * 100).toFixed(1) + "%";
+    const entropyBits = (ps) => -ps.reduce((h, p) => (p > 0 ? h + p * Math.log2(p) : h), 0);
+    let T = Number(tempIn.value);
+    let K = Number(topkIn.value);
+    let probs = [];
+
+    function updateSoftmax() {
+      probs = Course.topK(Course.softmax(LOGITS, T), K);
+      const best = probs.indexOf(Math.max(...probs));
+      Course.barChart(chartEl, VOCAB, probs, { max: 1, format: pct, highlight: best, title: "Next-token probabilities" });
+      document.getElementById("sim-top").textContent = VOCAB[best];
+      document.getElementById("sim-entropy").textContent = entropyBits(probs).toFixed(2);
+    }
+
+    Course.bindRange(tempIn, document.getElementById("sim-temp-out"),
+      (v) => (v === 0 ? "0 · greedy" : v.toFixed(2)), (v) => { T = v; updateSoftmax(); });
+    Course.bindRange(topkIn, document.getElementById("sim-topk-out"), String, (v) => { K = v; updateSoftmax(); });
+
+    document.getElementById("sim-sample").addEventListener("click", () => {
+      const box = document.getElementById("sim-samples");
+      box.textContent = "";
+      for (let i = 0; i < 10; i++) {
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = VOCAB[Course.sample(probs, rng)];
+        box.appendChild(tag);
+      }
+    });
+
+    // --- Line chart: illustrative learning curves ---------------------------------
+    function curves(reg) {
+      const train = [];
+      const val = [];
+      for (let e = 1; e <= 20; e++) {
+        const base = 0.35 + 1.9 * Math.exp(-0.28 * e);
+        const tr = base - 0.2 * (1 - reg) * (1 - Math.exp(-0.12 * e));
+        const gap = 0.06 + (1 - reg) * 0.009 * Math.pow(Math.max(0, e - 4), 1.6);
+        train.push([e, +tr.toFixed(3)]);
+        val.push([e, +(base + gap).toFixed(3)]);
+      }
+      return [
+        { name: "Training loss", points: train },
+        { name: "Validation loss", points: val, dashed: true }
+      ];
+    }
+
+    Course.bindRange(document.getElementById("lc-reg"), document.getElementById("lc-reg-out"),
+      (v) => v.toFixed(2), (reg) => {
+        const series = curves(reg);
+        Course.lineChart(document.getElementById("lc-chart"), series,
+          { xLabel: "Epoch", yLabel: "Loss", yMin: 0, yMax: 2, width: 640, height: 400, title: "Learning curves" });
+        const best = series[1].points.reduce((b, p) => (p[1] < b[1] ? p : b));
+        document.getElementById("lc-best").textContent = `epoch ${best[0]} (${best[1].toFixed(2)})`;
+      });
+  });
+</script>
+</body>
+</html>

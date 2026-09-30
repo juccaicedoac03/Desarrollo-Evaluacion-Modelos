@@ -1,0 +1,1333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S09 · Use Cases: Generative Models in Real Contexts</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+<style>
+  /* Deck-specific styles (S09): value × feasibility matrix and ROI calculator */
+  .reveal .vf-cases { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .reveal .vf-case {
+    display: flex; gap: 10px; align-items: baseline; width: 100%; box-sizing: border-box;
+    padding: 5px 10px; border: 1.5px solid var(--line-strong); border-radius: 10px;
+    background: #fff; color: var(--ink); font: inherit; font-size: 17px; line-height: 1.25;
+    text-align: left; cursor: pointer;
+  }
+  .reveal .vf-case strong { font-family: var(--font-mono); color: var(--accent); }
+  .reveal .vf-case.is-selected { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, white); }
+  .reveal .vf-case.is-placed strong::after { content: " ✓"; color: var(--ok); }
+  .reveal .vf-case:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, white); outline-offset: 1px; }
+  .reveal #vf-svg { display: block; width: 100%; height: auto; max-height: 390px; cursor: crosshair; font-family: var(--font-sans); }
+  .reveal #vf-svg .q-bg { stroke: none; }
+  .reveal #vf-svg .q-label { font-size: 17px; font-weight: 700; fill: var(--muted); }
+  .reveal #vf-svg .axis-t { font-size: 17px; fill: var(--muted); font-weight: 600; }
+  .reveal #vf-svg .dot circle { fill: var(--accent); stroke: #fff; stroke-width: 2; }
+  .reveal #vf-svg .dot text { fill: #fff; font-size: 16px; font-weight: 700; }
+  .reveal #vf-svg .dot.is-selected circle { fill: var(--accent-2); }
+  .reveal #vf-svg .ref circle { fill: none; stroke: var(--brand); stroke-width: 2.5; stroke-dasharray: 5 4; }
+  .reveal #vf-svg .ref text { fill: var(--brand); font-size: 15px; font-weight: 700; }
+  .reveal .roi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; }
+  .reveal .roi-grid .control label { font-size: 18px; }
+  .reveal .roi-grid input[type="range"] { height: 24px; }
+  .reveal .kpi-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 6px; }
+  .reveal .kpi-row .kpi { padding: 6px 10px; border-radius: 10px; background: var(--surface); }
+  .reveal .kpi-row .kpi span { display: block; font-size: 15px; color: var(--muted); }
+  .reveal .kpi-row .kpi strong { font-family: var(--font-mono); font-size: 22px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .reveal .ladder td:first-child { white-space: nowrap; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ===================================================================== -->
+  <!-- OPENING                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="09">
+    <div class="title-main">
+      <h1>Use Cases: Generative Models in Real Contexts</h1>
+      <p class="subtitle">Casos de uso: modelos generativos en contexto real</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome to Session 09. Until now we built models, apps, agents and classifiers.
+      Today we step back and ask the business question: where do these models create value, how do
+      we know, and what can go wrong? Today is also milestone H3 of the final project: every group
+      submits its use-case canvas before 23:59. Keys: S speaker view, F fullscreen, Esc overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Warm-up: three questions on generative classifiers (S08) <span class="time">10'</span></li>
+      <li data-block="theory">Theory: frameworks, evidence, three sectors, failures and your canvas <span class="time">60'</span></li>
+      <li data-block="break">Break <span class="time">10'</span></li>
+      <li data-block="lab">Guided lab: finance, health and education prototypes + a sector agent <span class="time">60'</span></li>
+      <li data-block="challenge">Session challenge (graded, individual) <span class="time">40'</span></li>
+    </ol>
+    <p class="small muted" style="margin-top: 18px">Project milestone H3 (use-case canvas) is due today at 23:59.</p>
+    <aside class="notes">
+      [0:01 · 1 min] Walk through the blocks. The theory block has two simulators (a value × feasibility
+      matrix and an ROI calculator) and a breakout by sector. The challenge reuses the ROI formula with
+      each student's own parameters, so pay attention to it.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WARM-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 3 · Warm-up divider -->
+  <section class="section-slide" data-block="warmup">
+    <h2>Warm-up</h2>
+    <p>Three questions on last session: building classifiers with generative models.</p>
+    <span class="block-tag" data-block="warmup">Warm-up · 10'</span>
+    <aside class="notes">
+      [0:02] Retrieval practice on Session 08. Launch each question as a Zoom poll, wait about
+      45 seconds, then click the most voted option.
+    </aside>
+  </section>
+
+  <!-- 4 · Q1 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q1</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">You only have 30 labelled examples. Which classifier usually gets closer to its best possible error first?</p>
+      <button class="quiz-opt" data-key="a">Logistic regression (discriminative)</button>
+      <button class="quiz-opt" data-key="b">Naive Bayes (generative)</button>
+      <button class="quiz-opt" data-key="c">A three-layer neural network trained from scratch</button>
+      <button class="quiz-opt" data-key="d">All three converge at exactly the same speed</button>
+      <div class="quiz-explain">Ng &amp; Jordan (2002): generative classifiers such as Naive Bayes approach their
+        (higher) asymptotic error with fewer examples; logistic regression usually wins once data is plentiful.
+        That is why the learning curve in the S08 lab crossed over.</div>
+    </div>
+    <aside class="notes">
+      [0:02 · 3 min] If the room hesitates, sketch the two learning curves: Naive Bayes drops fast and
+      plateaus higher; logistic regression starts worse and ends lower. Business link for today: with
+      little data, the "simple" option can be the right first prototype.
+    </aside>
+  </section>
+
+  <!-- 5 · Q2 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q2</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">In zero-shot classification by label likelihood, what does the LLM compute for each label?</p>
+      <button class="quiz-opt" data-key="a">The cosine similarity between the label and the text embedding</button>
+      <button class="quiz-opt" data-key="b">The log-probability of the label tokens given the prompt with the text; the highest wins</button>
+      <button class="quiz-opt" data-key="c">How many times the label word appears in the text</button>
+      <button class="quiz-opt" data-key="d">The output of a softmax head fine-tuned on the labels</button>
+      <div class="quiz-explain">We score \( \log p(\text{label tokens} \mid \text{prompt}) \) for every verbalized label and
+        pick the arg max. No training, but the choice of verbalizer (“bullish” vs “positive”) matters. We use it
+        again today in the finance part of the lab.</div>
+    </div>
+    <aside class="notes">
+      [0:05 · 2 min] Connect to today: in the lab we compare this zero-shot LLM against FinBERT, a model
+      fine-tuned on financial text, on the same dataset as S08.
+    </aside>
+  </section>
+
+  <!-- 6 · Q3 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q3</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">A teammate fitted TF-IDF on the whole dataset and tuned the decision threshold on the test set. The report says 94% accuracy. What do you answer?</p>
+      <button class="quiz-opt" data-key="a">Great result: ship it</button>
+      <button class="quiz-opt" data-key="b">Fine, as long as the test set is large</button>
+      <button class="quiz-opt" data-key="c">The estimate is optimistic: both steps leak test information; refit on train and tune on validation</button>
+      <button class="quiz-opt" data-key="d">Only the threshold is a problem; TF-IDF is unsupervised, so it cannot leak</button>
+      <div class="quiz-explain">Both are data leakage. Unsupervised statistics (vocabulary, IDF) computed on test data and a
+        threshold tuned on test data both make the reported number look better than what production will see.
+        Today this matters twice: a business case built on a leaky metric overstates the ROI.</div>
+    </div>
+    <aside class="notes">
+      [0:07 · 3 min] This bridges to today: every ROI estimate we build starts from a quality number. If
+      that number is inflated by leakage, the whole business case is inflated. Transition: "Let's see how
+      to turn a model metric into a decision."
+    </aside>
+  </section>
+
+  <!-- 7 · Learning objectives -->
+  <section>
+    <p class="kicker">Learning objectives</p>
+    <h2>By the end of this session you can…</h2>
+    <ol>
+      <li>Analyse a use case with value × feasibility, risk × impact and a KPI ladder <span class="pill">RAE 4</span></li>
+      <li>Estimate ROI and payback with explicit assumptions and decide go / no-go <span class="pill">RAE 4</span> <span class="pill">RAE 5</span></li>
+      <li>Read the evidence critically: economic estimates, field experiments and documented failures <span class="pill">RAE 4</span></li>
+      <li>Prototype and measure sector solutions in finance, health and education <span class="pill">RAE 5</span></li>
+      <li>Anticipate sector risks and choose controls: liability, safety, privacy <span class="pill">RAE 6</span></li>
+    </ol>
+    <p class="small muted">RAE numbers refer to the learning outcomes in the course syllabus (guía de asignatura).</p>
+    <aside class="notes">
+      [0:09 · 1 min] RAE 4 (analyse real use cases), RAE 5 (identify opportunities) and RAE 6 (manage risk
+      and quality). The challenge assesses objectives 2, 4 and 5 directly; objective 3 appears in the
+      "Crítica a la IA" task, where students must verify claims against the sources we cite today.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 1 · FRAMEWORKS                                           -->
+  <!-- ===================================================================== -->
+
+  <!-- 8 · Part 1 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 1</p>
+    <h2>From idea to use case</h2>
+    <p>Four lenses to decide where generative AI creates value, and at what risk.</p>
+    <aside class="notes">
+      [0:10] Part 1 runs until about 0:31. Two simulators in this part.
+    </aside>
+  </section>
+
+  <!-- 9 · Tasks, not technologies -->
+  <section>
+    <p class="kicker">Unit of analysis</p>
+    <h2>A use case is a task, not a technology</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Break a role into tasks</h4>
+        <p class="small muted" style="margin-bottom: 6px">Claims analyst at an insurer (illustrative):</p>
+        <table class="compact" style="margin: 0">
+          <tbody>
+            <tr><td>Read claim documents</td><td><span class="tag">extract</span></td></tr>
+            <tr><td>Check the policy's coverage</td><td><span class="tag">retrieve + answer</span></td></tr>
+            <tr><td>Flag unusual claims</td><td><span class="tag">classify</span></td></tr>
+            <tr><td>Write the decision letter</td><td><span class="tag">draft</span></td></tr>
+            <tr><td>Call the customer</td><td><span class="tag">human</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="callout">
+          <h4 style="margin-bottom: 6px">Use-case statement</h4>
+          <p class="small" style="margin: 0">For <strong>[user]</strong> who <strong>[task and pain]</strong>, a model that
+            <strong>[capability]</strong> produces <strong>[output]</strong>, measured by <strong>[KPI]</strong>,
+            with <strong>[human control]</strong>.</p>
+        </div>
+        <div class="callout tip"><strong>Why tasks?</strong> Jobs mix tasks where AI helps a lot with tasks where it
+          hurts. Value, risk and ROI are all computed per task.</div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:10 · 2 min] The single most common mistake in business cases: "let's use generative AI in
+      claims". That is not a use case. Decompose the job, find the tasks that are frequent, text-heavy
+      and checkable, and write one sentence with the template on the right. Students will use this
+      sentence in the breakout, the challenge (T2) and their H3 canvas.
+    </aside>
+  </section>
+
+  <!-- 10 · Value chain -->
+  <section>
+    <p class="kicker">Lens 1 · value chain</p>
+    <h2>Where in the chain does the task sit?</h2>
+    <div class="cols-3">
+      <div class="card"><h4>📣 Marketing &amp; sales</h4><p class="small">Campaign variants, product descriptions, proposal drafts.</p></div>
+      <div class="card"><h4>🎧 Customer service</h4><p class="small">Grounded assistants, call summaries, agent copilots.</p></div>
+      <div class="card"><h4>⚙️ Operations</h4><p class="small">Document processing, report drafts, routing of requests.</p></div>
+      <div class="card"><h4>🧪 Product &amp; R&amp;D</h4><p class="small">Code assistants, test generation, design exploration.</p></div>
+      <div class="card"><h4>🛡️ Risk &amp; compliance</h4><p class="small">Policy Q&amp;A, news and alert triage, always with review.</p></div>
+      <div class="card"><h4>👥 People &amp; knowledge</h4><p class="small">Onboarding assistants, internal search, training content.</p></div>
+    </div>
+    <p class="small muted" style="margin-top: 10px">Adapted from Porter's value chain (1985): primary and support activities.</p>
+    <aside class="notes">
+      [0:12 · 2 min] Porter's value chain is an old but useful map: it forces you to say which activity
+      the task belongs to and who owns it. Ask for one example per card from the room, quickly. Point
+      out that customer service and operations are text-heavy and high volume, which is why they
+      dominate the evidence we will see in Part 2.
+    </aside>
+  </section>
+
+  <!-- 11 · Value × feasibility -->
+  <section>
+    <p class="kicker">Lens 2 · value × feasibility</p>
+    <h2>Score value and feasibility separately</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Value (1–5)</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Volume × time per case (the ROI engine)</li>
+          <li>Quality, revenue or risk reduction</li>
+          <li>User pain and strategic fit</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Feasibility (1–5)</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Data and knowledge: available, legal to use, owned</li>
+          <li>Technical: is the task inside the model's frontier?</li>
+          <li>Integration effort and organizational readiness</li>
+        </ul>
+      </div>
+    </div>
+    <table class="compact" style="margin-top: 14px">
+      <tbody>
+        <tr><td><strong>High value · high feasibility</strong></td><td>Quick win: pilot now, with a baseline</td>
+            <td><strong>High value · low feasibility</strong></td><td>Strategic bet: de-risk first</td></tr>
+        <tr><td><strong>Low value · high feasibility</strong></td><td>Fill-in: cheap, off-the-shelf</td>
+            <td><strong>Low value · low feasibility</strong></td><td>Money pit: park it</td></tr>
+      </tbody>
+    </table>
+    <aside class="notes">
+      [0:14 · 2 min] This is the same scoring as block B3 of the project template (propuesta.md, Part B).
+      Stress: score with evidence, not enthusiasm. "Is the task inside the frontier?" is exactly the
+      question the Dell'Acqua et al. experiment answers in Part 2. Next slide: try it.
+    </aside>
+  </section>
+
+  <!-- 12 · Simulator 1: value × feasibility -->
+  <section>
+    <p class="kicker">Simulator · value × feasibility</p>
+    <h2>Place six cases on the matrix</h2>
+    <div class="sim" style="grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr); padding: 14px 18px">
+      <div class="sim-controls" style="gap: 8px">
+        <p class="small muted" style="margin: 0; font-size: 17px">1 · Pick a case · 2 · click the matrix to place it.</p>
+        <div class="vf-cases" id="vf-cases"></div>
+        <div>
+          <button class="btn btn-sm" id="vf-ref" type="button">Show our reading</button>
+          <button class="btn btn-sm btn-ghost" id="vf-reset" type="button">Reset</button>
+        </div>
+      </div>
+      <div class="sim-output" style="padding: 8px 12px">
+        <svg id="vf-svg" viewBox="0 0 560 400" role="img" aria-label="Value by feasibility matrix"></svg>
+        <p class="small" id="vf-advice" style="margin: 4px 0 0; font-size: 18px" aria-live="polite">Select a case on the left.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:16 · 6 min] Interaction. Ask the room to vote case by case in the chat ("high/low value,
+      high/low feasibility"), then place it. After all six, press "Show our reading": dashed circles show
+      the instructor's placement; discuss the disagreements, not the agreements. Our reading:
+      A NovaTel FAQ grounded in policies = quick win. B Clínica Serena discharge drafts = high value but
+      sensitive data and integration → strategic bet. C Aseguradora Mirador automatic claim approvals =
+      value exists, but decisions about people, regulation and error cost → strategic bet at the
+      bottom edge, close to money pit. D Café Alto Montaña captions = fill-in. E Colibrí Socratic tutor =
+      borderline quick win (evidence says guardrails matter). F building an LLM from scratch for memos =
+      money pit. All organizations are fictional.
+    </aside>
+  </section>
+
+  <!-- 13 · Risk × impact -->
+  <section>
+    <p class="kicker">Lens 3 · risk × impact</p>
+    <h2>How bad is a wrong answer?</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr)">
+      <table class="compact">
+        <thead><tr><th></th><th>Low harm</th><th>High harm</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Errors rare</strong></td><td>Automate, audit a sample<br><span class="small muted">caption drafts</span></td>
+              <td>Human approves each output<br><span class="small muted">discharge summaries</span></td></tr>
+          <tr><td><strong>Errors frequent</strong></td><td>Assist only, user edits<br><span class="small muted">first drafts, ideas</span></td>
+              <td>Redesign or do not deploy<br><span class="small muted">unsupervised triage</span></td></tr>
+        </tbody>
+      </table>
+      <div>
+        <p class="small"><strong>Autonomy ladder:</strong> assist → augment → automate. Climb one step only when your
+          measured error rate and error cost allow it.</p>
+        <div class="callout business">
+          <p class="small" style="margin: 0">Error cost is a <strong>business number</strong>: rework minutes, refunds,
+            complaints, legal exposure. It enters the ROI as a negative term, not as a footnote.</p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:22 · 2 min] Business lens for Part 1. Harm is about who is affected and how reversible the
+      error is: a bad caption is deleted; a wrong triage or a wrong refund promise is not. The autonomy
+      ladder links to S06 (confidence thresholds and human in the loop). Keep the "error cost enters the
+      ROI" idea: it is the rework term in the formula two slides ahead.
+    </aside>
+  </section>
+
+  <!-- 14 · KPI ladder -->
+  <section>
+    <p class="kicker">Lens 4 · KPIs</p>
+    <h2>From model metric to business outcome</h2>
+    <table class="compact ladder">
+      <thead><tr><th>Level</th><th>Examples</th><th>Who cares</th></tr></thead>
+      <tbody>
+        <tr><td>Model metric</td><td>Accuracy, macro-F1, top-3 accuracy, answerable rate</td><td>Data team</td></tr>
+        <tr><td>Operational KPI</td><td>Handling time, first-contact resolution, time to first draft, escalations</td><td>Process owner</td></tr>
+        <tr><td>Business outcome</td><td>Cost per case, revenue, satisfaction, learning gains</td><td>Sponsor</td></tr>
+        <tr><td>Guardrail</td><td>Complaints, incidents, unsafe answers, gaps between user groups</td><td>Risk &amp; compliance</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip" style="margin-top: 12px"><strong>Rule:</strong> measure the baseline <em>before</em> the pilot,
+      and define kill criteria upfront (e.g., “stop if escalations rise”).</div>
+    <aside class="notes">
+      [0:24 · 2 min] Each level answers to a different owner. A model can improve its accuracy and the
+      business outcome stays flat (nobody uses it), or the operational KPI improves while a guardrail
+      breaks (faster answers, more complaints). The canvas in the challenge and in H3 asks for at least
+      one KPI and one guardrail. Without a baseline, you cannot compute any improvement.
+    </aside>
+  </section>
+
+  <!-- 15 · ROI formula -->
+  <section>
+    <p class="kicker">ROI and payback</p>
+    <h2>A transparent formula beats a big number</h2>
+    <p class="small" style="margin-bottom: 4px">Hours saved per month, net of rework:</p>
+    $$ H = \frac{V \cdot a \cdot \big(q\,m - (1-q)\,r\big)}{60} $$
+    <div class="cols">
+      <div>
+        $$ B = H \cdot c - C_{\text{run}} \qquad \text{payback} = \frac{C_{\text{impl}}}{B}\ \ (B &gt; 0) $$
+        $$ \text{ROI}_{12} = \frac{12\,H\,c - (C_{\text{impl}} + 12\,C_{\text{run}})}{C_{\text{impl}} + 12\,C_{\text{run}}} $$
+      </div>
+      <p class="small" style="font-size: 20px">\(V\) cases per month · \(a\) adoption · \(q\) share usable without rework ·
+        \(m\) minutes saved per usable output · \(r\) rework minutes per unusable output · \(c\) loaded cost per hour ·
+        \(C_{\text{impl}}\) one-off cost · \(C_{\text{run}}\) monthly cost (compute, licences, monitoring, review).</p>
+    </div>
+    <aside class="notes">
+      [0:26 · 2 min] Walk through each symbol. The quality q comes from YOUR measurement (the lab and
+      challenge produce it). The rework term is the error cost from two slides ago: with q = 0.8 and
+      rework minutes twice the minutes saved, 20% of cases eat half the savings of the other 80%.
+      Same structure as block B5 of the project template. The challenge's ROI cell implements exactly
+      this formula.
+    </aside>
+  </section>
+
+  <!-- 16 · Simulator 2: ROI -->
+  <section>
+    <p class="kicker">Simulator · ROI calculator</p>
+    <h2>When does the pilot pay back?</h2>
+    <div class="sim" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 14px 18px; gap: 18px">
+      <div class="sim-controls">
+        <div class="roi-grid">
+          <div class="control"><label for="roi-vol">Cases / month <output id="roi-vol-out">–</output></label>
+            <input type="range" id="roi-vol" min="1000" max="50000" step="1000" value="10000"></div>
+          <div class="control"><label for="roi-adopt">Adoption <output id="roi-adopt-out">–</output></label>
+            <input type="range" id="roi-adopt" min="10" max="100" step="5" value="60"></div>
+          <div class="control"><label for="roi-q">Usable (q) <output id="roi-q-out">–</output></label>
+            <input type="range" id="roi-q" min="50" max="100" step="1" value="85"></div>
+          <div class="control"><label for="roi-m">Min saved <output id="roi-m-out">–</output></label>
+            <input type="range" id="roi-m" min="0.5" max="15" step="0.5" value="5"></div>
+          <div class="control"><label for="roi-r">Rework min <output id="roi-r-out">–</output></label>
+            <input type="range" id="roi-r" min="0" max="20" step="1" value="8"></div>
+          <div class="control"><label for="roi-c">USD / hour <output id="roi-c-out">–</output></label>
+            <input type="range" id="roi-c" min="5" max="60" step="1" value="20"></div>
+          <div class="control"><label for="roi-impl">One-off USD <output id="roi-impl-out">–</output></label>
+            <input type="range" id="roi-impl" min="5000" max="200000" step="5000" value="60000"></div>
+          <div class="control"><label for="roi-run">Monthly USD <output id="roi-run-out">–</output></label>
+            <input type="range" id="roi-run" min="0" max="20000" step="500" value="2500"></div>
+        </div>
+        <p class="small muted" style="margin: 0; font-size: 16px">Illustrative defaults, not benchmarks. Same formula as the challenge.</p>
+      </div>
+      <div class="sim-output" style="padding: 8px 12px">
+        <div class="kpi-row">
+          <div class="kpi"><span>Net / month</span><strong id="roi-net">–</strong></div>
+          <div class="kpi"><span>Payback</span><strong id="roi-pay">–</strong></div>
+          <div class="kpi"><span>ROI 12 m</span><strong id="roi-12">–</strong></div>
+        </div>
+        <div id="roi-chart"></div>
+        <p class="small" id="roi-verdict" style="margin: 2px 0 0; font-size: 18px" aria-live="polite"></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:28 · 4 min] Interaction. Defaults: 10,000 cases, 60% adoption, 85% usable, 5 min saved,
+      8 min rework, USD 20/h, USD 60k one-off, USD 2.5k/month → net ≈ USD 3,600/month, payback ≈ 17
+      months, negative 12-month ROI. Ask: "Which single slider would you work on first?" Try: adoption
+      to 90% (change management), q to 95% (better model or narrower scope), rework to 4 (better UI for
+      corrections). Then drop q to 70%: rework swallows the savings. Lesson: quality and adoption often
+      matter more than model cost.
+    </aside>
+  </section>
+
+  <!-- 17 · Quiz: payback -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · payback</span>
+    <div class="quiz grid-2" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Hours saved are worth USD 8,000 per month, run costs are USD 3,000 per month and the one-off cost is USD 40,000. What is the payback?</p>
+      <button class="quiz-opt" data-key="a">5 months</button>
+      <button class="quiz-opt" data-key="b">8 months</button>
+      <button class="quiz-opt" data-key="c">13.3 months</button>
+      <button class="quiz-opt" data-key="d">It never pays back</button>
+      <div class="quiz-explain">Net monthly benefit = 8,000 − 3,000 = 5,000; payback = 40,000 / 5,000 = 8 months.
+        Answer (a) forgets the run cost, the most common mistake in business cases.</div>
+    </div>
+    <aside class="notes">
+      [0:31 · 1 min] Quick poll. If many chose (a), insist: run costs include compute, licences,
+      monitoring and the human review time. End of Part 1.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 2 · EVIDENCE                                             -->
+  <!-- ===================================================================== -->
+
+  <!-- 18 · Part 2 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 2</p>
+    <h2>What the evidence says</h2>
+    <p>Top-down estimates, field experiments and what transfers to your case.</p>
+    <aside class="notes">
+      [0:32] Part 2 until about 0:43. Three sources every student should be able to cite correctly:
+      the challenge's "Crítica a la IA" task checks exactly this.
+    </aside>
+  </section>
+
+  <!-- 19 · McKinsey -->
+  <section>
+    <p class="kicker">Top-down estimate</p>
+    <h2>The economic potential, and how to read it</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number" style="font-size: 64px; white-space: nowrap">USD 2.6–4.4 T</span>
+        <p class="caption muted">added value per year across the 63 use cases analysed by McKinsey (2023); about 75% of it
+          in customer operations, marketing and sales, software engineering and R&amp;D.</p>
+      </div>
+      <div>
+        <div class="callout warn">
+          <p class="small" style="margin: 0"><strong>How to read it:</strong> a scenario estimate of potential at scale,
+            not measured results. It says <em>where to look</em>, not what your pilot will return.</p>
+        </div>
+        <div class="callout business">
+          <p class="small" style="margin: 0">Use top-down numbers to pick where to search; use your own baseline and
+            pilot to build the business case.</p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:32 · 2 min] Source: McKinsey &amp; Company (June 2023), "The economic potential of generative AI:
+      The next productivity frontier". Students saw the headline in S01; today the point is how to use
+      it. Common misuse (planted in the challenge): quoting a "McKinsey statistic" that the report does
+      not contain. If you cite it, cite the range, the 63 use cases, and the fact that it is potential.
+    </aside>
+  </section>
+
+  <!-- 20 · Brynjolfsson et al. -->
+  <section>
+    <p class="kicker">Field evidence · customer support</p>
+    <h2>Generative AI at work: support agents</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">+14%</span>
+        <p class="caption muted">issues resolved per hour, on average, after 5,179 support agents got an AI assistant
+          (NBER working paper, 2023). The 2025 journal version reports about +15%.</p>
+      </div>
+      <div>
+        <ul class="small">
+          <li><strong>Biggest gains for novices</strong> and lower-skilled agents (+34% in the working paper); little
+            effect for the most experienced.</li>
+          <li>The assistant spreads the <strong>practices of top performers</strong> to everyone else.</li>
+          <li>Customers were more positive and asked less often for a manager.</li>
+        </ul>
+        <p class="small muted">Brynjolfsson, Li &amp; Raymond (2023, NBER w31161; <em>QJE</em>, 2025).</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:34 · 3 min] One of the first large field studies with real workers and staggered rollout, so
+      the comparison is credible. Key teaching points: (1) the effect is heterogeneous: onboarding and
+      novice support are strong use cases; (2) the unit is a task inside a job, not the whole job;
+      (3) the outcome is an operational KPI (resolutions per hour) plus guardrails (customer sentiment,
+      escalations). Note the numbers differ slightly between the 2023 working paper (5,179 agents,
+      +14%) and the 2025 QJE article (5,172 agents, +15%): always say which version you cite.
+    </aside>
+  </section>
+
+  <!-- 21 · Jagged frontier -->
+  <section>
+    <p class="kicker">Field evidence · knowledge work</p>
+    <h2>The jagged technological frontier</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Inside the frontier</h4>
+        <p class="small">758 BCG consultants with GPT-4 completed <strong>12.2% more tasks</strong>,
+          <strong>25.1% faster</strong>, with <strong>more than 40% higher quality</strong> ratings.</p>
+      </div>
+      <div class="card">
+        <h4>Outside the frontier</h4>
+        <p class="small">On a task designed to fall outside the model's capabilities, consultants using AI were
+          <strong>19 percentage points less likely</strong> to reach the correct answer.</p>
+      </div>
+    </div>
+    <div class="callout tip" style="margin-top: 14px"><strong>Takeaway:</strong> tasks that look equally hard can sit on opposite
+      sides of the frontier. Map it with your own tests before you scale. “Centaurs” split tasks between human and AI;
+      “cyborgs” interleave them.</div>
+    <p class="small muted" style="margin: 6px 0 0">Dell'Acqua, McFowland, Mollick, Lifshitz-Assaf, Kellogg, Rajendran, Krayer, Candelon &amp; Lakhani (2023), HBS Working Paper 24-013.</p>
+    <aside class="notes">
+      [0:37 · 3 min] Figures from the 2023 HBS working paper (now published in Organization Science).
+      The outside-the-frontier task looked like a normal business case but required spotting a
+      subtle inconsistency in interviews; AI made people confidently wrong. Link to value × feasibility:
+      "technical feasibility" means "is this task inside the frontier for this model?", and only a
+      test set from your own task answers it.
+    </aside>
+  </section>
+
+  <!-- 22 · Quiz: evidence -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · evidence</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">Andes Bank (fictional) wants to cite Brynjolfsson et al. to justify an assistant for its most senior advisors. What is the best reply?</p>
+      <button class="quiz-opt" data-key="a">Perfect: the study shows the largest gains for the most experienced workers</button>
+      <button class="quiz-opt" data-key="b">Any study with a positive result justifies any deployment</button>
+      <button class="quiz-opt" data-key="c">Careful: the largest gains were for novices; senior advisors may gain little, so run your own pilot</button>
+      <button class="quiz-opt" data-key="d">The study found no productivity effect at all</button>
+      <div class="quiz-explain">The effect was concentrated among novice and lower-skilled agents, in customer support.
+        Transfer the finding only after checking task, users and quality measure, ideally with a pilot and a comparison group.</div>
+    </div>
+    <aside class="notes">
+      [0:40 · 1 min] Poll. Option (a) is the reversed claim that appears in AI-written summaries; the
+      challenge's critique task plants similar reversals.
+    </aside>
+  </section>
+
+  <!-- 23 · Business lens: transfer -->
+  <section>
+    <p class="kicker">From their study to your case</p>
+    <h2>Does the evidence transfer?</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Four transfer questions</h4>
+        <ol class="small" style="margin-bottom: 0">
+          <li><strong>Same task?</strong> Support chats ≠ legal opinions.</li>
+          <li><strong>Same users?</strong> Novices gain more than experts.</li>
+          <li><strong>Same quality measure?</strong> Speed alone can hide errors.</li>
+          <li><strong>Same tool and context?</strong> Language, data, integration.</li>
+        </ol>
+      </div>
+      <div>
+        <div class="callout business">
+          <p class="small" style="margin: 0">Budget a <strong>pilot with a comparison group</strong> and a baseline. It is the
+            cheapest way to replace borrowed numbers with your own.</p>
+        </div>
+        <div class="prompt-card" data-kind="chat">
+          <h4>Your turn</h4>
+          <p class="small">Which of the three studies is closest to your project, and which transfer question worries you most?</p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:41 · 2 min] Business lens for Part 2. Read two or three chat answers. Most projects fail
+      question 2 or 4: the study population is English-speaking and US-based; our users and data are
+      Colombian and Spanish-speaking. That is the bridge to Part 4 (local context).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 3 · SECTORS                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 24 · Part 3 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 3</p>
+    <h2>Three sectors up close</h2>
+    <p>Health, finance and education: use cases, evidence and the risks that shape them.</p>
+    <aside class="notes">
+      [0:43] Part 3 until 1:00, including an 8-minute breakout. Each sector slide maps to one part of
+      today's lab and to one sector of the challenge.
+    </aside>
+  </section>
+
+  <!-- 25 · Health -->
+  <section>
+    <p class="kicker">Sector · health</p>
+    <h2>Health: high value, high stakes</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>Use cases</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Clinical documentation drafts</li>
+          <li>Replies to patient messages</li>
+          <li>Intake and routing of requests</li>
+          <li>Coding and admin work</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Evidence</h4>
+        <p class="small" style="margin-bottom: 0">Med-PaLM work (Singhal et al., 2023, <em>Nature</em>): 67.6% on USMLE-style
+          MedQA with Flan-PaLM, yet clinician review still found gaps in the answers. Benchmark scores are not safety.</p>
+      </div>
+      <div class="card">
+        <h4>Risks</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Under-triage of urgent cases</li>
+          <li>Automation bias in staff</li>
+          <li>Health data are sensitive data (Ley 1581 de 2012)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout warn" style="margin-top: 12px"><strong>Lab framing:</strong> our symptom-retrieval prototype routes requests;
+      it is <strong>not medical advice</strong> and a clinician always decides.</div>
+    <aside class="notes">
+      [0:43 · 3 min] Singhal et al. (2023) introduced MultiMedQA and HealthSearchQA; Flan-PaLM reached
+      67.6% on MedQA and instruction-tuned Med-PaLM improved clinician ratings, but the authors stress
+      that the models were not ready for clinical use. Med-PaLM 2 (Singhal et al., 2025, Nature
+      Medicine) improved further. The use cases with the most traction are administrative
+      (documentation, messages), where a professional reviews every output. In Colombia, health data
+      are sensitive data under Ley 1581: explicit authorization and reinforced security.
+    </aside>
+  </section>
+
+  <!-- 26 · Finance -->
+  <section>
+    <p class="kicker">Sector · finance</p>
+    <h2>Finance: documents, service and signals</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>Use cases</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Customer-service assistants</li>
+          <li>Document processing (KYC, invoices, contracts)</li>
+          <li>Knowledge assistants for advisors</li>
+          <li>News and sentiment triage</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Examples</h4>
+        <p class="small" style="margin-bottom: 0">Morgan Stanley launched a GPT-4-based assistant for its financial advisors
+          to query internal research (2023). FinBERT (Araci, 2019) adapted BERT to financial sentiment.</p>
+      </div>
+      <div class="card">
+        <h4>Risks</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Advice rules and supervision</li>
+          <li>Explainability of decisions</li>
+          <li>Fraud: deepfakes and phishing also use GenAI</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout business" style="margin-top: 12px"><p class="small" style="margin: 0">In fraud, generative AI cuts both ways:
+      it helps analysts summarise alerts, and it helps criminals produce convincing fakes. Budget for both sides.</p></div>
+    <aside class="notes">
+      [0:46 · 3 min] Business lens for Part 3. The advisor assistant is a textbook RAG use case: huge
+      internal document base, expert users who can check answers, clear time savings. Customer-facing
+      advice is harder: suitability rules and supervision. Today's lab compares FinBERT (fine-tuned,
+      Araci 2019) with a zero-shot LLM on financial tweets.
+    </aside>
+  </section>
+
+  <!-- 27 · Education -->
+  <section>
+    <p class="kicker">Sector · education</p>
+    <h2>Education: help that does not replace learning</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Use cases</h4>
+        <ul class="small" style="margin-bottom: 6px">
+          <li>Tutoring: Khan Academy's Khanmigo guides with questions instead of giving answers</li>
+          <li>Feedback on drafts; question generation; teacher admin</li>
+        </ul>
+        <h4>Risks</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Over-reliance, wrong content, unequal access, student data</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Evidence · Bastani et al. (2025, <em>PNAS</em>)</h4>
+        <p class="small">Field experiment with about 1,000 high-school math students in Turkey:</p>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Plain GPT-4 interface: practice grades <strong>+48%</strong>, but <strong>−17%</strong> on exams without AI</li>
+          <li>Tutor with guardrails: practice <strong>+127%</strong>, no significant harm on exams</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:49 · 3 min] The key lesson: the design of the tool (guardrails, Socratic prompting) changes the
+      outcome from harmful to helpful. Khanmigo is described qualitatively: a GPT-4-based tutor launched
+      in 2023 that asks guiding questions rather than handing out answers. Today's lab generates quiz
+      questions from science paragraphs and checks automatically whether they can be answered.
+    </aside>
+  </section>
+
+  <!-- 28 · Quiz: sector control -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · controls</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">A night-time telemedicine chat (fictional) wants an assistant that suggests possible conditions to order the queue. Which control matters most?</p>
+      <button class="quiz-opt" data-key="a">A bigger model: accuracy solves safety</button>
+      <button class="quiz-opt" data-key="b">A “this is not medical advice” banner and nothing else</button>
+      <button class="quiz-opt" data-key="c">Red-flag rules that send emergencies to the 123 line, a clinician who decides, and monitoring of under-triage</button>
+      <button class="quiz-opt" data-key="d">Let it recommend over-the-counter medicines to shorten the queue</button>
+      <div class="quiz-explain">High harm needs layered controls: deterministic rules for emergencies, a human decision,
+        and a KPI that watches the costliest error. A disclaimer alone does not transfer responsibility, as the next
+        part shows.</div>
+    </div>
+    <aside class="notes">
+      [0:51 · 1 min] 123 is Colombia's national emergency line. This is one of the challenge's health
+      cases (TeleSalud Caribe), so do not go deeper than the answer here.
+    </aside>
+  </section>
+
+  <!-- 29 · Breakout -->
+  <section>
+    <p class="kicker">Breakout · by sector</p>
+    <h2>Analyse one case with the canvas</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr)">
+      <div class="prompt-card" data-kind="breakout">
+        <h4>Case canvas · 8 min</h4>
+        <p class="small" style="margin-bottom: 6px">Room 1 · <strong>IPS Vida Plena:</strong> draft discharge summaries for doctors.
+          Room 2 · <strong>NovaCrédito:</strong> check documents in loan applications.
+          Room 3 · <strong>Colibrí Online University:</strong> a tutor for Statistics 101.</p>
+        <ol class="small" style="margin-bottom: 6px">
+          <li>Use-case statement (user, task, output, KPI, human control)</li>
+          <li>Value and feasibility, 1–5 each, with one reason</li>
+          <li>Top two risks and one control each</li>
+          <li>One KPI, one guardrail, and go / pilot / no-go</li>
+        </ol>
+        <p class="small muted" style="margin: 0">All organizations are fictional. Rooms with more people get the same case twice.</p>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="8" data-label="Breakout rooms"></div>
+        <p class="small">One person per room reports the decision and its main reason in 30 seconds.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:52 · 8 min] Open breakout rooms by sector (mix business and technical profiles), then press
+      Start. Debrief at 1:00: one decision per room. Good answers: Vida Plena → pilot with doctor review
+      of every draft; KPI minutes per discharge, guardrail corrections needed / clinical incidents.
+      NovaCrédito → quick win for extraction and completeness checks; the credit decision stays human;
+      guardrail: error rate by applicant group. Colibrí tutor → pilot with guardrails (Socratic mode),
+      measure learning on exams without AI, not only practice scores (Bastani et al.).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 4 · FAILURES, SUCCESS FACTORS, CONTEXT, PROJECT          -->
+  <!-- ===================================================================== -->
+
+  <!-- 30 · Part 4 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 4</p>
+    <h2>When it fails, and what makes it work</h2>
+    <p>Documented failures, success factors, the Colombian context and your H3 canvas.</p>
+    <aside class="notes">
+      [1:00] Part 4 until 1:10. Keep it brisk; the two failure cases are the most memorable part of the day.
+    </aside>
+  </section>
+
+  <!-- 31 · Documented failures -->
+  <section>
+    <p class="kicker">Documented failures</p>
+    <h2>Your chatbot speaks for your organization</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Moffatt v. Air Canada (2024 BCCRT 149)</h4>
+        <p class="small">The airline's website chatbot told a customer he could request a bereavement fare after
+          travelling; the airline's policy said otherwise. Air Canada argued the chatbot was responsible for its own
+          actions. The British Columbia Civil Resolution Tribunal rejected this, found <strong>negligent
+          misrepresentation</strong> and ordered the airline to pay the fare difference plus interest and fees.</p>
+      </div>
+      <div class="card">
+        <h4>NYC MyCity chatbot (The Markup, 2024)</h4>
+        <p class="small">New York City's official AI chatbot for business owners gave answers that contradicted the law,
+          for example that employers could take a cut of workers' tips and that landlords could refuse housing vouchers.
+          The city kept the tool online with added disclaimers.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:00 · 3 min] Moffatt v. Air Canada, decided 14 February 2024 by the BC Civil Resolution Tribunal:
+      damages of about CA$650 (the fare difference) plus pre-judgment interest and tribunal fees
+      (about CA$812 in total). The tribunal said, in substance, that the company is responsible for all
+      the information on its website, whether it comes from a static page or a chatbot. MyCity: The Markup
+      (Colin Lecher, 29 March 2024) tested the Microsoft-powered chatbot launched by the city in October
+      2023. Both are about the same pattern: a fluent assistant answering outside its verified knowledge,
+      with no human in the loop, in a domain (policy, law) where errors create liability.
+    </aside>
+  </section>
+
+  <!-- 32 · Patterns → controls -->
+  <section>
+    <p class="kicker">From failure patterns to controls</p>
+    <h2>What would have prevented it?</h2>
+    <table class="compact">
+      <thead><tr><th>Failure pattern</th><th>Control</th></tr></thead>
+      <tbody>
+        <tr><td>Answers beyond its knowledge base</td><td>Grounding (RAG) + “I don't know” + handoff to a person</td></tr>
+        <tr><td>Bot contradicts the official policy</td><td>One source of truth; test set built from the policies; versioning</td></tr>
+        <tr><td>Confident legal or medical advice</td><td>Scope limits, refusals, deterministic rules for red flags</td></tr>
+        <tr><td>Nobody notices for months</td><td>Logs, sampled audits, incident process, guardrail KPIs</td></tr>
+        <tr><td>Disclaimer as the only defence</td><td>Disclaimers do not transfer responsibility: fix the system</td></tr>
+      </tbody>
+    </table>
+    <div class="callout business" style="margin-top: 12px"><p class="small" style="margin: 0">Liability and reputation stay with the
+      organization that deploys the assistant. Price the control costs into \(C_{\text{run}}\).</p></div>
+    <aside class="notes">
+      [1:03 · 2 min] Business lens for Part 4. Each control is something we built in S06–S07:
+      confidence thresholds, grounding, test conversations, escalation. The lab's Part 4 measures one of
+      them: does the agent say "I don't have that information" when the handbook does not cover a question?
+    </aside>
+  </section>
+
+  <!-- 33 · Success factors -->
+  <section>
+    <p class="kicker">Success factors</p>
+    <h2>What successful deployments have in common</h2>
+    <div class="cols-3">
+      <div class="card"><h4>🎯 A costly, frequent task</h4><p class="small">Volume × minutes is large, and the output is checkable.</p></div>
+      <div class="card"><h4>📏 Baseline and comparison</h4><p class="small">Measured before, with a control group or a staggered rollout.</p></div>
+      <div class="card"><h4>📚 Knowledge with an owner</h4><p class="small">Documents are current, versioned and someone updates them.</p></div>
+      <div class="card"><h4>🧑‍⚕️ Humans where harm is high</h4><p class="small">Autonomy grows only with measured quality.</p></div>
+      <div class="card"><h4>🧪 Evaluation never stops</h4><p class="small">Test sets before launch, monitoring and audits after.</p></div>
+      <div class="card"><h4>🤝 Adoption is designed</h4><p class="small">Training, workflow fit, clear accountability, kill criteria.</p></div>
+    </div>
+    <aside class="notes">
+      [1:05 · 1.5 min] Synthesis of the session: each card maps to a lens or a study. Adoption is the
+      most underrated: in the ROI simulator it multiplies everything. Brynjolfsson et al. also suggest
+      that onboarding novices is where assistants shine.
+    </aside>
+  </section>
+
+  <!-- 34 · LatAm / Colombia -->
+  <section>
+    <p class="kicker">Local context</p>
+    <h2>Colombia and Latin America: rules and data</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Rules and policy</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li><strong>Ley 1581 de 2012:</strong> personal data protection; health data are sensitive data</li>
+          <li><strong>SIC, Circular Externa 002 de 2024:</strong> guidance on personal data in AI systems</li>
+          <li><strong>CONPES 4144 (2025):</strong> national AI policy</li>
+          <li><strong>ILIA</strong> (CENIA and CEPAL): regional AI index; Colombia is among the “adopter” countries</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Data availability</h4>
+        <ul class="small" style="margin-bottom: 0">
+          <li>Most open datasets and benchmarks are in English, like today's lab</li>
+          <li>Spanish and local terms need <strong>your own test set</strong></li>
+          <li>Open public data: <span class="tag">datos.gov.co</span></li>
+          <li>Spanish models exist (BETO, S03), but domain data are scarce</li>
+        </ul>
+      </div>
+    </div>
+    <div class="prompt-card" data-kind="chat" style="margin-top: 12px">
+      <h4>Data owner</h4>
+      <p class="small" style="margin: 0">Who owns the data your project needs in Colombia, and what authorization would you need?</p>
+    </div>
+    <aside class="notes">
+      [1:06 · 2 min] The SIC circular (21 August 2024) asks organizations that develop or use AI systems
+      to comply with personal data rules and to justify processing by suitability, necessity,
+      reasonableness and proportionality. CONPES 4144 (February 2025) is the national AI policy. The
+      ILIA index is produced by CENIA (Chile) with CEPAL. Session 10 goes deeper into regulation; here
+      the point is feasibility: legal access to data is part of the feasibility score.
+    </aside>
+  </section>
+
+  <!-- 35 · H3 milestone -->
+  <section>
+    <p class="kicker">Final project · milestone H3</p>
+    <h2>Your use-case canvas, due today</h2>
+    <div class="cols">
+      <div>
+        <p class="small"><strong>Part A</strong> updated (1 page, mark changes with [CAMBIO]) + <strong>Part B</strong> (up to 2 pages):</p>
+        <ol class="small">
+          <li>B1 Changes since the proposal</li>
+          <li>B2 Baseline and first results</li>
+          <li>B3 Value × feasibility, with evidence</li>
+          <li>B4 KPIs · B5 ROI (base and pessimistic)</li>
+          <li>B6 Risks · B7 Continue / adjust / pivot</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h4>Submission</h4>
+        <p class="small">One member uploads <code>PF_G&lt;NN&gt;_H3_canvas</code> (PDF or Markdown) to e-Aulas before 23:59 today.
+          Formative, but a missing milestone costs 0.3 on the technical deliverable.</p>
+        <p class="small" style="margin: 0">
+          <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/proyecto-final/plantillas/propuesta.md" target="_blank" rel="noopener">Template (propuesta.md, Part B)</a> ·
+          <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/proyecto-final/README.md" target="_blank" rel="noopener">Project brief</a></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:08 · 2 min] Everything in Part B is what we practised today: value × feasibility (B3), KPIs (B4),
+      ROI with the same formula (B5), risks (B6), decision (B7). Remind groups: no invented numbers; if a
+      value is an estimate, say so and explain its source. Comments come back before S10. Groups may
+      still change topic until today, justifying it in B1.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- BREAK                                                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 36 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Stretch, and if you use Startti, check that your agent is published and your key is in Kaggle Secrets.</p>
+    <div class="timer" data-minutes="10" data-label="Break"></div>
+    <aside class="notes">
+      [1:10 · 10 min] Press Start before you mute. Stay on the call for Startti questions: the lab's Part 4
+      needs a published agent with the Colibrí handbook as knowledge base (optional; the Python path works
+      without an account).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- LAB                                                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 37 · Lab divider -->
+  <section class="section-slide" data-block="lab">
+    <p class="kicker">Hands-on</p>
+    <h2>Guided lab</h2>
+    <p>Three sector prototypes, each measured with a number you can put in a business case.</p>
+    <span class="block-tag" data-block="lab">Lab · 60'</span>
+    <aside class="notes">
+      [1:20] Lab block. Share your screen and code along; students run each cell after you.
+    </aside>
+  </section>
+
+  <!-- 38 · Lab bridge -->
+  <section>
+    <p class="kicker">Lab bridge</p>
+    <h2>What we will build</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <table class="compact">
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Finance: FinBERT vs a zero-shot LLM on financial tweets</td><td class="num">15'</td></tr>
+          <tr><td><strong>2</strong></td><td>Health: symptom → condition retrieval, top-3 accuracy (not medical advice)</td><td class="num">12'</td></tr>
+          <tr><td><strong>3</strong></td><td>Education: generate quiz questions and check they are answerable</td><td class="num">13'</td></tr>
+          <tr><td><strong>4</strong></td><td>Sector agent: Startti with a knowledge base, or the Python RAG alternative</td><td class="num">15'</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h4>Open the notebook</h4>
+        <p class="small">Kaggle checklist: Internet on · GPU T4 optional (faster) · for Startti: Add-ons → Secrets →
+          <code>STARTTI_API_KEY</code>.</p>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/09-real-world-use-cases/lab.ipynb" target="_blank" rel="noopener">Open in Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/09-real-world-use-cases/lab.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <div class="callout tip"><strong>No Startti account?</strong> Part 4 runs a Python agent over the same document and is scored
+      with the same test questions. Both paths are equally valid in the challenge.</div>
+    <aside class="notes">
+      [1:20 · 3 min] Timing: Part 1 until 1:38, Part 2 until 1:50, Part 3 until 2:03, Part 4 until 2:18.
+      Startti path: create an agent with the Colibrí handbook (data/colibri_handbook.md) as knowledge base,
+      publish it, paste the AGENT_ID in the notebook. Common blockers: agent not published (409), key
+      restricted to other agents (403), secret not attached to the notebook.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CHALLENGE                                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 39 · Challenge divider -->
+  <section class="section-slide" data-block="challenge">
+    <h2>Session challenge</h2>
+    <p>Individual, graded, 40 minutes in class. Submit by 23:59 today.</p>
+    <aside class="notes">
+      [2:20] Challenge block. The next slide is the only slide in Spanish.
+    </aside>
+  </section>
+
+  <!-- 40 · Challenge briefing (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Challenge de la sesión · evaluado</p>
+    <h2>Challenge S09: tu caso, tus números, tu decisión</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <div>
+        <p class="small" style="margin-bottom: 6px">Tu código te asigna un <strong>sector</strong> (salud, finanzas o educación), un <strong>caso</strong> ficticio y tus parámetros de ROI.</p>
+        <ol class="small">
+          <li><strong>Prototipo:</strong> corre el prototipo del sector con tu muestra y el asistente del caso (Startti o Python) y mide.</li>
+          <li><strong>Canvas:</strong> valor, factibilidad, riesgos y KPI, apoyados en tus números.</li>
+          <li><strong>Explica y decide:</strong> ROI y payback con tus parámetros → go / no-go.</li>
+          <li><strong>Crítica a la IA:</strong> un resumen escrito por IA con una estadística inventada y una afirmación legal falsa: verifica y corrige.</li>
+        </ol>
+        <ul class="small">
+          <li><strong>Rúbrica:</strong> ejecución 40% · análisis 40% · reflexión y registro de IA 20%.</li>
+          <li><strong>IA permitida</strong> con registro; <strong>micro-sustentaciones</strong>: si no explicas tu entrega, máximo 3.0.</li>
+          <li><strong>Entrega:</strong> Archivo → Descargar notebook → e-Aulas como <code>S09_&lt;codigo&gt;.ipynb</code>, 23:59.</li>
+        </ul>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="40" data-label="Challenge"></div>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/09-real-world-use-cases/challenge.ipynb" target="_blank" rel="noopener">Abrir en Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/09-real-world-use-cases/challenge.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+        <p class="small muted">Hoy también: hito H3 del proyecto (canvas de caso de uso), 23:59.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:20 · 38 min] Spanish by course convention. Remind students to type their STUDENT_ID first: sector,
+      case and ROI parameters depend on it. Startti is optional: without a key, the notebook uses the
+      Python assistant and the rubric is the same. During the block, run 3–4 random micro-vivas
+      (2–3 minutes, screen shared, no AI help).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WRAP-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 41 · Wrap-up -->
+  <section>
+    <p class="kicker">Wrap-up</p>
+    <h2>Key takeaways</h2>
+    <div class="cols">
+      <ul>
+        <li>Analyse tasks, not technologies: value, feasibility, risk and KPIs, each with evidence.</li>
+        <li>ROI = volume × adoption × (savings − rework) − costs; quality and adoption drive it.</li>
+        <li>Field evidence is real but uneven: novices gain most, and some tasks fall outside the frontier.</li>
+        <li>Your assistant speaks for you: grounding, scope limits and humans where harm is high.</li>
+      </ul>
+      <div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">What single number would convince your sponsor to fund the next step of your project, and how will you measure it?</p>
+        </div>
+        <p class="small"><strong>Next session:</strong> Ethics and sustainability (bias, privacy, regulation, carbon footprint).
+          <span class="muted">Before: submit the challenge and the H3 canvas by 23:59.</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:58 · 2 min] Collect exit answers in the chat. Remind: challenge S09_codigo.ipynb and group H3
+      canvas PF_G&lt;NN&gt;_H3_canvas, both before 23:59. Session 10 builds on today's risk lens with
+      regulation (EU AI Act risk levels, NIST AI RMF, CONPES 4144).
+    </aside>
+  </section>
+
+  <!-- 42 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Sources for this session</h2>
+    <div class="cols" style="font-size: 16px; line-height: 1.3">
+      <ul>
+        <li>McKinsey &amp; Company (2023). <em>The economic potential of generative AI: The next productivity frontier</em>.</li>
+        <li>Brynjolfsson, E., Li, D., &amp; Raymond, L. R. (2023). Generative AI at work. NBER Working Paper 31161; <em>Quarterly Journal of Economics</em>, 140(2), 2025.</li>
+        <li>Dell'Acqua, F., et al. (2023). Navigating the jagged technological frontier. HBS Working Paper 24-013; <em>Organization Science</em>, 2026.</li>
+        <li>Singhal, K., Azizi, S., Tu, T., Mahdavi, S. S., et al. (2023). Large language models encode clinical knowledge. <em>Nature</em>, 620, 172–180.</li>
+        <li>Singhal, K., Tu, T., Gottweis, J., et al. (2025). Toward expert-level medical question answering with large language models. <em>Nature Medicine</em>, 31, 943–950.</li>
+        <li>Bastani, H., Bastani, O., Sungu, A., Ge, H., Kabakcı, Ö., &amp; Mariman, R. (2025). Generative AI without guardrails can harm learning. <em>PNAS</em>, 122(26).</li>
+        <li>Araci, D. (2019). FinBERT: Financial sentiment analysis with pre-trained language models. arXiv:1908.10063.</li>
+        <li>Ng, A. Y., &amp; Jordan, M. I. (2002). On discriminative vs. generative classifiers. <em>NeurIPS</em>.</li>
+      </ul>
+      <ul>
+        <li><em>Moffatt v. Air Canada</em>, 2024 BCCRT 149 (Civil Resolution Tribunal of British Columbia).</li>
+        <li>Lecher, C. (2024, March 29). NYC's AI chatbot tells businesses to break the law. <em>The Markup</em>.</li>
+        <li>Porter, M. E. (1985). <em>Competitive advantage</em>. Free Press.</li>
+        <li>Khan Academy. Khanmigo (AI-powered tutor and teaching assistant), described qualitatively.</li>
+        <li>Congreso de Colombia (2012). Ley 1581 de 2012, protección de datos personales.</li>
+        <li>Superintendencia de Industria y Comercio (2024). Circular Externa 002 de 2024: datos personales en sistemas de IA.</li>
+        <li>CONPES 4144 (2025). Política Nacional de Inteligencia Artificial. DNP.</li>
+        <li>CENIA &amp; CEPAL (2025). Índice Latinoamericano de Inteligencia Artificial (ILIA).</li>
+        <li>Datasets: zeroshot/twitter-financial-news-sentiment · gretelai/symptom_to_diagnosis · allenai/sciq (Welbl, Liu &amp; Gardner, 2017).</li>
+      </ul>
+    </div>
+    <aside class="notes">
+      Primary sources for every claim in the deck. Women authors in this list include Danielle Li,
+      Lindsey Raymond, Hila Lifshitz-Assaf, Katherine Kellogg, Lisa Krayer, S. Sara Mahdavi and Hamsa
+      Bastani. The Spanish-language regional reference is the ILIA report by CENIA and CEPAL.
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "09" });
+  Course.onReady(() => {
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const mk = (tag, attrs, parent) => {
+      const node = document.createElementNS(SVG_NS, tag);
+      Object.entries(attrs || {}).forEach(([k, v]) => node.setAttribute(k, v));
+      if (parent) parent.appendChild(node);
+      return node;
+    };
+
+    // --- Simulator 1: value × feasibility matrix -----------------------------------------
+    // Six fictional cases. "ref" is the instructor's reading (feasibility, value) on 0–10 scales,
+    // shown only on demand to trigger discussion; it is an opinion, not a benchmark.
+    const CASES = [
+      { id: "A", name: "NovaTel · billing FAQ assistant grounded in official policies", ref: [8, 7.2],
+        why: "frequent questions, documents exist, errors are low harm and easy to escalate" },
+      { id: "B", name: "Clínica Serena · discharge-summary drafts reviewed by doctors", ref: [4.2, 8.3],
+        why: "big time savings, but sensitive data, EHR integration and clinical review" },
+      { id: "C", name: "Aseguradora Mirador · fully automatic claim approvals", ref: [2.2, 6],
+        why: "decisions about people, regulation and costly errors: start as assist, not automate" },
+      { id: "D", name: "Café Alto Montaña · social-media captions", ref: [9, 2.4],
+        why: "easy and harmless, but little value: use an off-the-shelf tool" },
+      { id: "E", name: "Colibrí Online University · Socratic tutor for Statistics 101", ref: [6, 6.8],
+        why: "valuable if guardrails protect learning; measure exams without AI" },
+      { id: "F", name: "Any company · train its own LLM from scratch to write memos", ref: [1.4, 2],
+        why: "huge cost for a task that prompting already solves" }
+    ];
+    const QUAD = {
+      "quick": { name: "Quick win", advice: "pilot now with a baseline and a KPI; scale if the pilot meets the threshold." },
+      "bet": { name: "Strategic bet", advice: "de-risk first: data work, a narrower scope, a human in the loop, stage-gated budget." },
+      "fill": { name: "Fill-in", advice: "fine as a cheap experiment with off-the-shelf tools; do not build custom." },
+      "pit": { name: "Money pit", advice: "park it; revisit only if value or feasibility changes." }
+    };
+    const quadOf = (f, v) => (v >= 5 ? (f >= 5 ? "quick" : "bet") : (f >= 5 ? "fill" : "pit"));
+    const vfSvg = document.getElementById("vf-svg");
+    const vfList = document.getElementById("vf-cases");
+    const vfAdvice = document.getElementById("vf-advice");
+    const PX0 = 56, PX1 = 548, PY0 = 12, PY1 = 356;
+    const sx = (f) => PX0 + (f / 10) * (PX1 - PX0);
+    const sy = (v) => PY1 - (v / 10) * (PY1 - PY0);
+    const placed = {};
+    let selected = null;
+    let showRef = false;
+
+    function drawMatrix() {
+      vfSvg.textContent = "";
+      const mx = sx(5), my = sy(5);
+      const fills = [
+        [PX0, PY0, mx - PX0, my - PY0, "rgba(180, 83, 9, 0.08)", "Strategic bet", PX0 + 10, PY0 + 22, "start"],
+        [mx, PY0, PX1 - mx, my - PY0, "rgba(15, 118, 110, 0.10)", "Quick win", PX1 - 10, PY0 + 22, "end"],
+        [PX0, my, mx - PX0, PY1 - my, "rgba(158, 27, 50, 0.07)", "Money pit", PX0 + 10, PY1 - 10, "start"],
+        [mx, my, PX1 - mx, PY1 - my, "rgba(67, 56, 202, 0.07)", "Fill-in", PX1 - 10, PY1 - 10, "end"]
+      ];
+      fills.forEach(([x, y, w, h, fill, label, lx, ly, anchor]) => {
+        mk("rect", { x, y, width: w, height: h, fill, class: "q-bg" }, vfSvg);
+        const t = mk("text", { x: lx, y: ly, class: "q-label", "text-anchor": anchor }, vfSvg);
+        t.textContent = label;
+      });
+      mk("line", { x1: PX0, x2: PX1, y1: PY1, y2: PY1, stroke: "#a8a29e", "stroke-width": 1.5 }, vfSvg);
+      mk("line", { x1: PX0, x2: PX0, y1: PY0, y2: PY1, stroke: "#a8a29e", "stroke-width": 1.5 }, vfSvg);
+      mk("line", { x1: mx, x2: mx, y1: PY0, y2: PY1, stroke: "#cfc9c3", "stroke-dasharray": "4 4" }, vfSvg);
+      mk("line", { x1: PX0, x2: PX1, y1: my, y2: my, stroke: "#cfc9c3", "stroke-dasharray": "4 4" }, vfSvg);
+      const xt = mk("text", { x: (PX0 + PX1) / 2, y: 392, class: "axis-t", "text-anchor": "middle" }, vfSvg);
+      xt.textContent = "Feasibility →";
+      const yt = mk("text", { x: 0, y: 0, class: "axis-t", "text-anchor": "middle",
+        transform: `translate(24 ${(PY0 + PY1) / 2}) rotate(-90)` }, vfSvg);
+      yt.textContent = "Value →";
+      if (showRef) {
+        CASES.forEach((c) => {
+          const g = mk("g", { class: "ref" }, vfSvg);
+          mk("circle", { cx: sx(c.ref[0]), cy: sy(c.ref[1]), r: 17 }, g);
+          const t = mk("text", { x: sx(c.ref[0]) + 20, y: sy(c.ref[1]) - 12 }, g);
+          t.textContent = c.id;
+        });
+      }
+      CASES.forEach((c) => {
+        if (!placed[c.id]) return;
+        const [f, v] = placed[c.id];
+        const g = mk("g", { class: "dot" + (selected === c.id ? " is-selected" : "") }, vfSvg);
+        mk("circle", { cx: sx(f), cy: sy(v), r: 15 }, g);
+        const t = mk("text", { x: sx(f), y: sy(v), "text-anchor": "middle", dy: "0.35em" }, g);
+        t.textContent = c.id;
+      });
+    }
+
+    function describe(id) {
+      const c = CASES.find((x) => x.id === id);
+      if (!placed[id]) {
+        vfAdvice.innerHTML = `<strong>${c.id}</strong> selected: click the matrix to place it.`;
+        return;
+      }
+      const [f, v] = placed[id];
+      const q = QUAD[quadOf(f, v)];
+      let html = `<strong>${c.id} · ${q.name}</strong> (value ${v.toFixed(1)}, feasibility ${f.toFixed(1)}): ${q.advice}`;
+      if (showRef) {
+        const rq = QUAD[quadOf(c.ref[0], c.ref[1])];
+        html += ` <em>Our reading: ${rq.name}, ${c.why}.</em>`;
+      }
+      vfAdvice.innerHTML = html;
+    }
+
+    function renderList() {
+      vfList.textContent = "";
+      CASES.forEach((c) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "vf-case" + (selected === c.id ? " is-selected" : "") + (placed[c.id] ? " is-placed" : "");
+        b.setAttribute("aria-pressed", selected === c.id ? "true" : "false");
+        const s = document.createElement("strong");
+        s.textContent = c.id;
+        const span = document.createElement("span");
+        span.textContent = c.name;
+        b.append(s, span);
+        b.addEventListener("click", () => { selected = c.id; renderList(); drawMatrix(); describe(c.id); });
+        vfList.appendChild(b);
+      });
+    }
+
+    vfSvg.addEventListener("click", (ev) => {
+      if (!selected) { vfAdvice.textContent = "Select a case on the left first."; return; }
+      const pt = vfSvg.createSVGPoint();
+      pt.x = ev.clientX; pt.y = ev.clientY;
+      const p = pt.matrixTransform(vfSvg.getScreenCTM().inverse());
+      const f = Math.max(0, Math.min(10, ((p.x - PX0) / (PX1 - PX0)) * 10));
+      const v = Math.max(0, Math.min(10, ((PY1 - p.y) / (PY1 - PY0)) * 10));
+      placed[selected] = [f, v];
+      renderList(); drawMatrix(); describe(selected);
+    });
+    document.getElementById("vf-ref").addEventListener("click", (ev) => {
+      showRef = !showRef;
+      ev.currentTarget.textContent = showRef ? "Hide our reading" : "Show our reading";
+      drawMatrix();
+      if (selected) describe(selected);
+      else if (showRef) vfAdvice.textContent = "Dashed circles show our reading. Select a case to compare.";
+    });
+    document.getElementById("vf-reset").addEventListener("click", () => {
+      Object.keys(placed).forEach((k) => delete placed[k]);
+      selected = null;
+      renderList(); drawMatrix();
+      vfAdvice.textContent = "Select a case on the left.";
+    });
+    renderList(); drawMatrix();
+
+    // --- Simulator 2: ROI calculator ----------------------------------------------------
+    // Same formula as the challenge: H = V·a·(q·m − (1−q)·r)/60 ; B = H·c − C_run.
+    const roiIds = ["roi-vol", "roi-adopt", "roi-q", "roi-m", "roi-r", "roi-c", "roi-impl", "roi-run"];
+    const roiIn = Object.fromEntries(roiIds.map((id) => [id, document.getElementById(id)]));
+    const usd = (x) => {
+      const sign = x < 0 ? "−" : "";
+      const a = Math.abs(x);
+      if (a >= 1e6) return `${sign}USD ${(a / 1e6).toFixed(2)} M`;
+      if (a >= 1e4) return `${sign}USD ${(a / 1e3).toFixed(1)} k`;
+      return `${sign}USD ${Math.round(a).toLocaleString("en-US")}`;
+    };
+
+    function updateRoi() {
+      const V = Number(roiIn["roi-vol"].value);
+      const a = Number(roiIn["roi-adopt"].value) / 100;
+      const q = Number(roiIn["roi-q"].value) / 100;
+      const m = Number(roiIn["roi-m"].value);
+      const r = Number(roiIn["roi-r"].value);
+      const c = Number(roiIn["roi-c"].value);
+      const impl = Number(roiIn["roi-impl"].value);
+      const run = Number(roiIn["roi-run"].value);
+      const hours = (V * a * (q * m - (1 - q) * r)) / 60;
+      const gross = hours * c;
+      const net = gross - run;
+      const cost12 = impl + 12 * run;
+      const roi12 = (12 * gross - cost12) / cost12;
+      const payback = net > 0 ? impl / net : Infinity;
+      document.getElementById("roi-net").textContent = usd(net);
+      document.getElementById("roi-pay").textContent = isFinite(payback) ? `${payback.toFixed(1)} mo` : "never";
+      document.getElementById("roi-12").textContent = `${(roi12 * 100).toFixed(0)}%`;
+      const pts = [];
+      for (let t = 0; t <= 24; t++) pts.push([t, (-impl + net * t) / 1000]);
+      Course.lineChart(document.getElementById("roi-chart"), [
+        { name: "Cumulative net value", points: pts, markers: false },
+        { name: "Break-even", points: [[0, 0], [24, 0]], dashed: true, markers: false }
+      ], { xLabel: "Month", yLabel: "USD thousands", width: 600, height: 300, title: "Cumulative net value over 24 months" });
+      let verdict;
+      if (hours <= 0) verdict = "Rework cancels the savings: improve quality (q) or the correction workflow before anything else.";
+      else if (!isFinite(payback)) verdict = "Savings do not cover the monthly run cost: this is a no-go at this scale.";
+      else if (payback <= 12) verdict = "Pays back within a year: a strong case, if q and adoption hold in a pilot.";
+      else if (payback <= 24) verdict = "Pays back in 1–2 years: pilot first and verify the weakest assumption.";
+      else verdict = "Payback beyond 2 years: rethink scope, costs or adoption before investing.";
+      document.getElementById("roi-verdict").innerHTML = `<strong>Reading:</strong> ${verdict}`;
+    }
+
+    Course.bindRange(roiIn["roi-vol"], document.getElementById("roi-vol-out"), (v) => v.toLocaleString("en-US"), updateRoi);
+    Course.bindRange(roiIn["roi-adopt"], document.getElementById("roi-adopt-out"), (v) => `${v}%`, updateRoi);
+    Course.bindRange(roiIn["roi-q"], document.getElementById("roi-q-out"), (v) => `${v}%`, updateRoi);
+    Course.bindRange(roiIn["roi-m"], document.getElementById("roi-m-out"), (v) => v.toFixed(1), updateRoi);
+    Course.bindRange(roiIn["roi-r"], document.getElementById("roi-r-out"), String, updateRoi);
+    Course.bindRange(roiIn["roi-c"], document.getElementById("roi-c-out"), String, updateRoi);
+    Course.bindRange(roiIn["roi-impl"], document.getElementById("roi-impl-out"), (v) => `${(v / 1000).toFixed(0)}k`, updateRoi);
+    Course.bindRange(roiIn["roi-run"], document.getElementById("roi-run-out"), (v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v)), updateRoi);
+  });
+</script>
+</body>
+</html>
