@@ -1,7 +1,7 @@
 # Sesión 10 — Ethics and Sustainability in Generative Models
 *Ética y sostenibilidad en modelos generativos*
 
-**RAE asociados:** RAE 2, RAE 6 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 2, RAE 6 · **Duración:** 3 horas (virtual) · **Fecha:** viernes 23 de octubre de 2026, 18:00–21:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -29,6 +29,7 @@ Al terminar la sesión podrás:
 - Revisa el capítulo 2 de las *Directrices éticas para una IA fiable* del Grupo de Expertos de Alto Nivel (HLEG, 2019): los siete requisitos (≈30 min).
 - Lee Mitchell et al. (2019), *Model cards for model reporting*, secciones 1 a 4 (≈30 min).
 - Trae a clase el caso de uso de tu proyecto (canvas del H3): lo usarás en el calentamiento.
+- **Proyecto:** la entrega final vence **hoy a las 23:59**. Lleguen a clase con el informe técnico casi completo, incluida la iteración de mejora del hito H4 (sección 5), y con un primer borrador del análisis ético (sección 7) y de la *model card*, para ajustarlos con lo de hoy.
 
 ## Materiales
 
@@ -56,10 +57,10 @@ Tu código estudiantil te asigna un **atributo** (género, nacionalidad o edad),
 
 ## Después de la clase (trabajo independiente ≈7 h)
 
-- Termina y entrega el challenge (≈1 h).
-- **Proyecto (≈4 h):** redacta el análisis ético y de sostenibilidad de tu proyecto (informe §7): riesgos específicos del caso, al menos una prueba empírica (desempeño por subgrupo o prueba contrafactual, como en el lab), anonimización de datos según la Ley 1581, clasificación de riesgo razonada y emisiones del entrenamiento medidas con CodeCarbon o estimadas con un método citado. Empieza el borrador de la [*model card*](../../proyecto-final/plantillas/model-card.md) con la del lab como punto de partida.
+- Termina y entrega el challenge (≈1 h, hasta las 23:59).
+- **Proyecto · entrega final y H4, hoy a las 23:59:** cierren el análisis ético y de sostenibilidad del proyecto (informe §7): riesgos específicos del caso, al menos una prueba empírica (desempeño por subgrupo o prueba contrafactual, como en el lab), anonimización de datos según la Ley 1581, clasificación de riesgo razonada y emisiones del entrenamiento medidas con CodeCarbon o estimadas con un método citado. Completen la [*model card*](../../proyecto-final/plantillas/model-card.md) (la del lab sirve de punto de partida) y verifiquen que la sección 5 del informe documenta la iteración de mejora (H4). Una persona del grupo sube la entrega final a e-Aulas antes de las 23:59 ([detalles](../12-integrative-project/README.md#entrega-final-viernes-23-de-octubre-2359)).
 - Lecturas (≈2 h): Gebru et al. (2021), *Datasheets for datasets*; Luccioni, Jernite y Strubell (2024); y el documento CONPES 4144.
-- Prepárate para la S11 (*Evaluation and Continuous Model Improvement*): identifica un error frecuente de tu modelo que quieras corregir.
+- **Prepara la S11 y la S12 antes del sábado 24 de octubre a las 7:00:** son seguidas (7:00–10:00 y 10:00–13:00). Haz las lecturas de la S11 ([guía](../11-continuous-improvement/README.md)) y ensayen el *pitch* y la demo de la S12 ([guía](../12-integrative-project/README.md)).
 
 ## Lecturas y recursos
 

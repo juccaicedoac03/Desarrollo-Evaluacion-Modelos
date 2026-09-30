@@ -9,7 +9,7 @@
 > - En español. Las tablas y figuras cuentan dentro de las 8 páginas: úsenlas cuando digan más que el texto.
 > - Todo número del informe debe salir de ejecutar su código. Los resultados fabricados se tramitan conforme al reglamento académico y el componente afectado puede calificarse con 0.0 ([rúbrica](../rubrica.md)).
 > - Las extensiones sugeridas son orientativas. Borren las instrucciones en cursiva antes de entregar.
-> - **Hito H4 (S11):** entreguen el borrador de la sección 5 (bitácora) con el enlace al código.
+> - **Hito H4:** la sección 5 (bitácora de mejora) es el H4. No se entrega aparte: va dentro de este informe, en la entrega final del viernes 23 de octubre a las 23:59, junto con el enlace al código.
 
 ---
 

@@ -128,13 +128,13 @@ En la práctica, quien recibe en promedio "aporte sólido" (4) o más conserva e
 
    La evidencia incluye: historial de commits o de versiones de Kaggle, la declaración de contribuciones del informe, el registro de uso de IA, los hitos, la participación en la socialización y la defensa individual. El profesor puede pedir una reunión breve con el grupo o con cada integrante. Puede confirmar F, ajustarlo dentro del rango 0.7–1.0 o descartar evaluaciones puntuales, y comunica su decisión con la justificación. Las reclamaciones siguen el reglamento académico.
 5. **No participación total.** Si la evidencia muestra que un integrante no hizo ningún aporte verificable al proyecto, el profesor puede calificar su entregable técnico de forma individual, según su aporte real (incluso con 0.0), conforme al reglamento.
-6. **Alerta temprana.** Los problemas de participación deben informarse al profesor antes de la S11. La coevaluación no reemplaza la conversación oportuna dentro del grupo.
+6. **Alerta temprana.** Los problemas de participación deben informarse al profesor antes de la S10 (viernes 23 de octubre), para que haya margen de actuar antes de la entrega final. La coevaluación no reemplaza la conversación oportuna dentro del grupo.
 
 ---
 
 ## 6. Ejemplo completo
 
-**Grupo G03** (Ana, Bruno y Carla). Entregó H1, H2 y H3 a tiempo; **H4 no se entregó**.
+**Grupo G03** (Ana, Bruno y Carla). Entregó H1 y H3 a tiempo, y el H4 llegó dentro del informe de la entrega final; **el H2 no se entregó en su plazo**: la propuesta llegó el jueves 15 de octubre, después del cierre del miércoles 14 a las 23:59, así que cuenta como no entregada para el descuento.
 
 **Entregable técnico**
 
@@ -149,7 +149,7 @@ En la práctica, quien recibe en promedio "aporte sólido" (4) o más conserva e
 | 7. Código y reproducibilidad | 10% | 4.8 | 0.480 |
 | 8. Registro de uso de IA | 5% | 4.6 | 0.230 |
 | **Subtotal** | | | **4.40** |
-| Descuento por H4 no entregado | | | −0.30 |
+| Descuento por H2 no entregado en su plazo | | | −0.30 |
 | **T** | | | **4.10** |
 
 **Socialización y demo:** pitch 4.6 (35%) + demo 4.6 (30%) + tiempo 4.2 (15%) + participación 4.4 (20%) → **S = 1.61 + 1.38 + 0.63 + 0.88 = 4.50**.

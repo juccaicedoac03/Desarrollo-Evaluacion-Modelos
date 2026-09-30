@@ -1,6 +1,6 @@
 # Configuración de Startti ADP
 
-*Guía para tener tu workspace, tu primer agente y tu API key listos. Hazla **antes de la Sesión 06**.*
+*Guía para tener tu workspace, tu primer agente y tu API key listos. Activa tu licencia **antes del sábado 10 de octubre**: ese día la S05 y la S06 van seguidas y no hay tiempo entre una y otra.*
 
 **Startti ADP** es una plataforma para construir agentes de IA de forma visual: sobre un lienzo (*canvas*) conectas nodos de entrada, modelos de lenguaje, herramientas y bases de conocimiento; luego **publicas** el agente y lo llamas desde tus propias aplicaciones por API. En el curso la usamos para pasar del prototipo en código al agente listo para integrarse.
 
@@ -14,9 +14,9 @@
 
 | Sesión | Uso |
 |---|---|
-| S06 | Primer agente, publicación y primera llamada por API desde Kaggle |
-| S07 | Agente de servicio al cliente con base de conocimiento, evaluado desde Kaggle con un set de conversaciones |
-| S09 | Agente sectorial (salud, finanzas o educación) |
+| S06 (sábado 10 oct.) | Primer agente, publicación y primera llamada por API desde Kaggle |
+| S07 (viernes 16 oct.) | Agente de servicio al cliente con base de conocimiento, evaluado desde Kaggle con un set de conversaciones |
+| S09 (sábado 17 oct.) | Agente sectorial (salud, finanzas o educación) |
 | Proyecto final | Opcional: puedes exponer tu solución como agente de Startti o como app en Gradio |
 
 > **¿Prefieres no crear una cuenta?** Todo el curso se puede hacer sin Startti: ver la sección 11.
@@ -197,7 +197,7 @@ Si prefieres no crear una cuenta en Startti, puedes hacer todo el curso con la *
 
 ## 12. Lista de verificación
 
-**Antes de la Sesión 06**
+**Antes del sábado 10 de octubre (S05 y S06)**
 
 - [ ] Activé mi licencia e inicié sesión en [app.startti.ai](https://app.startti.ai).
 - [ ] Veo mi workspace.
@@ -209,6 +209,6 @@ Si prefieres no crear una cuenta en Startti, puedes hacer todo el curso con la *
 - [ ] Creé mi API key y la guardé en Kaggle Secrets como `STARTTI_API_KEY`.
 - [ ] Llamé a mi agente desde Kaggle con `startti_run`.
 
-**Antes de la Sesión 07**
+**Antes de la Sesión 07 (viernes 16 de octubre)**
 
 - [ ] Mi API key sigue funcionando desde Kaggle (la celda del cliente imprime `Startti key found ✅`).

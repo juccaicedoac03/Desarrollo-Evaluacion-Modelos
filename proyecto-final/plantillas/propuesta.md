@@ -4,8 +4,8 @@
 
 > **Cómo usar esta plantilla**
 >
-> - **Parte A — Canvas de propuesta (Hito H2):** se entrega **antes de la Sesión 6** (23:59 del día anterior). Máximo **1 página**: respuestas cortas y concretas.
-> - **Parte B — Canvas de caso de uso (Hito H3):** se entrega en la **Sesión 9** (23:59 del mismo día). Actualicen la Parte A (sigue siendo de máximo 1 página; marquen los cambios con **[CAMBIO]**) y completen la Parte B en **máximo 2 páginas adicionales**. El archivo del H3 tiene, entonces, máximo 3 páginas: Parte A (1) + Parte B (2).
+> - **Parte A — Canvas de propuesta (Hito H2):** se entrega hasta el **miércoles 14 de octubre a las 23:59**, después de la Sesión 6; la retroalimentación escrita llega en la Sesión 7 (viernes 16 de octubre). Máximo **1 página**: respuestas cortas y concretas.
+> - **Parte B — Canvas de caso de uso (Hito H3):** se entrega en la **Sesión 9** (sábado 17 de octubre, 23:59). Actualicen la Parte A (sigue siendo de máximo 1 página; marquen los cambios con **[CAMBIO]**) y completen la Parte B en **máximo 2 páginas adicionales**. El archivo del H3 tiene, entonces, máximo 3 páginas: Parte A (1) + Parte B (2).
 > - Súbanla a e-Aulas en PDF o Markdown: `PF_G<NN>_H2_propuesta` y `PF_G<NN>_H3_canvas`.
 > - Borren las preguntas guía antes de entregar. Enunciado, hitos e ideas: [README del proyecto](../README.md).
 
@@ -36,9 +36,9 @@
 
 | Tramo | Qué lograremos | Responsable |
 |---|---|---|
-| S6 → S9 (H3) | Datos listos y particionados, línea base evaluada, primer modelo entrenado | |
-| S9 → S11 (H4) | Análisis de errores e iteración de mejora documentada | |
-| S11 → S12 | Demo, análisis ético, model card, informe y pitch | |
+| Hasta la S9 (H3, sábado 17 oct.) | Datos listos y particionados, línea base evaluada, primer modelo entrenado | |
+| S9 → viernes 23 oct. (H4 y entrega final) | Análisis de errores, iteración de mejora documentada en el §5 del informe, demo, análisis ético, model card e informe | |
+| Viernes 23 oct. → S12 (sábado 24 oct.) | Pitch y ensayo de la demo para la socialización | |
 
 **10. Roles:** completen la columna "Rol principal" de la tabla de integrantes. Cada persona lidera un frente, pero todos programan y todos deben poder explicar todo el proyecto.
 

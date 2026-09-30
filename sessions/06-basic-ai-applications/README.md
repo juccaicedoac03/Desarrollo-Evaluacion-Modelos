@@ -1,7 +1,7 @@
 # Sesión 06 — Introduction to Basic Application Development
 *Introducción al desarrollo de aplicaciones básicas*
 
-**RAE asociados:** RAE 3, RAE 4 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 3, RAE 4 · **Duración:** 3 horas (virtual) · **Fecha:** sábado 10 de octubre de 2026, 10:00–13:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -23,12 +23,14 @@ Al terminar la sesión podrás:
 | Lab guiado | 60' | Clasificador de intenciones (Banking77) con umbral, app en Gradio con registro de retroalimentación y generador de texto, y primer agente en Startti llamado desde Kaggle |
 | Challenge | 40' | Caso personal: umbral de mínimo costo, app en Gradio, asistente en Startti o en Python y decisión código vs. no-code |
 
-**Diálogo formativo del proyecto:** hoy se devuelve la **retroalimentación escrita de las propuestas** (hito H2). Revísenla en grupo y ajusten el alcance antes de la S09.
+**Proyecto:** la propuesta del grupo (hito H2) se entrega hasta el **miércoles 14 de octubre a las 23:59**; la **retroalimentación escrita** llega en la **S07** (viernes 16 de octubre), dentro del diálogo formativo. Úsenla para ajustar el alcance antes de la S09.
 
 ## Antes de la clase (≈2 h)
 
-- [ ] **Activa tu licencia de Startti** e inicia sesión en [app.startti.ai](https://app.startti.ai), siguiendo las secciones 1 y 12 de la [guía de configuración de Startti](../../docs/configuracion-startti.md). Si prefieres no crear una cuenta, la alternativa en Python cubre todo (sección 11 de la guía).
-- [ ] Tu grupo entregó la **propuesta del proyecto (H2)** en e-Aulas a más tardar a las 23:59 del día anterior ([plantilla](../../proyecto-final/plantillas/propuesta.md)).
+La S05 y la S06 son seguidas (sábado 10 de octubre, 7:00 y 10:00): haz esta preparación antes del sábado.
+
+- [ ] **Activa tu licencia de Startti antes del sábado 10 de octubre** e inicia sesión en [app.startti.ai](https://app.startti.ai), siguiendo las secciones 1 y 12 de la [guía de configuración de Startti](../../docs/configuracion-startti.md). Si prefieres no crear una cuenta, la alternativa en Python cubre todo (sección 11 de la guía).
+- [ ] Con tu grupo, avancen en la **propuesta del proyecto (H2)**, que se entrega hasta el miércoles 14 de octubre a las 23:59 ([plantilla](../../proyecto-final/plantillas/propuesta.md)).
 - [ ] Lee la tabla de las 18 pautas de Amershi et al. (2019) y el capítulo *Errors + Graceful Failure* del [People + AI Guidebook](https://pair.withgoogle.com/guidebook/) (≈45 min).
 - [ ] Recorre el [inicio rápido de Gradio](https://www.gradio.app/guides/quickstart) (≈20 min).
 - [ ] Repasa las métricas de clasificación y la separación validación/prueba de la S05.
@@ -62,8 +64,8 @@ Cada estudiante recibe, a partir de su código, un **caso de servicio al cliente
 ## Después de la clase (trabajo independiente ≈7 h)
 
 - [ ] Termina y entrega el challenge (23:59).
-- [ ] **Antes de la S07:** crea tu API key de Startti (si no lo hiciste en el lab), guárdala en Kaggle Secrets como `STARTTI_API_KEY` y verifica que la celda del cliente imprima `Startti key found ✅` ([guía, secciones 5 y 6](../../docs/configuracion-startti.md)).
-- [ ] **Proyecto (≈3 h):** lean en grupo la retroalimentación escrita de la propuesta, ajusten el alcance, los datos y la línea base, y decidan si la demo será una app de Gradio o un agente de Startti.
+- [ ] **Antes de la S07 (viernes 16 de octubre):** crea tu API key de Startti (si no lo hiciste en el lab), guárdala en Kaggle Secrets como `STARTTI_API_KEY` y verifica que la celda del cliente imprima `Startti key found ✅` ([guía, secciones 5 y 6](../../docs/configuracion-startti.md)).
+- [ ] **Proyecto (≈3 h):** terminen y entreguen la **propuesta H2** (Parte A del canvas) en e-Aulas como `PF_G<NN>_H2_propuesta` hasta el **miércoles 14 de octubre a las 23:59**: precisen el alcance, los datos y la línea base con lo de hoy, y decidan si la demo será una app de Gradio o un agente de Startti. La retroalimentación escrita llega en la S07.
 - [ ] Practica con los ejercicios 🧪 del lab: cambia los costos, agrega retroalimentación granular y prueba reglas nuevas en tu agente.
 - [ ] Llena el [*AI Product Canvas*](data/ai-product-canvas.md) para el caso de tu proyecto.
 - [ ] Lectura recomendada: Shneiderman (2020) sobre IA centrada en el ser humano (opcional).

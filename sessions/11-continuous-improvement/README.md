@@ -1,7 +1,7 @@
 # Sesión 11 — Evaluation and Continuous Model Improvement
 *Evaluación y mejora continua de modelos*
 
-**RAE asociados:** RAE 2, RAE 6 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 2, RAE 6 · **Duración:** 3 horas (virtual) · **Fecha:** sábado 24 de octubre de 2026, 7:00–10:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -23,14 +23,16 @@ Al terminar la sesión podrás:
 | Lab guiado | 60' | Banking77 con 10% de etiquetas erróneas: línea base y bitácora, análisis de errores por segmento, etiquetas sospechosas y aumento de datos, Optuna, pruebas CheckList, cuantización int8 de DistilBERT y reporte final en prueba |
 | Challenge | 40' | Mejora con al menos 2 iteraciones, reporte de robustez, decisión de despliegue con tus restricciones y crítica a un plan de mejora propuesto por una IA |
 
-**Hito H4 del proyecto (grupal, formativo):** hoy a las 23:59 cada grupo **documenta una iteración de mejora** de su modelo en la bitácora de la sección 5 del [informe técnico](../../proyecto-final/plantillas/informe-tecnico.md) (hipótesis → cambio → resultado en validación → decisión) y entrega el enlace al código. En la sala de grupos de hoy planean esa iteración.
+**Proyecto · revisión del hito H4:** la **iteración de mejora (H4)** ya se entregó el viernes 23 de octubre a las 23:59, en la bitácora de la sección 5 del [informe técnico](../../proyecto-final/plantillas/informe-tecnico.md) (hipótesis → cambio → resultado en validación → decisión) que forma parte de la entrega final. Hoy no se entrega nada del proyecto: en la sala de grupos revisan esa iteración con lo visto en la sesión (¿fue un solo cambio?, ¿la regla de decisión se escribió antes?, ¿decidieron con validación?, ¿la ganancia supera el ruido?), definen la siguiente iteración que harían y preparan cómo contarla en el *pitch* de la S12.
 
 ## Antes de la clase (≈2 h)
+
+Esta sesión va justo antes de la S12 (10:00–13:00), así que esta preparación se hace **antes del sábado a las 7:00**, junto con el ensayo del *pitch* y la demo.
 
 - [ ] Lee Sculley et al. (2015), *Hidden technical debt in machine learning systems* (8 páginas, ≈40 min): quédate con la idea de que el modelo es la caja pequeña del sistema.
 - [ ] Lee las secciones 1 a 3 de Ribeiro et al. (2020), *Beyond accuracy: Behavioral testing of NLP models with CheckList* (≈30 min).
 - [ ] Recorre el [tutorial de primeros pasos de Optuna](https://optuna.readthedocs.io/en/stable/tutorial/index.html) (≈20 min).
-- [ ] Trae a clase **un error frecuente del modelo de tu proyecto**, con un conteo de tu línea base (lo usarás en la sala de grupos).
+- [ ] Ten a mano la **sección 5 del informe** que tu grupo entregó el viernes (iteración de mejora, H4), con el conteo de la categoría de error que atacaron en su línea base (la revisarán en la sala de grupos).
 - [ ] Repasa la separación entrenamiento / validación / prueba de la S05 y las pruebas contrafactuales de la S10.
 
 ## Materiales
@@ -58,11 +60,11 @@ Tu código estudiantil te asigna un **grupo de 10 intenciones** de Banking77, un
 - **IA permitida con registro obligatorio**: sin registro, ese componente vale 0.0 ([política de uso de IA](../../docs/politica-uso-ia.md)). **Micro-sustentaciones** al azar: si no puedes explicar tu entrega, la nota máxima es 3.0.
 - **Entrega:** `File → Download notebook` → súbelo a e-Aulas como **`S11_<codigo>.ipynb`** antes de las **23:59** de hoy.
 
-## Después de la clase (trabajo independiente ≈7 h)
+## Después de la clase (trabajo independiente ≈3 h)
 
+- [ ] **La S12 empieza hoy a las 10:00**, después de un descanso breve. No hay trabajo del proyecto entre las dos sesiones: la entrega final ya se hizo el viernes. Usen el descanso para relanzar la demo y probar la pantalla compartida.
 - [ ] Termina y entrega el challenge (23:59).
-- [ ] **Proyecto · hito H4 (≈3 h, hoy 23:59):** documenten en grupo **una iteración de mejora** del modelo del proyecto en la sección 5 del [informe técnico](../../proyecto-final/plantillas/informe-tecnico.md): hipótesis con evidencia de su análisis de errores, **un** cambio, métricas de validación antes y después, decisión según una regla escrita antes de experimentar, y enlace al código o *commit*. No usen el conjunto de prueba para decidir. Súbanlo a e-Aulas como `PF_G<NN>_H4` (por ejemplo, `PF_G03_H4_bitacora.pdf`); reciben comentarios antes de la S12 ([detalles del hito](../../proyecto-final/README.md)).
-- [ ] **Proyecto (≈2 h):** agreguen al informe al menos una prueba de comportamiento (INV o MFT) de su modelo y una medición de latencia o tamaño en el hardware de su demo; empiecen a preparar el *pitch* y la demo de la S12.
+- [ ] **Proyecto, después del curso (opcional):** corran la siguiente iteración que definieron hoy, con al menos una prueba de comportamiento (INV o MFT) y una medición de latencia o tamaño en el hardware de la demo. No usen el conjunto de prueba para decidir.
 - [ ] Practica con los ejercicios 🧪 del lab: nuevos segmentos de error, datos dirigidos para la intención más débil, búsqueda aleatoria frente a TPE y n-gramas de caracteres para la robustez.
 - [ ] Lectura recomendada (opcional): Sambasivan et al. (2021) sobre las cascadas de datos, o las *Reglas del aprendizaje automático* de Google (en español).
 

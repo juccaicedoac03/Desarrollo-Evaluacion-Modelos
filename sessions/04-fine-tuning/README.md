@@ -1,7 +1,7 @@
 # Sesión 04 — Fine-Tuning Generative Models
 *Afinamiento de modelos generativos*
 
-**RAE asociados:** RAE 1, RAE 2 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 1, RAE 2 · **Duración:** 3 horas (virtual) · **Fecha:** viernes 9 de octubre de 2026, 18:00–21:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -25,11 +25,11 @@ Al terminar la sesión podrás:
 
 ## Diálogo formativo: balance de los challenges S1–S3
 
-Esta semana se abre el **diálogo formativo** del curso (ventana entre las semanas 4 y 6), que no tiene nota propia:
+Hoy se abre el **diálogo formativo** del curso (entre las sesiones 4 y 7), que no tiene nota propia:
 
-- En la S04 el profesor comparte en **e-Aulas** el **balance de tus challenges S1–S3**, con **retroalimentación individual** por componente de la rúbrica. Compáralo con tus autoevaluaciones y elige un hábito para mejorar desde este challenge (por ejemplo, citar siempre tus propios números o llenar el registro de IA mientras trabajas).
-- Si lo necesitas, agenda una **conversación breve con el profesor** en el horario de atención entre las semanas 4 y 6.
-- Tu grupo entrega la **propuesta del proyecto (H2, canvas)** a más tardar a las 23:59 del día anterior a la S06; la retroalimentación escrita se devuelve en la S06.
+- Antes de la sesión de hoy el profesor publica en **e-Aulas** el **balance de tus challenges S1–S3**, con **retroalimentación individual** por componente de la rúbrica. Compáralo con tus autoevaluaciones y elige un hábito para mejorar desde este challenge (por ejemplo, citar siempre tus propios números o llenar el registro de IA mientras trabajas).
+- Si lo necesitas, agenda una **conversación breve con el profesor** en el horario de atención (virtual, con cita previa) entre las sesiones 4 y 7.
+- Tu grupo entrega la **propuesta del proyecto (H2, canvas)** hasta el **miércoles 14 de octubre a las 23:59**; la retroalimentación escrita se devuelve en la S07 (viernes 16 de octubre).
 
 Detalles en la [guía de asignatura](../../guia-de-asignatura/guia-de-asignatura.md) y en la [evaluación del curso](../../docs/evaluacion.md).
 
@@ -38,7 +38,7 @@ Detalles en la [guía de asignatura](../../guia-de-asignatura/guia-de-asignatura
 1. **Lectura 1:** Hugging Face, [*LLM Course*, capítulo 3 en español: *fine-tuning* de un modelo preentrenado](https://huggingface.co/learn/llm-course/es/chapter3/1), en especial la sección sobre la API `Trainer`. *(≈45 min)*
 2. **Lectura 2:** Hu et al. (2021), [*LoRA: Low-Rank Adaptation of Large Language Models*](https://arxiv.org/abs/2106.09685), secciones 1 a 4. No hace falta seguir todas las demostraciones: céntrate en la figura 1 y en la ecuación W₀ + BA. *(≈45 min)*
 3. **Revisa tu configuración de Kaggle:** hoy conviene usar **GPU T4 x2** (ver la [guía de configuración de Kaggle](../../docs/configuracion-kaggle.md)); confirma que tu número de celular está verificado. *(≈10 min)*
-4. **Revisa en e-Aulas** tus notas y comentarios de los challenges S1–S3 (llegan esta semana) y anota una pregunta para el diálogo formativo. *(≈20 min)*
+4. **Revisa en e-Aulas** tus notas y comentarios de los challenges S1–S3 (se publican antes de la sesión de hoy) y anota una pregunta para el diálogo formativo. *(≈20 min)*
 
 ## Materiales
 
@@ -73,9 +73,10 @@ Las slides y el lab están en inglés; el challenge y esta guía, en español. E
 
 1. **Termina y entrega el challenge** si no alcanzaste en clase (hasta las 23:59). *(≈1 h)*
 2. **Repite el lab por tu cuenta** y resuelve los ejercicios 🧪 *Try it* antes de abrir las soluciones; prueba otra combinación de `target_modules` y compara con la calculadora LoRA de las slides. *(≈1.5 h)*
-3. **Proyecto final (H2):** con tu grupo, redacta la **propuesta en formato canvas** con la [plantilla de propuesta](../../proyecto-final/plantillas/propuesta.md). Define qué modelo afinarán (completo o LoRA), con qué datos, cómo los etiquetarán y cuál será la línea base. Entrega: 23:59 del día anterior a la S06. *(≈2 h)*
+3. **Proyecto final (H2):** con tu grupo, redacta la **propuesta en formato canvas** con la [plantilla de propuesta](../../proyecto-final/plantillas/propuesta.md). Define qué modelo afinarán (completo o LoRA), con qué datos, cómo los etiquetarán y cuál será la línea base. Entrega: miércoles 14 de octubre, 23:59; la retroalimentación escrita llega en la S07. *(≈2 h)*
 4. **Diálogo formativo:** revisa tu balance S1–S3 en e-Aulas y, si lo necesitas, agenda una conversación en el horario de atención. *(≈0.5 h)*
 5. **Lecturas de profundización** (elige dos): Dettmers et al. (2023) sobre QLoRA; Ouyang et al. (2022) sobre InstructGPT; Kirkpatrick et al. (2017) sobre olvido catastrófico; Gebru et al. (2021) sobre *datasheets* para documentar datasets. *(≈2 h)*
+6. **Prepara las sesiones 05 y 06 antes del sábado a las 7:00:** el sábado 10 de octubre hay dos sesiones seguidas (7:00–10:00 y 10:00–13:00), así que haz antes la sección "Antes de la clase" de ambas guías ([Sesión 05](../05-evaluating-generative-models/README.md) y [Sesión 06](../06-basic-ai-applications/README.md)), incluida la **activación de tu licencia de Startti antes del sábado 10 de octubre**.
 
 ## Lecturas y recursos
 

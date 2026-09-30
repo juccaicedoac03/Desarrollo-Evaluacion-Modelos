@@ -1,7 +1,7 @@
 # Sesión 12 — Integrative Project: Complete Solution
 *Proyecto integrador: desarrollo de solución completa*
 
-**RAE asociados:** RAE 1, RAE 2, RAE 3, RAE 4, RAE 5, RAE 6 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 1, RAE 2, RAE 3, RAE 4, RAE 5, RAE 6 · **Duración:** 3 horas (virtual) · **Fecha:** sábado 24 de octubre de 2026, 10:00–13:00 (hora de Colombia)
 
 Esta sesión no tiene lab ni challenge: está dedicada a la **socialización de los proyectos finales**. Cada grupo presenta su modelo propio (pitch, demo en vivo y preguntas), cada integrante responde su defensa individual y cerramos el curso. El enunciado completo está en el [proyecto final](../../proyecto-final/README.md) y los criterios, en la [rúbrica](../../proyecto-final/rubrica.md). Esta guía reúne la logística del día.
 
@@ -27,9 +27,9 @@ Esta sesión no tiene lab ni challenge: está dedicada a la **socialización de 
 
 ## Antes de la clase
 
-### Entrega final: 23:59 del día anterior a la S12
+### Entrega final: viernes 23 de octubre, 23:59
 
-Un integrante sube a e-Aulas los archivos del grupo. Se califica la versión disponible al cierre del plazo: el último commit o la última versión guardada del notebook de Kaggle antes de la hora límite ([enunciado, §4](../../proyecto-final/README.md#4-entregables-finales-sesión-12)).
+La entrega final se hace el viernes 23 de octubre hasta las 23:59 (el día de la S10), junto con el hito H4, que va en la sección 5 del informe técnico. El día de la S12 solo quedan la socialización y los dos formularios individuales (coevaluación y retroalimentación entre grupos). Un integrante sube a e-Aulas los archivos del grupo. Se califica la versión disponible al cierre del plazo: el último commit o la última versión guardada del notebook de Kaggle antes de la hora límite ([enunciado, §4](../../proyecto-final/README.md#4-entregables-finales-sesión-12)).
 
 | Archivo | Contenido |
 |---|---|
@@ -41,6 +41,8 @@ Un integrante sube a e-Aulas los archivos del grupo. Se califica la versión dis
 El código (repositorio de GitHub o notebook de Kaggle) debe correr de principio a fin, también **sin claves de API**. Si el repositorio es privado, agreguen como colaborador al usuario `juccaicedoac03`; si el notebook de Kaggle es privado, compártanlo con el usuario que el profesor publicó en e-Aulas. El video de respaldo (opcional, máximo 3 minutos) se entrega como enlace.
 
 ### Lista de verificación del grupo para el día de la socialización
+
+Complétenla antes del sábado a las 7:00: la S12 empieza a las 10:00, justo después de la S11, y el descanso entre ambas solo alcanza para relanzar la demo y probar la pantalla compartida.
 
 - [ ] Ensayamos el pitch completo con cronómetro: 8' de pitch + 3' de demo, sin pasarnos.
 - [ ] Cada integrante sabe qué parte presenta y puede explicar **cualquier** otra parte del proyecto, incluido lo que generó una IA.

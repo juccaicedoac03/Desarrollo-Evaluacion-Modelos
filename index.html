@@ -221,6 +221,11 @@
   .chip-challenge { background: var(--accent-2-soft); color: var(--accent-2-ink); }
   .chip-startti { background: transparent; border-color: var(--accent-ink); color: var(--accent-ink); }
   .chip-project { background: var(--brand); color: #fff; }
+  .session-date {
+    margin: 14px 0 0; font-size: 13px; font-weight: 600; color: var(--brand-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .session .session-date + h3 { margin-top: 6px; }
   .session h3 { margin: 16px 0 0; font-size: 19px; line-height: 1.3; letter-spacing: -.005em; }
   .session-es { margin: 4px 0 0; color: var(--muted); font-style: italic; }
   .session-meta { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
@@ -310,6 +315,7 @@
       <p class="lede">Entrena, afina y evalúa modelos generativos y preentrenados, y conviértelos en chatbots, clasificadores y agentes útiles para tu organización, con criterio ético y de negocio.</p>
       <ul class="facts" aria-label="Datos del curso">
         <li>12 sesiones virtuales de 3 h</li>
+        <li>Del 2 al 24 de octubre de 2026</li>
         <li>3 créditos</li>
         <li>Profesor: Julian Caicedo</li>
         <li>Teoría en inglés · evaluación en español</li>
@@ -346,7 +352,7 @@
   <section id="estructura" aria-labelledby="estructura-title">
     <div class="wrap">
       <div class="section-head">
-        <p class="kicker">Cada semana</p>
+        <p class="kicker">Sesión a sesión</p>
         <h2 id="estructura-title">Estructura de cada sesión</h2>
         <p>180 minutos, siempre en el mismo orden. El challenge se empieza en clase y se entrega hasta las 23:59 del mismo día.</p>
       </div>
@@ -374,6 +380,7 @@
       <div class="section-head">
         <p class="kicker">Programa</p>
         <h2 id="sesiones-title">Las 12 sesiones</h2>
+        <p>Del 2 al 24 de octubre de 2026, en hora de Colombia: los viernes hay una sesión (18:00–21:00) y los sábados, dos seguidas (7:00–10:00 y 10:00–13:00). Prepara las dos sesiones del sábado antes de las 7:00.</p>
         <p>Slides y labs en inglés; challenges y guías en español. Los botones de Kaggle crean una copia del notebook en tu cuenta; cada guía de sesión incluye además enlaces a Colab.</p>
       </div>
       <div class="sessions">
@@ -382,6 +389,7 @@
             <span class="session-num" aria-hidden="true">01</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-02T18:00-05:00">Viernes 2 oct. · 18:00–21:00</time></p>
           <h3><span class="sr-only">Sesión 01: </span><span lang="en">Introduction to Generative and Pretrained Models</span></h3>
           <p class="session-es">Introducción a modelos generativos y preentrenados</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 1 · 4 · 5</b></p>
@@ -397,6 +405,7 @@
             <span class="session-num" aria-hidden="true">02</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-03T07:00-05:00">Sábado 3 oct. · 7:00–10:00</time></p>
           <h3><span class="sr-only">Sesión 02: </span><span lang="en">Training Generative Models</span></h3>
           <p class="session-es">Entrenamiento de modelos generativos</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 1 · 2</b></p>
@@ -412,6 +421,7 @@
             <span class="session-num" aria-hidden="true">03</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-03T10:00-05:00">Sábado 3 oct. · 10:00–13:00</time></p>
           <h3><span class="sr-only">Sesión 03: </span><span lang="en">Pretrained Models and Transfer Learning</span></h3>
           <p class="session-es">Modelos preentrenados y transferencia de aprendizaje</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 1 · 3</b></p>
@@ -428,6 +438,7 @@
             <span class="session-num" aria-hidden="true">04</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-09T18:00-05:00">Viernes 9 oct. · 18:00–21:00</time></p>
           <h3><span class="sr-only">Sesión 04: </span><span lang="en">Fine-Tuning Generative Models</span></h3>
           <p class="session-es">Afinamiento de modelos generativos</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 1 · 2</b></p>
@@ -443,10 +454,10 @@
             <span class="session-num" aria-hidden="true">05</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-10T07:00-05:00">Sábado 10 oct. · 7:00–10:00</time></p>
           <h3><span class="sr-only">Sesión 05: </span><span lang="en">Evaluating Generative Models</span></h3>
           <p class="session-es">Evaluación de modelos generativos</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 2</b></p>
-          <p class="milestone"><strong>Hito del proyecto:</strong> Propuesta (canvas) antes de S06</p>
           <div class="actions">
             <a class="btn btn-slides" href="sessions/05-evaluating-generative-models/slides.html">Slides</a>
             <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/05-evaluating-generative-models/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
@@ -459,9 +470,11 @@
             <span class="session-num" aria-hidden="true">06</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span><span class="chip chip-startti">Startti</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-10T10:00-05:00">Sábado 10 oct. · 10:00–13:00</time></p>
           <h3><span class="sr-only">Sesión 06: </span><span lang="en">Introduction to Basic Application Development</span></h3>
           <p class="session-es">Introducción al desarrollo de aplicaciones básicas</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 3 · 4</b></p>
+          <p class="milestone"><strong>Hito del proyecto:</strong> Propuesta (canvas), hasta el miércoles 14 oct. a las 23:59</p>
           <div class="actions">
             <a class="btn btn-slides" href="sessions/06-basic-ai-applications/slides.html">Slides</a>
             <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/06-basic-ai-applications/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
@@ -474,9 +487,11 @@
             <span class="session-num" aria-hidden="true">07</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span><span class="chip chip-startti">Startti</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-16T18:00-05:00">Viernes 16 oct. · 18:00–21:00</time></p>
           <h3><span class="sr-only">Sesión 07: </span><span lang="en">Implementing Basic Chatbots and Agents</span></h3>
           <p class="session-es">Implementación de chatbots básicos y agentes</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 3 · 4 · 6</b></p>
+          <p class="milestone"><strong>Proyecto:</strong> Retroalimentación escrita de la propuesta</p>
           <div class="actions">
             <a class="btn btn-slides" href="sessions/07-chatbots-and-agents/slides.html">Slides</a>
             <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/07-chatbots-and-agents/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
@@ -489,6 +504,7 @@
             <span class="session-num" aria-hidden="true">08</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-17T07:00-05:00">Sábado 17 oct. · 7:00–10:00</time></p>
           <h3><span class="sr-only">Sesión 08: </span><span lang="en">Building Classifiers with Generative Models</span></h3>
           <p class="session-es">Creación de clasificadores con modelos generativos</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 1 · 2 · 3</b></p>
@@ -504,6 +520,7 @@
             <span class="session-num" aria-hidden="true">09</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span><span class="chip chip-startti">Startti</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-17T10:00-05:00">Sábado 17 oct. · 10:00–13:00</time></p>
           <h3><span class="sr-only">Sesión 09: </span><span lang="en">Use Cases: Generative Models in Real Contexts</span></h3>
           <p class="session-es">Casos de uso: modelos generativos en contexto real</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 4 · 5 · 6</b></p>
@@ -520,9 +537,11 @@
             <span class="session-num" aria-hidden="true">10</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-23T18:00-05:00">Viernes 23 oct. · 18:00–21:00</time></p>
           <h3><span class="sr-only">Sesión 10: </span><span lang="en">Ethics and Sustainability in Generative Models</span></h3>
           <p class="session-es">Ética y sostenibilidad en modelos generativos</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 2 · 6</b></p>
+          <p class="milestone"><strong>Hito del proyecto:</strong> Entrega final con la iteración de mejora (H4), a las 23:59</p>
           <div class="actions">
             <a class="btn btn-slides" href="sessions/10-ethics-and-sustainability/slides.html">Slides</a>
             <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/10-ethics-and-sustainability/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
@@ -535,10 +554,11 @@
             <span class="session-num" aria-hidden="true">11</span>
             <div class="chips"><span class="chip chip-theory">Teoría</span><span class="chip chip-lab">Lab</span><span class="chip chip-challenge">Challenge</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-24T07:00-05:00">Sábado 24 oct. · 7:00–10:00</time></p>
           <h3><span class="sr-only">Sesión 11: </span><span lang="en">Evaluation and Continuous Model Improvement</span></h3>
           <p class="session-es">Evaluación y mejora continua de modelos</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 2 · 6</b></p>
-          <p class="milestone"><strong>Hito del proyecto:</strong> Iteración de mejora</p>
+          <p class="milestone"><strong>Proyecto:</strong> Revisión de la iteración de mejora y preparación del pitch</p>
           <div class="actions">
             <a class="btn btn-slides" href="sessions/11-continuous-improvement/slides.html">Slides</a>
             <a class="btn btn-lab" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/lab.ipynb" target="_blank" rel="noopener">Lab en Kaggle</a>
@@ -551,10 +571,11 @@
             <span class="session-num" aria-hidden="true">12</span>
             <div class="chips"><span class="chip chip-project">Proyecto final</span><span class="chip chip-startti">Startti opcional</span></div>
           </div>
+          <p class="session-date"><time datetime="2026-10-24T10:00-05:00">Sábado 24 oct. · 10:00–13:00</time></p>
           <h3><span class="sr-only">Sesión 12: </span><span lang="en">Integrative Project: Complete Solution</span></h3>
           <p class="session-es">Proyecto integrador: desarrollo de solución completa</p>
           <p class="session-meta">Resultados de aprendizaje: <b>RAE 1–6</b></p>
-          <p class="milestone"><strong>Proyecto:</strong> Entrega y socialización</p>
+          <p class="milestone"><strong>Proyecto:</strong> Socialización y defensa individual</p>
           <div class="actions">
             <a class="btn btn-slides" href="sessions/12-integrative-project/slides.html">Slides</a>
             <a class="btn btn-project" href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/proyecto-final/README.md">Proyecto final</a>

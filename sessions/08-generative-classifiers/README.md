@@ -1,7 +1,7 @@
 # Sesión 08 — Building Classifiers with Generative Models
 *Creación de clasificadores con modelos generativos*
 
-**RAE asociados:** RAE 1, RAE 2, RAE 3 · **Duración:** 3 horas (virtual)
+**RAE asociados:** RAE 1, RAE 2, RAE 3 · **Duración:** 3 horas (virtual) · **Fecha:** sábado 17 de octubre de 2026, 7:00–10:00 (hora de Colombia)
 
 ## Objetivos de la sesión
 
@@ -29,6 +29,7 @@ Al terminar la sesión podrás:
 - **Repaso breve:** Jurafsky y Martin (2023), primeras secciones del capítulo 4 (Naive Bayes) y del capítulo 5 (regresión logística).
 - **Repasa tus notebooks** de la Sesión 02 (el codificador de un VAE) y de la Sesión 03 (clasificación zero-shot y few-shot con un LLM): hoy los conectamos.
 - **Kaggle:** verifica que tu cuenta tenga el teléfono verificado para poder activar la GPU.
+- **Prepara también la Sesión 09:** es hoy mismo, de 10:00 a 13:00, justo después de esta. Haz su sección «Antes de la clase» ([guía de la S09](../09-real-world-use-cases/README.md)) antes de las 7:00 y trae una idea de caso de uso de tu sector para el canvas del proyecto (hito H3).
 
 ## Materiales
 
@@ -62,7 +63,7 @@ Challenge **individual** y **personalizado**: tu código estudiantil define cuá
 - **Proyecto final (≈4 h):** entrena o afina el primer modelo de tu grupo y compáralo con una **línea base simple** (por ejemplo, TF-IDF + regresión logística o un zero-shot) con al menos dos métricas justificadas. Si tu caso es de clasificación, incluye la curva de aprendizaje y revisa la calibración.
 - **Práctica autónoma (≈1 h):** resuelve los ejercicios 🧪 *Try it* del lab (conteos para Naive Bayes, pesos de clase en la MLP, calibración contextual del LLM, temperatura en la generación sintética).
 - **Lectura (≈1 h):** Ng y Jordan (2002) y la sección de resultados de Møller et al. (2024).
-- **Prepara la Sesión 09:** trae una idea de caso de uso de tu sector para el canvas del proyecto (hito formativo de S09).
+- **La Sesión 09 empieza hoy a las 10:00**, después de un breve descanso. No hay nada que preparar entre las dos sesiones: su preparación se hizo antes de las 7:00. Lo de arriba es trabajo para después de la S09 (el challenge sigue siendo hasta las 23:59 de hoy).
 
 ## Lecturas y recursos
 

@@ -1,6 +1,6 @@
 # Configuración de Kaggle
 
-*Guía para dejar tu entorno listo **antes de la Sesión 01**.*
+*Guía para dejar tu entorno listo **antes de la Sesión 01 (viernes 2 de octubre, 18:00)**.*
 
 Todos los labs y challenges del curso son notebooks de Jupyter que se ejecutan en **Kaggle Notebooks**: un entorno en la nube con GPU gratuita y la mayoría de las librerías del curso ya instaladas (PyTorch, transformers, scikit-learn…). No necesitas instalar nada en tu computador; basta un navegador y una conexión estable.
 
@@ -127,7 +127,7 @@ Si Kaggle no está disponible o agotaste tu cuota, puedes usar **Google Colab** 
 
 Ten en cuenta que en la versión gratuita de Colab la GPU no siempre está disponible y la sesión se desconecta tras un tiempo de inactividad.
 
-## 10. Lista de verificación antes de la Sesión 01
+## 10. Lista de verificación antes de la Sesión 01 (viernes 2 de octubre)
 
 - [ ] Tengo cuenta en Kaggle y sé iniciar sesión.
 - [ ] Verifiqué mi número celular.
