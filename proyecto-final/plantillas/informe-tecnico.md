@@ -7,7 +7,7 @@
 > - **Máximo 8 páginas**, sin contar portada, referencias ni anexos. Lo que pase de la página 8 no se califica.
 > - PDF, tamaño carta, fuente de 11 pt, interlineado sencillo, márgenes de 2.5 cm. Nombre del archivo: `PF_G<NN>_informe.pdf`.
 > - En español. Las tablas y figuras cuentan dentro de las 8 páginas: úsenlas cuando digan más que el texto.
-> - Todo número del informe debe salir de ejecutar su código. Resultados fabricados = 0.0 en el componente ([rúbrica](../rubrica.md)).
+> - Todo número del informe debe salir de ejecutar su código. Los resultados fabricados se tramitan conforme al reglamento académico y el componente afectado puede calificarse con 0.0 ([rúbrica](../rubrica.md)).
 > - Las extensiones sugeridas son orientativas. Borren las instrucciones en cursiva antes de entregar.
 > - **Hito H4 (S11):** entreguen el borrador de la sección 5 (bitácora) con el enlace al código.
 
@@ -105,8 +105,8 @@
 *Criterio 6 de la rúbrica.*
 
 - *Riesgos específicos del caso: sesgo, privacidad, usos indebidos, impacto en las personas usuarias y afectadas.*
-- *Al menos una prueba empírica: desempeño por subgrupo (variante del idioma, canal, longitud del texto, región) o prueba contrafactual; resultados y mitigación.*
-- *Emisiones o energía del entrenamiento (CodeCarbon) y cómo se comparan con alternativas (p. ej., un modelo más pequeño o solo la línea base).*
+- *Recomendado (necesario para el nivel Excelente del criterio 6): al menos una prueba empírica, como el desempeño por subgrupo (variante del idioma, canal, longitud del texto, región) o una prueba contrafactual; resultados y mitigación.*
+- *Emisiones o energía del entrenamiento, medidas con CodeCarbon o estimadas con un método citado (p. ej., Lacoste et al., 2019), y cómo se comparan con alternativas (p. ej., un modelo más pequeño o solo la línea base).*
 - *Clasificación de riesgo razonada (p. ej., según el EU AI Act) y marcos de referencia vistos en la S10.*
 - *Resumen de la model card y enlace a ella.*
 
@@ -141,6 +141,8 @@
 - [ ] ≤ 8 páginas (sin portada, referencias ni anexos), en PDF.
 - [ ] Todos los números coinciden con los que produce el código entregado.
 - [ ] Hay línea base, al menos 2 métricas justificadas, análisis de errores y al menos una iteración en la bitácora.
-- [ ] La sección 7 tiene al menos una prueba empírica y la medición de emisiones.
+- [ ] La sección 7 tiene los riesgos específicos del caso y las emisiones del entrenamiento, medidas con CodeCarbon o estimadas con un método citado.
+- [ ] *(Recomendado, necesario para el nivel Excelente)* La sección 7 incluye al menos una prueba empírica (por subgrupo o contrafactual).
+- [ ] El Anexo A (declaración de contribuciones) está completo.
 - [ ] Portada con enlaces que funcionan (pruébenlos desde una ventana privada si son públicos, o con la cuenta de otro integrante si son privados).
 - [ ] Model card y [registro de uso de IA](registro-uso-ia.md) completos.

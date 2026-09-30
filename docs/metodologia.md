@@ -100,13 +100,13 @@ El curso tiene 3 créditos: 36 horas con el profesor y **108 horas de trabajo in
 
 | Sesión | Hito formativo |
 |---|---|
-| S03 | Grupos conformados (3 integrantes) |
-| S05 → S06 | Propuesta del proyecto (canvas) |
-| S09 | Canvas de caso de uso |
-| S11 | Iteración de mejora documentada |
+| S03 | H1 · Grupos conformados (3 integrantes) |
+| S05 → S06 | H2 · Propuesta del proyecto (canvas); retroalimentación escrita en la S06 |
+| S09 | H3 · Canvas de caso de uso |
+| S11 | H4 · Iteración de mejora documentada |
 | S12 | Entrega y socialización (8' pitch + 3' demo + 4' preguntas) |
 
-Los detalles de entregables, plantillas y rúbrica están en [proyecto-final/README.md](../proyecto-final/README.md).
+Los hitos no tienen nota propia, pero son obligatorios: cada hito (H1–H4) que el grupo no entregue en su plazo descuenta 0.3 de la nota del entregable técnico (máximo −1.2). Los detalles de entregables, plantillas y rúbrica están en [proyecto-final/README.md](../proyecto-final/README.md).
 
 ## 7. Canales de soporte
 

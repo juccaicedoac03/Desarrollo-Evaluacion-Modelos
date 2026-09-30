@@ -38,9 +38,14 @@ Todo proyecto debe cumplir estos ocho mínimos. Si falta alguno, el criterio cor
 | 3 | **Al menos 2 métricas justificadas** | Una métrica técnica y otra ligada al negocio o al riesgo. Ejemplos: F1 macro + recall de la clase crítica; ROUGE-L + evaluación humana de fidelidad; exactitud + latencia o costo por consulta. | Informe §4 · model card |
 | 4 | **Análisis de errores** | Revisión manual de una muestra de errores (sugerido: 20 o más), agrupados en categorías, con conteos, ejemplos y una hipótesis por categoría. | Informe §4 |
 | 5 | **Al menos 1 iteración de mejora documentada** | Hipótesis → cambio → resultado → decisión. La decisión se toma con el conjunto de validación; al final se reportan todas las versiones en el mismo conjunto de prueba, **sin ajustar nada sobre él**. | Informe §5 (bitácora) |
-| 6 | **Análisis ético y de sostenibilidad** | Sesgos, privacidad (Ley 1581 de 2012), usos indebidos, emisiones del entrenamiento (CodeCarbon), clasificación de riesgo y mitigaciones. | Informe §7 · model card |
+| 6 | **Análisis ético y de sostenibilidad** | Sesgos, privacidad (Ley 1581 de 2012), usos indebidos, emisiones del entrenamiento (medidas con CodeCarbon o estimadas con un método citado), clasificación de riesgo y mitigaciones. | Informe §7 · model card |
 | 7 | **Model card** | Documento del modelo según Mitchell et al. (2019), con la [plantilla](plantillas/model-card.md). | Repositorio o notebook |
 | 8 | **Demo funcional** | App de Gradio o agente de Startti integrado con el modelo propio (ver §4). El modelo del grupo debe tener un papel verificable en la demo. | Socialización |
+
+**Carga de trabajo.** El proyecto está dimensionado para unas **3 horas semanales por persona** entre la S3 y la S12, dentro de las 9 horas semanales de trabajo independiente del curso. Los ocho mínimos caben en ese presupuesto. Dos elementos del nivel *Excelente* de la [rúbrica](rubrica.md) son **metas de alcance extendido**, para hacer solo si el tiempo les alcanza (sin ellos, esos criterios pueden llegar al nivel *Bueno*):
+
+- la variabilidad de los resultados con varias semillas o intervalos (criterio 4 del entregable técnico);
+- la prueba empírica por subgrupo o contrafactual (criterio 6).
 
 ---
 
@@ -50,16 +55,16 @@ Los hitos son **formativos y obligatorios**: no tienen nota propia, pero sirven 
 
 | Hito | Sesión | Qué entrega el grupo | Plantilla | Plazo | Retroalimentación |
 |---|---|---|---|---|---|
-| **H1 · Conformación del grupo** | S3 | Registro del grupo (ver el bloque de abajo) | — | 23:59 del día de la S3 | Confirmación y número de grupo (`G01`, `G02`…) |
-| **H2 · Propuesta (canvas)** | Antes de la S6 | Parte A de la propuesta: canvas de 1 página | [propuesta.md](plantillas/propuesta.md) | 23:59 del día anterior a la S6 | Comentarios escritos antes de la S7 |
-| **H3 · Canvas de caso de uso** | S9 | Propuesta actualizada + Parte B: valor × factibilidad, KPI, ROI, riesgos, primeros resultados de la línea base | [propuesta.md](plantillas/propuesta.md) (Parte B) | 23:59 del día de la S9 | Comentarios antes de la S10 |
+| **H1 · Conformación del grupo** | S3 | Registro del grupo (ver el bloque de abajo), como `PF_H1_<codigo>` | — | 23:59 del día de la S3 | Confirmación y número de grupo (`G01`, `G02`…) |
+| **H2 · Propuesta (canvas)** | Antes de la S6 | Parte A de la propuesta: canvas de 1 página | [propuesta.md](plantillas/propuesta.md) | 23:59 del día anterior a la S6 | Retroalimentación escrita en la S6 |
+| **H3 · Canvas de caso de uso** | S9 | Parte A actualizada (1 página) + Parte B (máximo 2 páginas adicionales): valor × factibilidad, KPI, ROI, riesgos, primeros resultados de la línea base | [propuesta.md](plantillas/propuesta.md) (Parte B) | 23:59 del día de la S9 | Comentarios antes de la S10 |
 | **H4 · Iteración de mejora** | S11 | Borrador de la sección 5 del informe (bitácora con al menos una iteración) + enlace al código | [informe-tecnico.md](plantillas/informe-tecnico.md) §5 | 23:59 del día de la S11 | Comentarios antes de la S12 |
 | **Entrega final** | S12 | Todos los entregables de la §4 | Todas | 23:59 del día anterior a la S12 | Calificación con la rúbrica |
 | **Socialización** | S12 | Pitch + demo + preguntas | — | En clase | Retroalimentación del profesor y de los demás grupos |
-| **Coevaluación** | S12 | Formulario individual y confidencial | [coevaluacion.md](plantillas/coevaluacion.md) | 23:59 del día de la S12 | — |
-| **Retroalimentación entre grupos** | S12 | Formulario para los grupos que te asignen | [retroalimentacion-pares.md](plantillas/retroalimentacion-pares.md) | 23:59 del día de la S12 | Consolidada y anónima |
+| **Coevaluación** | S12 | Formulario individual y confidencial, como `PF_G<NN>_coev_<codigo>` | [coevaluacion.md](plantillas/coevaluacion.md) | 23:59 del día de la S12 | — |
+| **Retroalimentación entre grupos** | S12 | Formulario individual sobre los grupos que el profesor asigna a cada estudiante, como `PF_retro_<codigo>` | [retroalimentacion-pares.md](plantillas/retroalimentacion-pares.md) | 23:59 del día de la S12 | Consolidada y anónima |
 
-**Cómo se entrega:** un integrante sube el archivo del grupo a la actividad correspondiente de e-Aulas, en PDF o Markdown, con el nombre `PF_G<NN>_<hito>` (p. ej., `PF_G03_H2_propuesta.pdf`). La coevaluación y la retroalimentación entre grupos son individuales.
+**Cómo se entrega:** un integrante sube el archivo del grupo a la actividad correspondiente de e-Aulas, en PDF o Markdown. En el H1 el grupo aún no tiene número, así que el registro se llama `PF_H1_<codigo>`, con el código estudiantil de quien lo sube (p. ej., `PF_H1_123456.md`). Desde el H2, los archivos se llaman `PF_G<NN>_<hito>` (p. ej., `PF_G03_H2_propuesta.pdf`). La coevaluación (`PF_G<NN>_coev_<codigo>`) y la retroalimentación entre grupos (`PF_retro_<codigo>`) son individuales: cada estudiante sube su propio archivo.
 
 ### Bloque para el registro del grupo (H1)
 
@@ -96,15 +101,15 @@ Plazo: **23:59 del día anterior a la S12**. Se califica la versión disponible 
 
 | # | Entregable | Formato y condiciones |
 |---|---|---|
-| 1 | **Código** | Repositorio de GitHub o notebook de Kaggle, público o privado compartido con el profesor. Debe correr de principio a fin (`Run All` o las instrucciones del README), con semilla fija, versiones de librerías registradas, acceso a los datos documentado (p. ej., un Kaggle Dataset privado) y **sin claves en el código** (usen Kaggle Secrets). |
-| 2 | **Informe técnico** | PDF de **máximo 8 páginas**, sin contar portada, referencias ni anexos, con la [plantilla](plantillas/informe-tecnico.md). Lo que pase de la página 8 no se califica. |
+| 1 | **Código** | Repositorio de GitHub o notebook de Kaggle, público o privado compartido con el profesor. Debe correr de principio a fin (`Run All` o las instrucciones del README), con semilla fija, versiones de librerías registradas, acceso a los datos documentado (p. ej., un Kaggle Dataset privado) y **sin claves en el código** (usen Kaggle Secrets). El profesor no tiene acceso a sus Secrets, así que el notebook también debe correr completo **sin claves** (ver la opción B de la demo). |
+| 2 | **Informe técnico** | PDF de **máximo 8 páginas**, sin contar portada, referencias ni anexos, con la [plantilla](plantillas/informe-tecnico.md). Lo que pase de la página 8 no se califica. Incluye el **Anexo A. Declaración de contribuciones** (obligatorio, no cuenta en las 8 páginas). |
 | 3 | **Model card** | Con la [plantilla](plantillas/model-card.md): `MODEL_CARD.md` en el repositorio, sección final del notebook o tarjeta del modelo en Hugging Face Hub. |
-| 4 | **Demo** | **Opción A — Gradio:** app en el notebook (`demo.launch(share=True)` genera un enlace público temporal) o, si quieren un enlace estable, en Hugging Face Spaces. **Opción B — Agente de Startti integrado:** el agente funciona como capa conversacional y se orquesta desde el notebook junto con el modelo propio (p. ej., el modelo clasifica o extrae y el agente responde con su base de conocimiento). El agente por sí solo no cumple el mínimo. Ver [configuración de Startti](../docs/configuracion-startti.md). |
+| 4 | **Demo** | **Opción A — Gradio:** app en el notebook (`demo.launch(share=True)` genera un enlace público temporal) o, si quieren un enlace estable, en Hugging Face Spaces. **Opción B — Agente de Startti integrado:** el agente funciona como capa conversacional y se orquesta desde el notebook junto con el modelo propio (p. ej., el modelo clasifica o extrae y el agente responde con su base de conocimiento). El agente por sí solo no cumple el mínimo. Como el profesor no puede usar sus Kaggle Secrets, el notebook entregado debe funcionar **sin la clave de Startti**: las celdas del agente se omiten sin error y muestran una transcripción o capturas grabadas de conversaciones reales con el agente, o ejecutan la alternativa en Python. El agente en vivo se muestra en la socialización de la S12. Ver [configuración de Startti](../docs/configuracion-startti.md). |
 | 5 | **Registro de uso de IA** | Con la [plantilla](plantillas/registro-uso-ia.md). Es obligatorio y se califica. |
 | 6 | **Diapositivas del pitch** | PDF. |
-| 7 | **Video de respaldo** *(opcional)* | Máximo 3 minutos: la demo grabada, por si la demo en vivo falla. Se entrega como enlace (no subas el video a e-Aulas). |
+| 7 | **Video de respaldo** *(opcional)* | Máximo 3 minutos: la demo grabada, por si la demo en vivo falla. Se entrega como enlace (no suban el video a e-Aulas). |
 
-Un integrante sube a e-Aulas: `PF_G<NN>_informe.pdf`, `PF_G<NN>_slides.pdf`, `PF_G<NN>_model-card.md` y `PF_G<NN>_registro-ia.md`. La portada del informe reúne los enlaces al código, la demo y el video.
+Un integrante sube a e-Aulas: `PF_G<NN>_informe.pdf` (con el Anexo A de contribuciones), `PF_G<NN>_slides.pdf`, `PF_G<NN>_model-card.md` y `PF_G<NN>_registro-ia.md`. La portada del informe reúne los enlaces al código, la demo y el video. Después de la S12, cada estudiante sube su coevaluación (`PF_G<NN>_coev_<codigo>`) y su retroalimentación entre grupos (`PF_retro_<codigo>`).
 
 **Compartir con el profesor:** si el repositorio de GitHub es privado, agreguen como colaborador al usuario `juccaicedoac03`. Si el notebook de Kaggle es privado, compártanlo con el usuario de Kaggle que el profesor publicará en e-Aulas.
 
@@ -154,10 +159,10 @@ Nota individual del proyecto  = Nota del proyecto × F
 Aporte a la nota final        = 0.30 × Nota individual del proyecto
 
 F = 0.7 + 0.3 × (P − 1) / 3, con tope en 1.0
-P = promedio de los puntajes (1–5) que te asignan tus compañeros de grupo en la coevaluación
+P = promedio de los puntajes (1–5) que cada estudiante recibe de sus compañeros de grupo en la coevaluación (sin su autoevaluación)
 ```
 
-Con P = 1.0, F = 0.70; con P = 3.0, F = 0.90; con **P ≥ 4.0, F = 1.00**. La rúbrica trae un ejemplo completo y las reglas para casos extremos: el profesor puede revisar el factor con evidencia.
+Con P = 1.0, F = 0.70; con P = 3.0, F = 0.90; con **P ≥ 4.0, F = 1.00**. F se redondea a dos decimales. En el entregable técnico se aplican primero los descuentos por hitos (−0.3 por hito, máximo −1.2) y luego los topes (p. ej., 3.0 si solo hay prompting). La rúbrica trae un ejemplo completo y las reglas para casos extremos: el profesor puede revisar el factor con evidencia.
 
 ---
 
@@ -168,7 +173,7 @@ Aplica la [política de uso de IA del curso](../docs/politica-uso-ia.md). En res
 1. **Los asistentes de IA están permitidos y se espera que los usen** (ChatGPT, Claude, Codex, Copilot, etc.) para programar, depurar, redactar y revisar.
 2. **Todo uso se declara** en el [registro de uso de IA](plantillas/registro-uso-ia.md): herramienta, para qué, prompt principal y qué verificaron o corrigieron. Si no hay registro, ese criterio de la rúbrica vale 0.
 3. **Cada integrante debe poder explicar cualquier parte del proyecto**, incluido lo que generó una IA. La defensa individual lo comprueba.
-4. **Resultados fabricados = 0.** Métricas, tablas, gráficas, citas o datos que no provengan de ejecutar su propio código, o que hayan sido alterados, llevan a **0.0 en el componente afectado** y al proceso disciplinario de integridad académica según el reglamento de la universidad.
+4. **Resultados fabricados.** Métricas, tablas, gráficas, citas o datos que no provengan de ejecutar su propio código, o que hayan sido alterados, se tramitan conforme al reglamento académico de la Universidad del Rosario; el componente afectado puede calificarse con **0.0**.
 5. **No compartan datos personales ni confidenciales** de ninguna organización con asistentes de IA externos ni con agentes de Startti.
 6. Si la IA forma parte de la solución (datos sintéticos, LLM como juez, traducción automática, agente conversacional), se documenta además en el informe y en la model card, con la forma en que se validó.
 
@@ -218,10 +223,11 @@ El proyecto debe poder hacerse con los recursos **gratuitos de Kaggle**: GPU T4 
 
 - Usen modelos de **≤ ~1B de parámetros**; para modelos generativos, **LoRA** ([Hu et al., 2021](https://arxiv.org/abs/2106.09685)).
 - Iteren con subconjuntos pequeños y escalen solo la versión final.
-- Limiten la longitud de secuencia (p. ej., 128–256 tokens para clasificación), usen `fp16=True` en GPU y acumulación de gradientes si la memoria no alcanza.
+- Limiten la longitud de secuencia (p. ej., 128–256 tokens para clasificación) y usen acumulación de gradientes si la memoria no alcanza.
+- Precisión numérica: con modelos pequeños, entrenen en fp32 (la opción por defecto), que es la más estable. `fp16=True` puede ahorrar memoria y tiempo en GPU con los modelos más grandes de la lista; si la pérdida se vuelve `NaN`, vuelvan a fp32. **No usen fp16 con modelos de la familia T5** (p. ej., `google/flan-t5-small`): suelen producir pérdidas `NaN`.
 - Guarden checkpoints en `/kaggle/working`. Para entrenamientos largos, usen *Save Version → Save & Run All*, que ejecuta el notebook en segundo plano.
 - Registren `transformers.__version__` y fijen versiones: Kaggle puede traer versiones distintas entre sesiones. Usen `eval_strategy` (no `evaluation_strategy`).
-- Midan las emisiones del entrenamiento con [CodeCarbon](https://codecarbon.io).
+- Midan las emisiones del entrenamiento con [CodeCarbon](https://codecarbon.io) o, si no es posible, estímenlas con un método citado (p. ej., [Lacoste et al., 2019](https://arxiv.org/abs/1910.09700)).
 
 **Modelos de partida sugeridos** (abiertos y sin acceso restringido)
 
@@ -264,9 +270,9 @@ Las organizaciones de los ejemplos son genéricas o ficticias.
 - **Demo:** Gradio con umbral de confianza; si el modelo duda, el caso pasa a revisión humana.
 - **Ojo con:** datos personales en el texto; desempeño desigual según el canal o la forma de escribir (errores ortográficos, lenguaje coloquial).
 
-### 2. Asistente de soporte para una fintech con base de conocimiento
+### 2. Asistente de soporte para un banco digital con base de conocimiento
 
-- **Contexto:** *Andes Bank*, una billetera digital ficticia, atiende por chat preguntas repetitivas sobre tarjetas, transferencias y recargas.
+- **Contexto:** *Andes Bank*, un banco digital ficticio (el mismo de la guía de configuración de Startti y del lab de la S07), atiende por chat preguntas repetitivas sobre tarjetas, transferencias y recargas.
 - **Tarea:** detectar la intención, responder con una base de conocimiento y escalar a una persona cuando corresponda.
 - **Datos:** `legacy-datasets/banking77` (pueden traducir un subconjunto al español y revisarlo) + una FAQ ficticia escrita por el grupo para la base de conocimiento.
 - **Modelo de partida:** DistilBERT o BETO afinado para la intención; opcional: LoRA sobre `Qwen/Qwen2.5-0.5B-Instruct` para el tono de marca. El agente de Startti puede ser la capa conversacional.
@@ -348,7 +354,7 @@ Las organizaciones de los ejemplos son genéricas o ficticias.
 
 ### 10. Análisis de noticias financieras
 
-- **Contexto:** el área de riesgo de *Andes Bank* quiere monitorear el tono de las noticias sobre sectores y emisores.
+- **Contexto:** el área de riesgo de *Banco Andino*, un banco ficticio, quiere monitorear el tono de las noticias sobre sectores y emisores.
 - **Tarea:** clasificar el sentimiento financiero (bajista / alcista / neutral).
 - **Datos:** `zeroshot/twitter-financial-news-sentiment` + titulares en español recolectados por el grupo (solo titulares, citando la fuente) para medir la transferencia al español.
 - **Modelo de partida:** `ProsusAI/finbert` como modelo preentrenado de referencia (hay que mapear sus etiquetas a las del dataset) frente a DistilBERT o BETO afinado por el grupo.

@@ -64,7 +64,9 @@
 | Línea base | | |
 | Este modelo | | |
 
-**Resultados por factor o subgrupo**
+**Resultados por factor o subgrupo** *(recomendado; necesario para el nivel Excelente del criterio 6 de la rúbrica)*
+
+*Si no evaluaron ningún factor de forma empírica, díganlo y expliquen por qué.*
 
 | Factor / subgrupo | N | Métrica 1 | Métrica 2 | Brecha frente al global |
 |---|---|---|---|---|
@@ -91,8 +93,8 @@
 |---|---|
 | Hardware | *p. ej., GPU T4 de Kaggle* |
 | Horas de cómputo (entrenamiento + experimentos) | |
-| Emisiones estimadas (kg CO₂eq) | |
-| Herramienta o método | *CodeCarbon, o la calculadora de Lacoste et al. (2019)* |
+| Emisiones medidas o estimadas (kg CO₂eq) | |
+| Herramienta o método | *Medición con CodeCarbon, o estimación con un método citado (p. ej., la calculadora de Lacoste et al., 2019)* |
 
 ## 11. Cómo usar el modelo *(sección adicional)*
 
