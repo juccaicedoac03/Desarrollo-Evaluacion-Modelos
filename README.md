@@ -73,15 +73,15 @@ LICENSE                       Licencia MIT
 
 1. **Antes de la Sesión 01:** crea y verifica tu cuenta de Kaggle siguiendo la [guía de configuración de Kaggle](docs/configuracion-kaggle.md). Lee la [metodología](docs/metodologia.md), la [evaluación](docs/evaluacion.md) y la [política de uso de IA](docs/politica-uso-ia.md).
 2. **Antes de cada sesión (≈2 h):** abre la guía de la sesión (`sessions/NN-<tema>/README.md`) y haz la preparación previa que indica.
-3. **Durante la sesión:** sigue las slides desde el [portal](https://juccaicedoac03.github.io/Desarrollo-Evaluacion-Modelos/), participa en quizzes y salas de grupo, abre el lab en Kaggle con el botón *Open in Kaggle* y, en el último bloque, el challenge.
+3. **Durante la sesión:** sigue las slides desde el [portal](https://juccaicedoac03.github.io/Desarrollo-Evaluacion-Modelos/), participa en quizzes y salas de grupo, abre el lab con el botón **Lab en Kaggle** del portal y, en el último bloque, el challenge con **Challenge en Kaggle**. En la tabla de sesiones de este README y en las guías de sesión, esos enlaces se llaman simplemente **Kaggle**.
 4. **Entrega del challenge:** ejecuta todo, descarga el notebook (`File → Download notebook`) y súbelo a e-Aulas como `S<NN>_<codigo>.ipynb` antes de las 23:59 del mismo día.
-5. **Antes de la Sesión 06:** activa tu licencia de Startti y crea tu API key con la [guía de configuración de Startti](docs/configuracion-startti.md). Si prefieres no crear cuenta, los labs incluyen una alternativa en Python.
+5. **Antes de la Sesión 06:** activa tu licencia de Startti con la [guía de configuración de Startti](docs/configuracion-startti.md). En la S06 creas tu API key y, antes de la S07, la guardas en Kaggle Secrets. Si prefieres no crear cuenta, los labs incluyen una alternativa en Python.
 6. **Proyecto final:** revisa el [enunciado del proyecto](proyecto-final/README.md) desde la Sesión 03, cuando se conforman los grupos.
 
 ### Si eres profesor(a) o reutilizas el curso
 
 - **Presentaciones:** abre `sessions/NN-<tema>/slides.html` en el navegador (o desde el portal). Son decks de [reveal.js](https://revealjs.com/): la tecla `S` abre la vista del presentador con las notas y los tiempos de cada diapositiva; `Esc` muestra la vista general. Los quizzes, temporizadores y simuladores funcionan sin instalar nada.
-- **Notebooks:** comparte los enlaces *Open in Kaggle* (o Colab) de la tabla de sesiones. No se guardan salidas en el repositorio.
+- **Notebooks:** comparte los enlaces *Kaggle* (o *Colab*) de la tabla de sesiones, o los botones *Lab en Kaggle* y *Challenge en Kaggle* del portal. No se guardan salidas en el repositorio.
 - **Material del profesor:** las claves de calificación, respuestas modelo y notas de facilitación viven en la carpeta local `instructor/`, que está excluida de git. El repositorio es público: **nunca subas soluciones**.
 - **Verificaciones automáticas:**
 

@@ -76,7 +76,9 @@ Discutir conceptos con compañeros, ayudarse con un error de instalación o estu
 | Falta el registro de uso de IA | El componente "Reflexión y registro de IA" (20%) vale 0.0 |
 | Registro incompleto o genérico | Se refleja en el nivel de ese componente según la [rúbrica](evaluacion.md) |
 | No puedes explicar tu entrega en la micro-sustentación | La nota de ese challenge se limita a 3.0 |
-| Suplantación, resultados fabricados o resultados personalizados compartidos | La entrega se califica con 0.0 y el caso se remite a las instancias previstas en el reglamento de la Universidad |
+| Posible fraude académico: suplantación, resultados inventados o salidas personalizadas compartidas | Se tramita conforme al reglamento académico de la Universidad del Rosario; la entrega afectada puede calificarse con 0.0 |
+
+Cuando se comparten salidas personalizadas, el proceso aplica tanto a quien las comparte como a quien entrega el trabajo compartido.
 
 Si tienes dudas sobre si un uso está permitido, **pregunta antes de entregar**: declararlo y preguntar nunca te perjudica.
 

@@ -26,16 +26,22 @@ Si intentas activar Internet sin haber verificado tu número, Kaggle te pedirá 
 
 ## 3. Abre un notebook del curso
 
-Cada guía de sesión, cada presentación y el [portal del curso](https://juccaicedoac03.github.io/Desarrollo-Evaluacion-Modelos/) tienen botones **Open in Kaggle**. Los enlaces siguen este patrón:
+Los notebooks se abren desde enlaces a Kaggle:
+
+- en el [portal del curso](https://juccaicedoac03.github.io/Desarrollo-Evaluacion-Modelos/), cada sesión tiene los botones **Lab en Kaggle** y **Challenge en Kaggle**;
+- en las guías de sesión (`sessions/NN-<tema>/README.md`) y en la tabla de sesiones del README del repositorio, el enlace se llama simplemente **Kaggle** (junto a **Colab**);
+- las presentaciones también incluyen un botón de Kaggle en las diapositivas del lab y del challenge.
+
+Todos siguen este patrón:
 
 ```text
 https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/<NN-tema>/lab.ipynb
 ```
 
-Qué pasa al hacer clic:
+Qué pasa al hacer clic (el comportamiento exacto depende de la versión de Kaggle; el profesor lo confirmará en la S01):
 
 - Con tu sesión iniciada, Kaggle **importa el notebook desde GitHub y crea una copia en tu cuenta**. Tus cambios no afectan el original.
-- **Cada clic crea una copia nueva.** Para seguir trabajando en la que ya empezaste, búscala en tu perfil, en la sección de notebooks (*Code*), o en *Your Work*.
+- **Normalmente, cada clic crea una copia nueva.** Para seguir trabajando en la que ya empezaste, búscala en tu cuenta: según la versión de Kaggle, aparece en tu perfil, en la sección de notebooks (*Code*), o en *Your Work*.
 - Tu copia es privada. Mantenla así: los challenges contienen tu configuración personal y tus resultados.
 
 ## 4. Configura la sesión: acelerador (GPU) e Internet
@@ -71,14 +77,14 @@ Las claves de API **nunca se escriben en el código**. En Kaggle se guardan como
 2. Agrega un secreto nuevo con:
    - **Nombre (label):** `STARTTI_API_KEY` (exactamente así, en mayúsculas).
    - **Valor:** tu clave de Startti (empieza por `adp_`).
-3. Asegúrate de que el secreto quede **adjunto a este notebook** (marcado). Los secretos se guardan en tu cuenta, pero debes adjuntarlos en cada notebook donde los uses, incluidas las copias nuevas.
+3. Asegúrate de que el secreto quede **adjunto a este notebook** (marcado). Los secretos se guardan en tu cuenta, pero normalmente debes adjuntarlos en cada notebook donde los uses, incluidas las copias nuevas (el profesor lo confirmará en la S01).
 4. Vuelve a ejecutar la celda del cliente de Startti. Debe imprimir `Startti key found ✅`.
 
 Cómo obtener la clave: [configuracion-startti.md](configuracion-startti.md). Si decides no usar Startti, no necesitas este paso: los notebooks siguen funcionando con la alternativa en Python.
 
 ## 7. Guarda tu trabajo y entrega el challenge
 
-Kaggle guarda el borrador de tu notebook mientras trabajas, pero **descarga tu entrega apenas termines**.
+Normalmente, Kaggle guarda el borrador de tu notebook mientras trabajas (según la versión de Kaggle; el profesor lo confirmará en la S01). No dependas de eso: **descarga tu entrega apenas termines**.
 
 1. Ejecuta todo el notebook **en orden** (por ejemplo, con *Run All*).
 2. Verifica que se vean **"Tu configuración personal"** y la **huella de resultados** (🔏) al final. Se califican el código y las salidas.
@@ -102,13 +108,13 @@ No necesitas *Save Version* para entregar; la entrega es el archivo `.ipynb` que
 | `No STARTTI_API_KEY — Startti cells will be skipped.` | El secreto no existe, tiene otro nombre o no está adjunto | Revisa *Add-ons → Secrets*: nombre exacto `STARTTI_API_KEY` y adjunto al notebook; vuelve a ejecutar la celda del cliente |
 | La sesión se detuvo sola | Inactividad prolongada o límite de tiempo de la sesión | Vuelve a iniciar la sesión y ejecuta todo desde el inicio |
 | Kaggle dice que agotaste tu cuota de GPU | Consumiste la cuota semanal | Sigue en CPU o usa Colab (sección 9) hasta que se renueve |
-| El notebook que abriste no tiene los últimos cambios | Estás trabajando en una copia antigua | Ábrelo de nuevo desde el botón *Open in Kaggle*, que siempre toma la versión vigente del repositorio |
+| El notebook que abriste no tiene los últimos cambios | Estás trabajando en una copia antigua | Ábrelo de nuevo desde el botón *Lab en Kaggle* o *Challenge en Kaggle* del portal (o el enlace *Kaggle* de la guía de la sesión), que importa la versión vigente del repositorio |
 
 ## 9. Plan B: Google Colab
 
 Si Kaggle no está disponible o agotaste tu cuota, puedes usar **Google Colab** con una cuenta de Google. Los notebooks del curso detectan automáticamente si corren en Colab.
 
-1. **Abrir:** usa el botón *Open in Colab* de la guía de la sesión, o este patrón:
+1. **Abrir:** usa el enlace *Colab* de la guía de la sesión (o de la tabla de sesiones del README del repositorio), o este patrón:
 
    ```text
    https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/<NN-tema>/challenge.ipynb
@@ -125,6 +131,6 @@ Ten en cuenta que en la versión gratuita de Colab la GPU no siempre está dispo
 
 - [ ] Tengo cuenta en Kaggle y sé iniciar sesión.
 - [ ] Verifiqué mi número celular.
-- [ ] Abrí el lab de la Sesión 01 con el botón *Open in Kaggle* y se creó una copia en mi cuenta.
+- [ ] Abrí el lab de la Sesión 01 con el botón *Lab en Kaggle* del portal (o el enlace *Kaggle* de la guía de la sesión) y se creó una copia en mi cuenta.
 - [ ] Activé Internet (y la GPU) y la primera celda se ejecutó sin errores.
 - [ ] Sé descargar un notebook (*File → Download notebook*).

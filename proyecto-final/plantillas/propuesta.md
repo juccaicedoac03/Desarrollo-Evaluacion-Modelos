@@ -5,7 +5,7 @@
 > **Cómo usar esta plantilla**
 >
 > - **Parte A — Canvas de propuesta (Hito H2):** se entrega **antes de la Sesión 6** (23:59 del día anterior). Máximo **1 página**: respuestas cortas y concretas.
-> - **Parte B — Canvas de caso de uso (Hito H3):** se entrega en la **Sesión 9** (23:59 del mismo día). Actualicen la Parte A (marquen los cambios con **[CAMBIO]**) y completen la Parte B, en máximo 2 páginas.
+> - **Parte B — Canvas de caso de uso (Hito H3):** se entrega en la **Sesión 9** (23:59 del mismo día). Actualicen la Parte A (sigue siendo de máximo 1 página; marquen los cambios con **[CAMBIO]**) y completen la Parte B en **máximo 2 páginas adicionales**. El archivo del H3 tiene, entonces, máximo 3 páginas: Parte A (1) + Parte B (2).
 > - Súbanla a e-Aulas en PDF o Markdown: `PF_G<NN>_H2_propuesta` y `PF_G<NN>_H3_canvas`.
 > - Borren las preguntas guía antes de entregar. Enunciado, hitos e ideas: [README del proyecto](../README.md).
 
@@ -52,7 +52,7 @@
 
 ---
 
-## Parte B — Canvas de caso de uso (H3 · Sesión 9 · máximo 2 páginas)
+## Parte B — Canvas de caso de uso (H3 · Sesión 9 · máximo 2 páginas adicionales a la Parte A)
 
 ### B1. Cambios desde la propuesta
 

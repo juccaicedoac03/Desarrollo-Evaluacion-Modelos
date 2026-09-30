@@ -26,6 +26,8 @@ Proyecto individual  = Nota proyecto × Factor de coevaluación (0.7–1.0)
 Nota final           = 0.70 × Nota challenges + 0.30 × Proyecto individual
 ```
 
+*Entregable* es la nota del entregable técnico después de los descuentos por hitos y de los topes; el factor de coevaluación se calcula con la fórmula de la sección 7.
+
 **Ejemplo.** Una estudiante obtiene en sus 11 challenges: 4.5, 4.0, 3.8, 0.0 (no entregó el S04), 4.2, 4.6, 3.9, 4.4, 4.1, 4.3 y 4.7.
 
 1. Se descarta la nota más baja (0.0). El promedio de las otras 10 es **4.25**.
@@ -158,22 +160,29 @@ El proyecto final se desarrolla en **grupos de 3** a lo largo del semestre: dise
 
 | Componente | Peso | Nota |
 |---|---|---|
-| Entregable técnico | 15% | Grupal |
+| Entregable técnico | 15% | Grupal, después de descuentos por hitos y topes |
 | Socialización y demo (S12) | 10% | Grupal |
 | Defensa individual | 5% | Individual |
 | **Factor de coevaluación** | ×0.7–1.0 | Individual: multiplica tu nota del proyecto |
 
-- **Factor de coevaluación.** Al final del proyecto, cada integrante evalúa el aporte de sus compañeros con la [plantilla de coevaluación](../proyecto-final/plantillas/coevaluacion.md). Si el aporte fue equitativo, el factor es 1.0; si la evaluación de pares muestra un aporte menor, puede bajar hasta 0.7. La fórmula está en la rúbrica del proyecto.
-- **Hitos formativos (obligatorios).** No tienen nota propia, pero reciben retroalimentación y su calidad se refleja en la entrega final:
+- **Factor de coevaluación (F).** Al final del proyecto, cada integrante califica el aporte de sus compañeros con la [plantilla de coevaluación](../proyecto-final/plantillas/coevaluacion.md) (5 criterios, escala de 1 a 5). Con **P** = promedio de los puntajes que te asignan tus compañeros (tu autoevaluación no entra en P):
+
+  ```text
+  F = 0.7 + 0.3 × (P − 1) / 3, con tope en 1.0
+  ```
+
+  Con P = 1.0, F = 0.70; con P = 3.0, F = 0.90; con P ≥ 4.0, F = 1.00. F es el único valor intermedio que se redondea (a dos decimales). Las reglas para casos extremos están en la sección 5 de la [rúbrica del proyecto](../proyecto-final/rubrica.md).
+- **Hitos formativos (obligatorios).** No tienen nota propia, pero reciben retroalimentación y su calidad se refleja en la entrega final. **Cada hito (H1–H4) que no se entregue en su plazo descuenta 0.3 de la nota del entregable técnico** (máximo −1.2), salvo excusa válida aceptada por el profesor:
 
   | Sesión | Hito |
   |---|---|
-  | S03 | Grupos conformados |
-  | S05 → S06 | Propuesta del proyecto ([canvas](../proyecto-final/plantillas/propuesta.md)) |
-  | S09 | Canvas de caso de uso |
-  | S11 | Iteración de mejora documentada |
+  | S03 | H1 · Grupos conformados |
+  | S05 → S06 | H2 · Propuesta del proyecto ([canvas](../proyecto-final/plantillas/propuesta.md)); la retroalimentación escrita se devuelve en la S06 |
+  | S09 | H3 · Canvas de caso de uso |
+  | S11 | H4 · Iteración de mejora documentada |
   | S12 | Entrega y socialización |
 
+- **Orden de los ajustes del entregable técnico:** primero se aplican los descuentos por hitos (−0.3 por hito, máximo −1.2) y luego los topes (por ejemplo, la nota no puede superar 3.0 si el grupo no afinó ni entrenó un modelo propio y solo hizo *prompting*). Detalle y ejemplo en la sección 2 de la [rúbrica del proyecto](../proyecto-final/rubrica.md).
 - **Socialización en S12.** Cada grupo tiene 8 minutos de pitch, 3 de demo y 4 de preguntas. Se acepta una demo pregrabada como respaldo.
 - **Uso de IA en el proyecto.** El grupo documenta su uso de IA con la [plantilla de registro](../proyecto-final/plantillas/registro-uso-ia.md), bajo las mismas reglas de la [política de uso de IA](politica-uso-ia.md).
 
@@ -182,7 +191,7 @@ El proyecto final se desarrolla en **grupos de 3** a lo largo del semestre: dise
 | Tipo | Instrumento | ¿Afecta la nota? |
 |---|---|---|
 | **Diagnóstica** | Quiz de calentamiento al inicio de cada sesión (en S01 incluye un diagnóstico de entrada) | No |
-| **Formativa** | *Checkpoints* del lab, hitos del proyecto con retroalimentación, autoevaluación en las reflexiones | No, pero prepara las evaluaciones sumativas |
+| **Formativa** | *Checkpoints* del lab, hitos del proyecto con retroalimentación, autoevaluación en las reflexiones | No tienen nota propia y preparan las evaluaciones sumativas; pero cada hito del proyecto (H1–H4) no entregado descuenta 0.3 del entregable técnico |
 | **Sumativa** | Challenges de sesión (70%) y proyecto final (30%) | Sí |
 
 | Agente evaluador | Cómo se aplica |

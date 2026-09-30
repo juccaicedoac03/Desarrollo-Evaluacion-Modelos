@@ -69,14 +69,14 @@ Una base de conocimiento permite que el agente responda con información de tus 
 
 En el curso usarás documentos **ficticios** que encontrarás en la carpeta `data/` de cada sesión (por ejemplo, las preguntas frecuentes de Andes Bank en `sessions/07-chatbots-and-agents/data/`).
 
-**Buenas prácticas.** Una base de conocimiento funciona bien para información estable (políticas, preguntas frecuentes, manuales), no para datos que cambian a cada minuto (saldos, estados de pedidos). Los documentos cuentan contra el almacenamiento de tu plan: sube solo lo necesario.
+**Buenas prácticas.** Una base de conocimiento funciona bien para información estable (políticas, preguntas frecuentes, manuales), no para datos que cambian a cada minuto (saldos, estados de pedidos). Sube solo los documentos necesarios: tu plan puede tener límites de almacenamiento.
 
 ## 4. Publica el agente
 
 - **Publicar es un paso explícito, distinto de guardar.** Mientras no lo publiques, el agente es un borrador que solo funciona en la vista previa.
 - **Para llamarlo por API, el agente debe estar publicado.** Si no lo está, la API responde **409**.
 - Puedes despublicarlo después sin perder su configuración.
-- Tu plan tiene un límite de agentes publicados. Si la API o la plataforma responden **402**, despublica un agente que ya no uses.
+- Tu plan puede tener límites (por ejemplo, número de agentes publicados); si ves un error **402**, avísale al profesor. Mientras tanto, puedes despublicar los agentes que ya no uses.
 
 ## 5. Crea tu API key
 
@@ -172,7 +172,7 @@ Respuesta (resumida):
 | `No STARTTI_API_KEY — Startti cells will be skipped.` | El notebook no encontró tu clave | Revisa el nombre exacto del secreto (`STARTTI_API_KEY`) y que esté adjunto al notebook; vuelve a ejecutar la celda del cliente |
 | **400** | La solicitud está mal formada (por ejemplo, `prompt` vacío) | Revisa que envías `agentId` y un `prompt` con texto |
 | **401** | Clave inválida o revocada | Verifica que copiaste la clave completa; si la perdiste o la revocaste, crea una nueva |
-| **402** | Alcanzaste un límite de tu plan (por ejemplo, número de agentes publicados) | Despublica agentes que no uses o consulta al profesor |
+| **402** | Alcanzaste un límite de tu plan (por ejemplo, número de agentes publicados) | Avísale al profesor; mientras tanto, puedes despublicar los agentes que no uses |
 | **403** | La clave no tiene acceso a ese agente (otro workspace o clave restringida a otros agentes) | Usa una clave del mismo workspace del agente o agrega el agente a la lista de la clave |
 | **404** | No se encontró el agente | Revisa el `AGENT_ID` (sin espacios ni comillas de más) |
 | **409** | El agente no está publicado | Publícalo en ADP y vuelve a intentarlo |
@@ -193,7 +193,7 @@ Si prefieres no crear una cuenta en Startti, puedes hacer todo el curso con la *
 - En el lab de S07 construyes un **bot en Python** (clasificador de intenciones, extracción de datos, manejo de estado y respuesta con un modelo de lenguaje abierto) que cumple el mismo papel que el agente de Startti. En S06 y S09, las partes de Startti tienen su equivalente en código (la app en Gradio y los prototipos en Python).
 - Las celdas que dependen de Startti **se omiten automáticamente** si no hay una API key, así que el notebook se ejecuta completo.
 - El evaluador de conversaciones de S07 recibe cualquier función `agent_fn(prompt, session_key) -> str`: puedes pasarle tu agente de Startti o tu bot en Python.
-- Los challenges de S06, S07 y S09 aceptan ambos caminos y se califican con la misma rúbrica.
+- Los challenges de S06, S07 y S09 aceptan el camino de Startti o la alternativa en Python; ambos se califican con la misma rúbrica.
 
 ## 12. Lista de verificación
 
