@@ -5,11 +5,13 @@ Usage:
     python tools/check_links.py [root]        # root defaults to the repository root
 
 What is checked
-  * HTML: relative ``href=`` / ``src=`` attribute values (inline ``<script>`` bodies and
-    ``<!-- comments -->`` are ignored).
-  * Markdown: ``[text](target)`` and ``![alt](target)`` links, ``[ref]: target`` definitions and
-    HTML ``href=`` / ``src=`` attributes (badges).  Fenced code blocks, inline code spans and
-    HTML comments are ignored.
+  * HTML: relative ``href`` / ``src`` attributes of real tags (``<a href="...">``, ``<img src=...>``).
+    Attribute-like text elsewhere is not a link: ``data-href=``, text in escaped code
+    (``&lt;a href="x"&gt;``), ``href="..."`` inside another attribute's value, and anything inside
+    inline ``<script>`` bodies, ``<pre>...</pre>``, ``<code>...</code>`` or ``<!-- comments -->``.
+  * Markdown: ``[text](target)`` and ``![alt](target)`` links, ``[ref]: target`` definitions (but
+    not ``[^1]: footnote`` definitions) and the same HTML attributes (badges).  Fenced code
+    blocks, inline code spans, ``<pre>`` / ``<code>`` elements and HTML comments are ignored.
   * ``#fragment`` and ``?query`` are stripped, the path is resolved relative to the file and must
     exist (a directory link is fine when the directory exists).
   * Names are compared case-sensitively even on case-insensitive file systems (macOS), because
@@ -37,11 +39,17 @@ EXCLUDED_DIRS = {".git", ".superpowers", ".claude", "instructor", "node_modules"
 SUFFIXES = {".html", ".md"}
 
 SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.\-]*:")
-HTML_ATTR = re.compile(r"""(?<!\w)(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)')""", re.I)
+# A real start tag: ``<name`` followed by attributes; quoted values may contain ``>``.
+HTML_TAG = re.compile(r"""<[A-Za-z][^\s/>]*((?:"[^"]*"|'[^']*'|[^>"'])*)>""")
+# One quoted attribute inside a tag body; consuming the whole value keeps ``href='x'`` written
+# inside e.g. ``alt="..."`` from being seen as an attribute.  The name must follow whitespace.
+HTML_ATTR = re.compile(r"""\s([^\s"'<>/=]+)\s*=\s*(?:"([^"]*)"|'([^']*)')""")
+LINK_ATTRS = {"href", "src"}
 HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
 SCRIPT_ELEMENT = re.compile(r"(<script\b[^>]*>)(.*?)(</script\s*>)", re.S | re.I)
+CODE_ELEMENT = re.compile(r"(<(pre|code)(?=[\s>])[^>]*>)(.*?)(</\2\s*>)", re.S | re.I)
 MD_INLINE = re.compile(r"\]\(\s*(<[^>\n]*>|[^)\s]*)")
-MD_REFDEF = re.compile(r"^ {0,3}\[[^\]\n]+\]:\s*(<[^>\n]*>|\S+)", re.M)
+MD_REFDEF = re.compile(r"^ {0,3}\[(?!\^)[^\]\n]+\]:\s*(<[^>\n]*>|\S+)", re.M)  # [^1]: is a footnote
 MD_FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 MD_CODE_SPAN = re.compile(r"(`+)(.+?)(?<!`)\1(?!`)")
 
@@ -58,8 +66,14 @@ def _blank(match):
     return blank_text(match.group(0))
 
 
+def mask_code_elements(text):
+    """Blank the contents of ``<pre>`` and ``<code>`` elements (line count preserved)."""
+    return CODE_ELEMENT.sub(lambda m: m.group(1) + blank_text(m.group(3)) + m.group(4), text)
+
+
 def mask_markdown(text):
-    """Blank fenced code blocks, inline code spans and HTML comments (line count preserved)."""
+    """Blank fenced code blocks, inline code spans, ``<pre>``/``<code>`` contents and HTML comments
+    (line count preserved)."""
     out, fence = [], None
     for line in text.split("\n"):
         m = MD_FENCE.match(line)
@@ -75,13 +89,24 @@ def mask_markdown(text):
             if closes:
                 fence = None
             out.append("")
-    return HTML_COMMENT.sub(_blank, "\n".join(out))
+    return mask_code_elements(HTML_COMMENT.sub(_blank, "\n".join(out)))
 
 
 def mask_html(text):
-    """Blank comments and inline script bodies (line count preserved)."""
+    """Blank comments, inline script bodies and ``<pre>``/``<code>`` contents (line count preserved)."""
     text = HTML_COMMENT.sub(_blank, text)
-    return SCRIPT_ELEMENT.sub(lambda m: m.group(1) + blank_text(m.group(2)) + m.group(3), text)
+    text = SCRIPT_ELEMENT.sub(lambda m: m.group(1) + blank_text(m.group(2)) + m.group(3), text)
+    return mask_code_elements(text)
+
+
+def html_attribute_links(masked):
+    """Yield (position, value) of every ``href``/``src`` attribute of a real tag in masked HTML."""
+    for tag in HTML_TAG.finditer(masked):
+        body_start = tag.start(1)
+        for attr in HTML_ATTR.finditer(tag.group(1)):
+            if attr.group(1).lower() in LINK_ATTRS:
+                value = attr.group(2) if attr.group(2) is not None else attr.group(3)
+                yield body_start + attr.start(1), value
 
 
 def extract_links(path, text):
@@ -93,8 +118,7 @@ def extract_links(path, text):
     else:
         masked = mask_html(text)
         matches = []
-    matches += [(m.start(), m.group(1) if m.group(1) is not None else m.group(2))
-                for m in HTML_ATTR.finditer(masked)]
+    matches += list(html_attribute_links(masked))
     for pos, link in sorted(matches):
         yield link, masked.count("\n", 0, pos) + 1
 

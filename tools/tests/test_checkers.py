@@ -2,6 +2,7 @@
 import json
 import re
 import sys
+import warnings
 from pathlib import Path
 
 import nbformat
@@ -219,7 +220,7 @@ def test_cells_without_ids_fail_validation(tmp_path, capsys):
         c.pop("id")
     (tmp_path / "lab.ipynb").write_text(json.dumps(nb))
     status, out = run_nb_checker(capsys, tmp_path / "lab.ipynb")
-    assert status == 1 and "id" in out
+    assert status == 1 and "without an id" in out
 
 
 def test_missing_path_and_empty_directory_fail(tmp_path, capsys):
@@ -245,6 +246,130 @@ def test_mixed_run_reports_each_notebook_and_fails_overall(tmp_path, capsys):
     lines = out.strip().splitlines()
     assert status == 1 and len(lines) == 2
     assert lines[0].startswith("OK ") and lines[1].startswith("FAIL ")
+
+
+# ------------------------------------------- check_notebooks: CONFIG position / assignments
+def challenge_with_config_after_startti_client(session="S03"):
+    cells = good_challenge_cells(session)
+    # setup, startti_client, CONFIG, ...  (Startti sessions)
+    cells.insert(2, code(snippet("startti_client.py")))
+    cells.insert(5, code('print(startti_run("agent", "hola"))'))
+    return cells
+
+
+def test_challenge_config_cell_can_follow_the_startti_client_cell(tmp_path, capsys):
+    path = write_nb(tmp_path / "03-x" / "challenge.ipynb", challenge_with_config_after_startti_client())
+    status, out = run_nb_checker(capsys, path)
+    assert status == 0, out
+
+
+def test_challenge_config_cell_can_be_any_code_cell_between_setup_and_results(tmp_path, capsys):
+    cells = good_challenge_cells()
+    cells.insert(2, code("import pandas as pd"))
+    cells.insert(2, code("helper = 1"))
+    path = write_nb(tmp_path / "03-x" / "challenge.ipynb", cells)
+    status, out = run_nb_checker(capsys, path)
+    assert status == 0, out
+
+
+def test_challenge_config_must_precede_the_results_cell(tmp_path, capsys):
+    cells = good_challenge_cells()
+    # setup, RESULTS, CONFIG, ..., fingerprint
+    reordered = [cells[0], cells[1], cells[5], cells[2], cells[3], cells[4]] + cells[6:]
+    path = write_nb(tmp_path / "03-x" / "challenge.ipynb", reordered)
+    status, out = run_nb_checker(capsys, path)
+    assert status == 1 and "RESULTS" in out, out
+
+
+def test_challenge_config_before_the_setup_cell_does_not_count(tmp_path, capsys):
+    cells = good_challenge_cells()
+    swapped = [cells[0], cells[2], cells[1]] + cells[3:]  # CONFIG cell first, setup second
+    path = write_nb(tmp_path / "03-x" / "challenge.ipynb", swapped)
+    status, out = run_nb_checker(capsys, path)
+    assert status == 1 and "setup_challenge.py" in out, out
+
+
+@pytest.mark.parametrize("config_source, ok", [
+    ("CONFIG = {'a': 1}  # personalise with pick(['x', 'y'])", False),
+    ("# CONFIG = {'a': pick([1, 2])}\nCONFIG = {'a': 1}", False),
+    ("CONFIG = {'a': 1}\n# pick(...)", False),
+    ("x = pick([1, 2])", False),  # pick( but no CONFIG assignment
+    ('CONFIG = {"color": "#fff", "m": pick([1, 2])}', True),  # '#' inside a string is not a comment
+    ("CONFIG = {'m': pick([1, 2])}  # personal", True),
+    ("CONFIG: dict = {'m': pick([1, 2])}", True),
+    ("CONFIG: dict[str, int] = {'m': pick([1, 2])}", True),
+    ("CONFIG:dict={'m': pick([1, 2])}", True),
+    ("CONFIG: dict\nprint(pick([1, 2]))", False),  # bare annotation is not an assignment
+    ("CONFIG == pick([1, 2])", False),
+    ("pick_one = pick([1, 2])\nCONFIG = {'m': pick_one}", True),
+    ("%matplotlib inline\nCONFIG = {'m': pick([1, 2])}", True),  # not valid Python, still fine
+    ("CONFIG = {'a': pick([1])}  # note\nx = (", True),  # does not tokenize: regex fallback
+    ("CONFIG = {'a': 1}  # pick(x)\nx = (", False),
+])
+def test_challenge_config_cell_rule(tmp_path, capsys, config_source, ok):
+    cells = good_challenge_cells()
+    cells[2] = code(config_source)
+    path = write_nb(tmp_path / "03-x" / "challenge.ipynb", cells)
+    status, out = run_nb_checker(capsys, path)
+    assert (status == 0) == ok, out
+
+
+def test_challenge_accepts_annotated_results_assignment(tmp_path, capsys):
+    cells = good_challenge_cells()
+    cells[5] = code("RESULTS: dict = {'x': 1}")
+    path = write_nb(tmp_path / "03-x" / "challenge.ipynb", cells)
+    status, out = run_nb_checker(capsys, path)
+    assert status == 0, out
+
+
+def test_challenge_bare_results_annotation_is_not_an_assignment(tmp_path, capsys):
+    cells = good_challenge_cells()
+    cells[5] = code("RESULTS: dict")
+    path = write_nb(tmp_path / "03-x" / "challenge.ipynb", cells)
+    status, out = run_nb_checker(capsys, path)
+    assert status == 1 and "RESULTS" in out, out
+
+
+# ------------------------------------------------- check_notebooks: missing-id detection
+def _raw_notebook_text():
+    return nbformat.writes(v4.new_notebook(cells=good_lab_cells()))
+
+
+def test_missing_ids_are_detected_by_warning_category_not_message(tmp_path, monkeypatch):
+    path = tmp_path / "lab.ipynb"
+    path.write_text(_raw_notebook_text())
+
+    def validate(nb):
+        warnings.warn("totally different wording", check_notebooks.MissingIDFieldWarning)
+
+    monkeypatch.setattr(check_notebooks.nbformat, "validate", validate)
+    nb, reasons = check_notebooks.load_notebook(path)
+    assert nb is None and any("without an id" in r for r in reasons), reasons
+
+
+def test_other_warnings_do_not_fail_validation(tmp_path, monkeypatch):
+    path = tmp_path / "lab.ipynb"
+    path.write_text(_raw_notebook_text())
+
+    def validate(nb):
+        warnings.warn("cell is missing an id (but this is a UserWarning)", UserWarning)
+
+    monkeypatch.setattr(check_notebooks.nbformat, "validate", validate)
+    nb, reasons = check_notebooks.load_notebook(path)
+    assert nb is not None and reasons == []
+
+
+def test_missing_ids_fallback_when_warning_class_is_unavailable(tmp_path, monkeypatch):
+    path = tmp_path / "lab.ipynb"
+    path.write_text(_raw_notebook_text())
+
+    def validate(nb):
+        warnings.warn("Cell is missing an id field, this will become a hard error", FutureWarning)
+
+    monkeypatch.setattr(check_notebooks, "MissingIDFieldWarning", None)  # older nbformat
+    monkeypatch.setattr(check_notebooks.nbformat, "validate", validate)
+    nb, reasons = check_notebooks.load_notebook(path)
+    assert nb is None and any("without an id" in r for r in reasons), reasons
 
 
 # ------------------------------------------------------------------------- check_links
@@ -362,3 +487,75 @@ def test_nested_badge_link_in_markdown(tmp_path, capsys):
           "[![Colab](assets/colab.svg)](lab.ipynb)\n")
     status, out, _ = run_links(capsys, tmp_path)
     assert status == 1 and out.strip().splitlines() == ["README.md:1: assets/colab.svg"]
+
+
+# ------------------------------------------ check_links: footnotes and real-tag attributes
+def test_markdown_footnote_definitions_are_not_links(tmp_path, capsys):
+    write(tmp_path / "README.md",
+          "Claim[^1] and another[^nota-2].\n\n"
+          "[^1]: Véase el paper (2017).\n"
+          "[^nota-2]: See https://example.com/x for details.\n"
+          "   [^3]: indented footnote: text\n"
+          "[ref]: missing-ref.md\n")
+    status, out, _ = run_links(capsys, tmp_path)
+    assert status == 1 and out.strip().splitlines() == ["README.md:6: missing-ref.md"]
+
+
+def test_html_escaped_and_code_content_is_not_a_link(tmp_path, capsys):
+    write(tmp_path / "page.html",
+          '<pre><code>&lt;a href="foo.html"&gt;x&lt;/a&gt;</code></pre>\n'
+          '<p>Use <code>href="bar"</code> or <code>src=\'baz.png\'</code>.</p>\n'
+          '<pre>\n<a href="in-pre.html">shown as code</a>\nsrc="also-in-pre.png"\n</pre>\n'
+          '<p>Plain text: href="plain.html" is not a tag.</p>\n'
+          '<a href="missing-real.html">real</a>\n')
+    status, out, _ = run_links(capsys, tmp_path)
+    assert status == 1 and out.strip().splitlines() == ["page.html:8: missing-real.html"], out
+
+
+def test_html_code_masking_handles_attributes_case_and_unclosed_tags(tmp_path, capsys):
+    write(tmp_path / "page.html",
+          '<CODE class="x">href="a.html"</CODE>\n'
+          '<pre class="hljs">src="b.png"</PRE>\n'
+          '<code-widget href="missing-widget.html"></code-widget>\n'
+          '<code>never closed, href="c.html"\n')
+    status, out, _ = run_links(capsys, tmp_path)
+    # <code-widget> is a custom element (not <code>): its href is a real attribute.
+    # The unclosed <code> masks nothing, but its text is not inside a tag either.
+    assert status == 1 and out.strip().splitlines() == ["page.html:3: missing-widget.html"], out
+
+
+def test_data_attributes_are_not_links(tmp_path, capsys):
+    write(tmp_path / "page.html",
+          '<div data-href="a.html" data-src="b.png" x-href="c.html" data-x=1>\n'
+          '<a data-href="d.html" href="missing.html">l</a>\n'
+          '<img\n  data-src="e.png"\n  src="missing.png">\n'
+          '</div>\n')
+    status, out, _ = run_links(capsys, tmp_path)
+    assert status == 1
+    assert out.strip().splitlines() == ["page.html:2: missing.html", "page.html:5: missing.png"], out
+
+
+def test_attribute_text_inside_another_attribute_value_is_not_a_link(tmp_path, capsys):
+    write(tmp_path / "page.html",
+          '<img alt="see href=\'x.html\' and src=\"y.png\"" title=\'src="z.png"\' src="missing.png">\n'
+          '<a title="a > b" href="missing2.html">gt in value</a>\n')
+    status, out, _ = run_links(capsys, tmp_path)
+    assert status == 1
+    assert out.strip().splitlines() == ["page.html:1: missing.png", "page.html:2: missing2.html"], out
+
+
+def test_attribute_names_are_case_insensitive_and_need_a_real_tag(tmp_path, capsys):
+    write(tmp_path / "page.html", '<A HREF="missing.html">x</A>\nhref="not-a-tag.html"\na < b href="x.html"\n')
+    status, out, _ = run_links(capsys, tmp_path)
+    assert status == 1 and out.strip().splitlines() == ["page.html:1: missing.html"], out
+
+
+def test_markdown_html_snippets_follow_the_same_rules(tmp_path, capsys):
+    write(tmp_path / "README.md",
+          '<img src="assets/missing.png" data-src="x.png">\n'
+          'Write <code>href="bar"</code> or &lt;a href="foo.html"&gt; as text.\n'
+          '<pre>\n<a href="in-pre.html">x</a>\n[md](in-pre.md)\n</pre>\n'
+          '<a href="ok-if-exists.html">y</a>\n')
+    write(tmp_path / "ok-if-exists.html", "")
+    status, out, _ = run_links(capsys, tmp_path)
+    assert status == 1 and out.strip().splitlines() == ["README.md:1: assets/missing.png"], out

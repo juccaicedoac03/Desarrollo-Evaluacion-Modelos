@@ -16,8 +16,13 @@ kernel started with *this* Python interpreter, working directory = the notebook'
 what gets exercised.  Notebooks run one after another (the target machine has 8 GB of RAM).
 
 Prints ``PASS <path> <seconds>s`` or ``FAIL <path> <seconds>s`` followed by the failing cell's source
-(first 40 lines) and the tail of the traceback, writes ``outputs/smoke_report.json`` (git-ignored)
-and exits with status 1 if any notebook failed.
+(first 40 lines) and the tail of the traceback, and exits with status 1 if any notebook failed.
+A notebook that takes more than 360 s in total is flagged ``"slow": true`` in the report and gets
+``SLOW`` next to its status (``PASS SLOW <path> <seconds>s``); that is a warning only, the exit
+status is unaffected.
+
+``outputs/smoke_report.json`` (git-ignored) is rewritten after every notebook, so an interrupted
+run keeps the results of the notebooks that had finished.
 """
 import argparse
 import json
@@ -36,10 +41,12 @@ from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
 from traitlets import default
 
-from check_notebooks import KIND_BY_NAME, default_notebooks, discover
+from check_notebooks import KIND_BY_NAME, default_notebooks, discover, display
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = ROOT / "outputs" / "smoke_report.json"
+
+SLOW_SECONDS = 360  # total time per notebook above which it is flagged "slow"
 
 KERNEL_NAME = "course-smoke"
 KERNEL_ENV = {
@@ -117,11 +124,27 @@ def run_notebook(path, timeout):
     return result
 
 
-def display(path):
-    try:
-        return str(path.resolve().relative_to(Path.cwd().resolve()))
-    except ValueError:
-        return str(path)
+def is_slow(seconds):
+    return seconds > SLOW_SECONDS
+
+
+def status_line(result):
+    """``PASS <path> <s>s``; ``PASS SLOW <path> <s>s`` (or ``FAIL SLOW ...``) for slow notebooks."""
+    slow = " SLOW" if result.get("slow") else ""
+    return f"{result['status']}{slow} {result['path']} {result['seconds']}s"
+
+
+def write_report(results, problems, timeout):
+    passed = sum(r["status"] == "PASS" for r in results)
+    failed = len(results) - passed + len(problems)
+    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    REPORT_PATH.write_text(json.dumps({
+        "generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "python": sys.executable, "timeout_s": timeout, "slow_after_s": SLOW_SECONDS,
+        "kernel_env": KERNEL_ENV, "passed": passed, "failed": failed,
+        "problems": problems, "results": results,
+    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return passed, failed
 
 
 def print_failure(result):
@@ -168,20 +191,14 @@ def main(argv=None):
     for path in notebooks:
         result = run_notebook(path, args.timeout)
         result["path"] = display(path)
+        result["slow"] = is_slow(result["seconds"])
         results.append(result)
-        print(f"{result['status']} {result['path']} {result['seconds']}s", flush=True)
+        print(status_line(result), flush=True)
         if result["status"] == "FAIL":
             print_failure(result)
+        write_report(results, problems, args.timeout)  # incremental: survives an interrupted run
 
-    passed = sum(r["status"] == "PASS" for r in results)
-    failed = len(results) - passed + len(problems)
-    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    REPORT_PATH.write_text(json.dumps({
-        "generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "python": sys.executable, "timeout_s": args.timeout, "kernel_env": KERNEL_ENV,
-        "passed": passed, "failed": failed,
-        "problems": problems, "results": results,
-    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    passed, failed = write_report(results, problems, args.timeout)  # also when there was nothing to run
     print(f"{passed}/{len(results)} passed - report: {display(REPORT_PATH)}")
     return 1 if failed else 0
 

@@ -12,7 +12,8 @@ one passed explicitly as a file is still validated, and its kind can be forced w
 ``--kind`` when its name is not one of those two.
 
 Checks (all notebooks):
-  * valid nbformat 4 (nbformat validation, no cells missing an ``id``);
+  * valid nbformat 4 (nbformat validation, no cells missing an ``id``: nbformat reports that with
+    a ``MissingIDFieldWarning``, which is turned into a failure);
   * no outputs and no execution counts in code cells;
   * if code calls ``startti_run(`` the notebook contains ``snippets/startti_client.py`` verbatim.
 
@@ -21,8 +22,10 @@ Labs: the first code cell starts with ``snippets/setup_lab.py`` verbatim.
 Challenges (see the "Challenge notebook anatomy" in the course plan):
   * first code cell contains ``snippets/setup_challenge.py`` verbatim, except that the value of
     ``SESSION = "S<NN>"`` may differ (and must match the ``NN-slug`` folder name when there is one);
-  * second code cell assigns ``CONFIG`` using ``pick(``;
-  * a later code cell assigns ``RESULTS``;
+  * a code cell after the setup cell (and before the ``RESULTS`` cell) assigns ``CONFIG`` and calls
+    ``pick(`` in code - a mention in a ``#`` comment does not count.  Other cells may sit between
+    setup and CONFIG (Startti sessions put the ``startti_client.py`` cell there);
+  * a later code cell assigns ``RESULTS`` (``RESULTS = ...`` or annotated ``RESULTS: dict = ...``);
   * last code cell contains ``snippets/fingerprint.py`` verbatim;
   * the markdown cell right before it contains ``snippets/ai_log.md`` verbatim.
 
@@ -30,13 +33,20 @@ A snippet is "contained" when its text is a substring of the cell source (line e
 Prints ``OK <path>`` or ``FAIL <path>: <reasons>`` per notebook; exit status 1 if any failed.
 """
 import argparse
+import io
 import json
 import re
 import sys
+import tokenize
 import warnings
 from pathlib import Path
 
 import nbformat
+
+try:
+    from nbformat.warnings import MissingIDFieldWarning
+except ImportError:  # older nbformat: the missing-id warning is a plain FutureWarning with a message
+    MissingIDFieldWarning = None
 
 TOOLS_DIR = Path(__file__).resolve().parent
 ROOT = TOOLS_DIR.parent
@@ -45,8 +55,10 @@ SNIPPETS_DIR = TOOLS_DIR / "snippets"
 KIND_BY_NAME = {"lab.ipynb": "lab", "challenge.ipynb": "challenge"}
 SESSION_LINE = re.compile(r'(?m)^SESSION = "(S\d\d)"$')
 STARTTI_CALL = re.compile(r"(?m)^(?!\s*#).*\bstartti_run\(")
-CONFIG_ASSIGN = re.compile(r"(?m)^CONFIG\s*=(?!=)")
-RESULTS_ASSIGN = re.compile(r"(?m)^RESULTS\s*=(?!=)")
+# ``NAME = ...`` and annotated ``NAME: type = ...`` (a bare ``NAME: type`` is not an assignment)
+CONFIG_ASSIGN = re.compile(r"(?m)^CONFIG\s*(?::[^=\n]+)?=(?!=)")
+RESULTS_ASSIGN = re.compile(r"(?m)^RESULTS\s*(?::[^=\n]+)?=(?!=)")
+COMMENT = re.compile(r"(?m)#.*$")
 FOLDER_SESSION = re.compile(r"^(\d\d)-")
 MAX_LISTED = 8
 
@@ -54,6 +66,19 @@ MAX_LISTED = 8
 # ----------------------------------------------------------------------------- helpers
 def normalize(text):
     return text.replace("\r\n", "\n")
+
+
+def strip_comments(source):
+    """Source without ``#`` comments (a ``#`` inside a string is kept when the cell tokenizes)."""
+    try:
+        lines = source.split("\n")
+        spans = [tok.start + tok.end for tok in tokenize.generate_tokens(io.StringIO(source).readline)
+                 if tok.type == tokenize.COMMENT]
+    except (tokenize.TokenError, SyntaxError, IndentationError):
+        return COMMENT.sub("", source)  # e.g. cells with %magics: crude, but good enough
+    for (row, col, _, end_col) in reversed(spans):
+        lines[row - 1] = lines[row - 1][:col] + lines[row - 1][end_col:]
+    return "\n".join(lines)
 
 
 def load_snippet(name):
@@ -72,6 +97,7 @@ def listed(indices):
 
 
 def display(path):
+    """Path relative to the current directory when possible (shared with smoke_test.py)."""
     try:
         return str(path.resolve().relative_to(Path.cwd().resolve()))
     except ValueError:
@@ -90,6 +116,13 @@ def default_notebooks():
 
 
 # ------------------------------------------------------------------------------ checks
+def is_missing_id_warning(warning):
+    """True for nbformat's "cell has no id" warning (by category; by message on older nbformat)."""
+    if MissingIDFieldWarning is not None:
+        return issubclass(warning.category, MissingIDFieldWarning)
+    return "missing an id" in str(warning.message)
+
+
 def load_notebook(path):
     """Return (notebook, reasons).  ``notebook`` is None when it cannot be checked further."""
     try:
@@ -108,7 +141,7 @@ def load_notebook(path):
     except Exception as exc:  # jsonschema / nbformat raise several unrelated classes
         first_line = (str(exc).strip().splitlines() or [type(exc).__name__])[0]
         return None, [f"nbformat validation failed: {first_line[:160]}"]
-    if any("missing an id" in str(w.message) for w in caught):
+    if any(is_missing_id_warning(w) for w in caught):
         return None, ["nbformat validation failed: cells without an id field (nbformat_minor >= 5 requires ids)"]
     return nb, []
 
@@ -157,20 +190,24 @@ def check_challenge(cells, folder_name):
             reasons.append(f'SESSION = "{session}" does not match folder {folder_name!r} '
                            f'(expected "S{folder.group(1)}")')
 
-    # 2. CONFIG cell (second code cell) personalised with pick(
-    if len(code) < 2:
-        reasons.append("no second code cell defining CONFIG")
-        config_idx = None
+    fp_idx, fp_cell = code[-1]
+
+    # 2. CONFIG cell: any code cell between setup and fingerprint that assigns CONFIG and calls pick(
+    #    in code (comments stripped).  It must come before the RESULTS cell (checked in 4).
+    between = [(i, c) for i, c in code if code[0][0] < i < fp_idx]
+    assigning = [(i, c) for i, c in between if CONFIG_ASSIGN.search(normalize(c.source))]
+    personal = [i for i, c in assigning if "pick(" in strip_comments(normalize(c.source))]
+    if personal:
+        config_idx = personal[0]
     else:
-        config_idx, config_cell = code[1]
-        config_src = normalize(config_cell.source)
-        if not CONFIG_ASSIGN.search(config_src):
-            reasons.append("second code cell must assign CONFIG = {...}")
-        elif "pick(" not in config_src:
-            reasons.append("CONFIG cell must use pick(...) so the configuration is personal")
+        config_idx = None
+        if assigning:
+            reasons.append("CONFIG cell must call pick(...) in code (not only in a comment) "
+                           "so the configuration is personal")
+        else:
+            reasons.append("no code cell after the setup cell assigns CONFIG = {...}")
 
     # 3. fingerprint cell = last code cell
-    fp_idx, fp_cell = code[-1]
     fingerprint = load_snippet("fingerprint.py")
     fp_ok = fingerprint in normalize(fp_cell.source)
     if not fp_ok:
