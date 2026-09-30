@@ -1,0 +1,1234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S01 · Introduction to Generative and Pretrained Models</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ===================================================================== -->
+  <!-- OPENING                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="01">
+    <div class="title-main">
+      <h1>Introduction to Generative and Pretrained Models</h1>
+      <p class="subtitle">Introducción a modelos generativos y preentrenados</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome everyone to the first session. Ask people to keep the Zoom chat
+      open and cameras on if possible: every block today has an interaction. Remind them the
+      slides are on the course portal, so they can follow along and replay the simulators later.
+      Keys: S speaker view, F fullscreen, Esc overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Warm-up: who is in the room + two AI-literacy questions <span class="time">10'</span></li>
+      <li data-block="theory">Theory: generative models, model families, build vs buy, tools <span class="time">60'</span></li>
+      <li data-block="break">Break <span class="time">10'</span></li>
+      <li data-block="lab">Guided lab on Kaggle: PyTorch, Keras and Hugging Face <span class="time">60'</span></li>
+      <li data-block="challenge">Session challenge (graded, individual) <span class="time">40'</span></li>
+    </ol>
+    <p class="small muted" style="margin-top: 18px">Every session follows this same five-block structure.</p>
+    <aside class="notes">
+      [0:01 · 1 min] Walk through the five blocks. Stress that this structure repeats in all
+      eleven regular sessions: theory with simulators, a hands-on lab, then a graded challenge
+      that starts in class and is submitted the same day before 23:59.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WARM-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 3 · Warm-up divider -->
+  <section class="section-slide" data-block="warmup">
+    <h2>Warm-up</h2>
+    <p>Who is in the room, and what do we already know about how AI assistants work?</p>
+    <span class="block-tag" data-block="warmup">Warm-up · 10'</span>
+    <aside class="notes">
+      [0:02] Warm-up block. One diagnostic poll plus two quick AI-literacy questions. None of
+      them is graded; they tell us where to spend time today.
+    </aside>
+  </section>
+
+  <!-- 4 · Diagnostic poll -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Diagnostic</span>
+    <div class="quiz grid-2" style="margin-top: 18px">
+      <p class="quiz-q">Which best describes your role today?</p>
+      <button class="quiz-opt" data-key="a">Business or management</button>
+      <button class="quiz-opt" data-key="b">Technical: data, software, engineering</button>
+      <button class="quiz-opt" data-key="c">Mixed: I translate between both worlds</button>
+      <button class="quiz-opt" data-key="d">Other: consulting, academia, public sector…</button>
+      <div class="quiz-explain">No right answer. Mixed profiles are an asset: the final project is done in
+        groups of 3, formed in Session 03, and the best groups combine business and technical people.</div>
+    </div>
+    <div class="prompt-card" data-kind="chat">
+      <h4>What do you already delegate?</h4>
+      <p class="small">Type one task you already hand to an AI assistant (ChatGPT, Claude, Copilot…) at work.</p>
+    </div>
+    <aside class="notes">
+      [0:02 · 3 min] Launch the matching Zoom poll, wait about 45 seconds, then click the most
+      voted option (this is an ungraded poll). While the poll runs, ask for the chat line.
+      Read three or four answers aloud: they are useful examples for the build-vs-buy
+      discussion later. Note the business/technical split for forming project groups in S03.
+    </aside>
+  </section>
+
+  <!-- 5 · AI literacy Q1 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q1</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">When a chat assistant writes an answer, what is the underlying model doing at each step?</p>
+      <button class="quiz-opt" data-key="a">Looking up the answer in a database of stored responses</button>
+      <button class="quiz-opt" data-key="b">Computing a probability distribution over the next token and choosing one</button>
+      <button class="quiz-opt" data-key="c">Running rules that engineers wrote by hand</button>
+      <button class="quiz-opt" data-key="d">Searching the web and copying the best page</button>
+      <div class="quiz-explain">A language model writes one token at a time: it scores every possible next token,
+        turns the scores into probabilities and picks one. Products may add search or tools on top (RAG, agents),
+        but the core step is next-token prediction.</div>
+    </div>
+    <aside class="notes">
+      [0:05 · 2 min] Poll first, then click. Common misconception: "it searches the internet".
+      Some products do call a search tool, but the model itself only predicts tokens. We will
+      see the probability distribution live in about 15 minutes.
+    </aside>
+  </section>
+
+  <!-- 6 · AI literacy Q2 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q2</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">You ask the same question twice and get two different answers. What is the most likely reason?</p>
+      <button class="quiz-opt" data-key="a">The model was retrained between your two questions</button>
+      <button class="quiz-opt" data-key="b">The next token is sampled from a probability distribution, so outputs vary</button>
+      <button class="quiz-opt" data-key="c">The first answer was wrong, so the model corrected itself</button>
+      <button class="quiz-opt" data-key="d">Your first question permanently changed the model's weights</button>
+      <div class="quiz-explain">With sampling (temperature above 0) the model can pick a different token each time,
+        and one different word changes everything after it. Chatting does not change the weights: training is a
+        separate, offline process.</div>
+    </div>
+    <aside class="notes">
+      [0:07 · 2 min] This answer is the seed of today's challenge: students will measure how much
+      outputs vary with temperature. Clarify that providers may use conversations to train future
+      versions (depending on their terms), but not in real time during your chat.
+    </aside>
+  </section>
+
+  <!-- 7 · Learning objectives -->
+  <section>
+    <p class="kicker">Learning objectives</p>
+    <h2>By the end of this session you can…</h2>
+    <ol>
+      <li>Contrast discriminative and generative models; name six model families <span class="pill">RAE 1</span></li>
+      <li>Explain how temperature and top-k shape the text a model generates <span class="pill">RAE 1</span></li>
+      <li>Run pretrained models with PyTorch, Keras and Hugging Face on Kaggle <span class="pill">RAE 1</span></li>
+      <li>Place a business case on the adaptation spectrum and justify it <span class="pill">RAE 4</span></li>
+      <li>Spot opportunities for generative AI in your own sector <span class="pill">RAE 5</span></li>
+    </ol>
+    <p class="small muted">RAE numbers refer to the learning outcomes in the course syllabus (guía de asignatura).</p>
+    <aside class="notes">
+      [0:09 · 1 min] Objectives map to RAE 1 (design and train), RAE 4 (integrate in real
+      scenarios) and RAE 5 (innovation). The challenge assesses objectives 2 and 4 directly.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 1 · WHAT IS GENERATIVE AI                                 -->
+  <!-- ===================================================================== -->
+
+  <!-- 8 · Part 1 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 1</p>
+    <h2>What is generative AI?</h2>
+    <p>From predicting labels to producing new data.</p>
+    <span class="block-tag" data-block="theory">Theory · 60'</span>
+    <aside class="notes">
+      [0:10] Theory block starts: four parts of about 15 minutes each, with an interaction every
+      8 to 10 minutes.
+    </aside>
+  </section>
+
+  <!-- 9 · Discriminative vs generative -->
+  <section>
+    <p class="kicker">Two kinds of models</p>
+    <h2>Discriminative vs generative</h2>
+    <div class="cols">
+      <div class="card">
+        <span class="icon">🏷️</span>
+        <h3>Discriminative</h3>
+        <p>Learns \(p(y \mid x)\): the label given the input.</p>
+        <p class="small">“Is this email spam?” · credit scoring · churn prediction · sentiment</p>
+        <p class="small muted">Output: a label or a score.</p>
+      </div>
+      <div class="card">
+        <span class="icon">✨</span>
+        <h3>Generative</h3>
+        <p>Learns \(p(x)\) or \(p(x, y)\): how the data itself is distributed.</p>
+        <p class="small">Sample new data \(x \sim p(x)\): a new email, image, melody or function.</p>
+        <p class="small muted">Output: new content.</p>
+      </div>
+    </div>
+    <div class="callout"><strong>Bayes' rule links them:</strong> \(p(y \mid x) = p(x \mid y)\,p(y) / p(x)\).
+      A generative model can also classify (Session 08); a discriminative model cannot generate.</div>
+    <aside class="notes">
+      [0:10 · 3 min] Keep it intuitive. Discriminative: draw a boundary between classes.
+      Generative: learn what the data looks like, well enough to produce new examples. Business
+      translation: most "classic" ML in companies (scoring, churn) is discriminative; generative
+      AI produces content. Ask: "Is a fraud detector discriminative or generative?" (discriminative).
+    </aside>
+  </section>
+
+  <!-- 10 · Modalities -->
+  <section>
+    <p class="kicker">One idea, many modalities</p>
+    <h2>Learn the distribution, then sample from it</h2>
+    <div class="cols" style="gap: 20px">
+      <div class="card"><h4>📝 Text</h4><p class="small">Chat assistants, summaries, translation, drafting emails.</p></div>
+      <div class="card"><h4>🖼️ Images</h4><p class="small">Text-to-image generation, editing, product mock-ups (e.g., Stable Diffusion; Rombach et al., 2022).</p></div>
+      <div class="card"><h4>🔊 Audio</h4><p class="small">Synthetic voices (text-to-speech), music, sound effects.</p></div>
+      <div class="card"><h4>💻 Code</h4><p class="small">Code completion and generation from natural language (e.g., Codex; Chen et al., 2021).</p></div>
+    </div>
+    <p style="margin-top: 16px">Usually the model is <strong>conditioned</strong> on an input: \(p(x \mid \text{prompt})\).</p>
+    <aside class="notes">
+      [0:13 · 2 min] Ask for one example per modality from their own work (chat). Point out that
+      the underlying recipe is the same: a model of the data distribution plus a sampling procedure.
+      Conditioning on a prompt is what turns a generator into a useful tool.
+    </aside>
+  </section>
+
+  <!-- 11 · How an LM writes -->
+  <section>
+    <p class="kicker">Inside a language model</p>
+    <h2>Writing one token at a time</h2>
+    <p>Text is split into <strong>tokens</strong> (words or word pieces). An autoregressive model factorises the probability of a text:</p>
+    $$ p(x_1, \dots, x_T) = \prod_{t=1}^{T} p(x_t \mid x_{&lt;t}) $$
+    <p class="center" style="margin: 6px 0 14px">
+      <span class="tag">prompt</span> → <span class="pill">model</span> → <span class="tag">logits</span> →
+      <span class="pill">softmax(T)</span> → <span class="pill">top-k</span> → <span class="pill">sample</span> →
+      <span class="tag">next token</span> ↺
+    </p>
+    <div class="cols">
+      <div class="card">
+        <h4>Softmax with temperature</h4>
+        <p>\( p_i = \dfrac{\exp(z_i / T)}{\sum_j \exp(z_j / T)} \)</p>
+      </div>
+      <div class="card">
+        <h4>Top-k</h4>
+        <p class="small">Keep only the \(k\) most likely tokens, renormalise, then sample. \(T \to 0\) or \(k = 1\) is greedy decoding.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:15 · 3 min] Walk the loop: the model outputs one score (logit) per vocabulary token;
+      softmax turns scores into probabilities; temperature divides the logits first (low T sharpens,
+      high T flattens); top-k cuts the long tail; we sample; the chosen token is appended and the
+      loop repeats. This is exactly what students will code with generate() in the lab.
+    </aside>
+  </section>
+
+  <!-- 12 · Simulator: next-token sampling -->
+  <section>
+    <p class="kicker">Simulator · next-token sampling</p>
+    <h2>Temperature &amp; top-k at Andes Bank</h2>
+    <div class="sim">
+      <div class="sim-controls">
+        <p class="small muted" style="margin:0">Prompt: <em>“Thank you for contacting Andes Bank. Your request has been …”</em></p>
+        <div class="control">
+          <label for="nt-temp">Temperature <output id="nt-temp-out">1.00</output></label>
+          <input type="range" id="nt-temp" min="0" max="2" step="0.05" value="1">
+        </div>
+        <div class="control">
+          <label for="nt-topk">Top-k <output id="nt-topk-out">8</output></label>
+          <input type="range" id="nt-topk" min="1" max="8" step="1" value="8">
+        </div>
+        <div>
+          <button class="btn btn-sm" id="nt-sample" type="button">🎲 Sample 10 tokens</button>
+          <button class="btn btn-sm btn-ghost" id="nt-reset" type="button">↺ Reset seed</button>
+        </div>
+        <div class="token-row" id="nt-samples" aria-live="polite"></div>
+      </div>
+      <div class="sim-output">
+        <div id="nt-chart"></div>
+        <p class="stat">Most likely: <strong id="nt-top">–</strong> · Entropy: <strong id="nt-entropy">–</strong> bits ·
+          Tokens in play: <strong id="nt-inplay">–</strong></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:18 · 6 min] Interaction. Toy vocabulary with fixed, illustrative logits (not a real model).
+      1) Temperature 0: one bar, always "received" (greedy). 2) Temperature 2: the distribution
+      flattens and even "banana" gets a chance; sample 10 tokens a few times. 3) Keep T = 2 but set
+      top-k = 3: only three words can appear. Ask in the chat: "Which settings would you ship in a
+      bank's customer-service assistant, and why?" Sampling uses a fixed seed (Reset seed) so the
+      sequence is reproducible, exactly like the seed in the lab.
+    </aside>
+  </section>
+
+  <!-- 13 · Quiz: decoding -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · decoding</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Andes Bank's assistant must answer regulatory questions with consistent wording. Best starting point?</p>
+      <button class="quiz-opt" data-key="a">Temperature 1.5 with no top-k, for richer language</button>
+      <button class="quiz-opt" data-key="b">A low temperature (around 0–0.3) or greedy decoding</button>
+      <button class="quiz-opt" data-key="c">A random temperature for each customer</button>
+      <button class="quiz-opt" data-key="d">Temperature does not matter for consistency</button>
+      <div class="quiz-explain">Low temperature concentrates probability on the most likely tokens, so answers are
+        consistent. But consistent is not the same as correct: factual accuracy needs grounding in the bank's
+        documents (RAG) and evaluation (Session 05).</div>
+    </div>
+    <aside class="notes">
+      [0:24 · 2 min] Poll, then click. Follow-up question: "And for brainstorming campaign
+      slogans?" (a higher temperature, because diversity is the goal). Today's challenge measures
+      exactly this trade-off with real numbers.
+    </aside>
+  </section>
+
+  <!-- 14 · Business lens 1 -->
+  <section>
+    <p class="kicker">Customer-facing risk</p>
+    <h2>Fluent is not the same as correct</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>NovaTel</strong> (a fictional telecom) lets a model draft replies to billing complaints.
+          The model optimises <em>plausibility</em>, not truth: it can invent a refund policy that sounds exactly right.</p>
+      </div>
+      <div>
+        <h4>What a manager should ask</h4>
+        <ul class="small">
+          <li>Which answers create commitments (refunds, prices, legal terms)? Keep a human in the loop for those.</li>
+          <li>Which settings for which task? Low temperature for policy answers, higher for ideas.</li>
+          <li>Did we sample several outputs per prompt before deciding? One good demo proves little.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:26 · 2 min] Business lens for Part 1. The key message: generation is sampling from a
+      learned distribution, so variability and confident errors are features of the method, not
+      bugs of one vendor. The third bullet is the method of today's challenge.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 2 · MODEL FAMILIES                                        -->
+  <!-- ===================================================================== -->
+
+  <!-- 15 · Part 2 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 2</p>
+    <h2>Model families</h2>
+    <p>Six architectures behind today's generative AI, and the idea that unites them: pretrain once, adapt many times.</p>
+    <aside class="notes">
+      [0:28] Part 2: model families and foundation models.
+    </aside>
+  </section>
+
+  <!-- 16 · Transformer families -->
+  <section>
+    <p class="kicker">Three Transformer families</p>
+    <h2>Same building block, different objectives</h2>
+    <table class="compact">
+      <thead>
+        <tr><th>Family</th><th>Pretraining objective</th><th>Context it sees</th><th>Typical use</th><th>Examples</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Autoregressive</strong><br><span class="small muted">decoder-only</span></td><td>Predict the next token</td><td>Left side only</td><td>Generation, chat, code</td><td>GPT-2, GPT-3, SmolLM2, Qwen2.5</td></tr>
+        <tr><td><strong>Autoencoding</strong><br><span class="small muted">encoder-only</span></td><td>Recover masked tokens (masked language modelling)</td><td>Both sides</td><td>Classification, extraction, embeddings</td><td>BERT, DistilBERT</td></tr>
+        <tr><td><strong>Seq2seq</strong><br><span class="small muted">encoder–decoder</span></td><td>Rebuild corrupted text; map an input text to an output text</td><td>Encoder: both sides · decoder: left</td><td>Translation, summarisation</td><td>T5, FLAN-T5, MarianMT</td></tr>
+      </tbody>
+      <caption>All three are built from the Transformer (Vaswani et al., 2017). BERT: Devlin et al. (2019) · GPT-2: Radford et al. (2019) · T5: Raffel et al. (2020).</caption>
+    </table>
+    <p class="small">In today's lab you will use an autoencoding classifier, BERT's masked-word predictor and an autoregressive chat model.</p>
+    <aside class="notes">
+      [0:28 · 3 min] The Transformer is the shared building block; what differs is which tokens
+      each position can attend to and what the model is trained to predict. Encoders see the whole
+      sentence and are great at understanding; decoders see only the past and are natural
+      generators; encoder-decoders read a whole input and write a new output.
+    </aside>
+  </section>
+
+  <!-- 17 · VAE, GAN, diffusion -->
+  <section>
+    <p class="kicker">Beyond text</p>
+    <h2>VAEs, GANs and diffusion models</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>VAE</h4>
+        <p class="small">An encoder compresses \(x\) into a latent code \(z\); a decoder rebuilds \(x\). Trained with reconstruction loss plus a KL term. Sample a new \(z\) → new data.</p>
+        <p class="small muted">Kingma &amp; Welling (2014) · you train one in S02</p>
+      </div>
+      <div class="card">
+        <h4>GAN</h4>
+        <p class="small">A generator forges samples; a discriminator tries to tell real from fake. They improve by competing. Sharp images, but training can be unstable.</p>
+        <p class="small muted">Goodfellow et al. (2014)</p>
+      </div>
+      <div class="card">
+        <h4>Diffusion</h4>
+        <p class="small">Learns to reverse a gradual noising process: generation starts from pure noise and removes it step by step. Used in many text-to-image systems.</p>
+        <p class="small muted">Ho, Jain &amp; Abbeel (2020)</p>
+      </div>
+    </div>
+    <div class="callout tip"><strong>Reference text:</strong> Goodfellow, Bengio &amp; Courville (2016), <em>Deep Learning</em>, ch. 20 covers deep generative models in depth.</div>
+    <aside class="notes">
+      [0:31 · 3 min] One sentence per family; no maths today. VAEs return in Session 02 (students
+      train one on Fashion-MNIST). Mention mode collapse as the classic GAN failure: the generator
+      learns to produce only a few kinds of samples.
+    </aside>
+  </section>
+
+  <!-- 18 · Flip cards -->
+  <section>
+    <p class="kicker">Self-check · name the family</p>
+    <h2>Which model family is this?</h2>
+    <div class="cols-3">
+      <div class="flip-card"><div class="front">Predicts the next token using only the text on its left.</div><div class="back"><strong>Autoregressive</strong> (GPT-style decoder)</div></div>
+      <div class="flip-card"><div class="front">Fills in [MASK] tokens using context on both sides.</div><div class="back"><strong>Autoencoding</strong> (BERT-style encoder)</div></div>
+      <div class="flip-card"><div class="front">Reads a whole input, then writes a new text such as a translation.</div><div class="back"><strong>Seq2seq</strong> (T5-style encoder–decoder)</div></div>
+      <div class="flip-card"><div class="front">Two networks: one forges samples, the other spots fakes.</div><div class="back"><strong>GAN</strong>: generator vs discriminator</div></div>
+      <div class="flip-card"><div class="front">Compresses data into a smooth latent space and decodes new samples from it.</div><div class="back"><strong>VAE</strong>: variational autoencoder</div></div>
+      <div class="flip-card"><div class="front">Starts from pure noise and removes it step by step.</div><div class="back"><strong>Diffusion</strong> model</div></div>
+    </div>
+    <aside class="notes">
+      [0:34 · 3 min] Read each front aloud; ask the room to answer in the chat before you flip
+      (click, or Tab + Enter). Go fast: about 30 seconds per card.
+    </aside>
+  </section>
+
+  <!-- 19 · Quiz: which family -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · model families</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Andes Bank wants to route 10,000 complaint emails a month into 12 categories. Most natural starting point?</p>
+      <button class="quiz-opt" data-key="a">A GAN trained on the emails</button>
+      <button class="quiz-opt" data-key="b">An encoder (BERT-style) with a classification head, fine-tuned on labelled emails</button>
+      <button class="quiz-opt" data-key="c">A diffusion model</button>
+      <button class="quiz-opt" data-key="d">Training a GPT-style model from scratch</button>
+      <div class="quiz-explain">Routing is classification, where encoders are strong and cheap to run. A decoder LLM can also
+        classify by prompting (zero-shot), which makes a good baseline; Session 08 compares both.</div>
+    </div>
+    <aside class="notes">
+      [0:37 · 2 min] Poll, then click. Emphasise that "generative AI" projects often end up using
+      a small encoder for the classification part: choose the family by the task, not by the hype.
+    </aside>
+  </section>
+
+  <!-- 20 · Foundation models -->
+  <section>
+    <p class="kicker">Foundation models</p>
+    <h2>Pretrain once, adapt many times</h2>
+    <div style="display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 14px; align-items: center">
+      <div class="card"><h4>Broad data</h4><p class="small">Web text, books, code; mostly unlabelled.</p></div>
+      <span class="big-number" style="font-size: 48px">→</span>
+      <div class="card"><h4>Pretraining</h4><p class="small">Self-supervised, at scale: next token or masked token.</p></div>
+      <span class="big-number" style="font-size: 48px">→</span>
+      <div class="card"><h4>Adaptation</h4><p class="small">Prompting, RAG, fine-tuning → many downstream tasks.</p></div>
+    </div>
+    <p style="margin-top: 18px">A <strong>foundation model</strong> is trained on broad data, usually with self-supervision at scale, and can be adapted to a wide range of tasks (Bommasani et al., 2021).</p>
+    <div class="cols">
+      <div class="callout"><strong>Emergence:</strong> capabilities appear that nobody trained for explicitly, such as following instructions given only in the prompt.</div>
+      <div class="callout warn"><strong>Homogenization:</strong> many applications share the same few models, so they also share their defects.</div>
+    </div>
+    <aside class="notes">
+      [0:39 · 3 min] The term comes from the Stanford report by Bommasani and colleagues (2021).
+      Self-supervision means the labels come from the data itself: hide a word and predict it.
+      That is why pretraining can use enormous unlabelled corpora. Emergence and homogenization are
+      the two concepts the report highlights; homogenization sets up the business lens.
+    </aside>
+  </section>
+
+  <!-- 21 · Scale -->
+  <section>
+    <p class="kicker">Size matters, differently</p>
+    <h2>The models you will actually run</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">≈1,300×</span>
+        <p class="caption muted">fewer parameters in SmolLM2-135M (today's lab) than in GPT-3, which has 175 billion
+          (Brown et al., 2020). Arithmetic: 175,000 M ÷ 135 M ≈ 1,296.</p>
+      </div>
+      <div>
+        <ul>
+          <li>Small open models run on a free Kaggle GPU, sometimes on a laptop CPU.</li>
+          <li>They are weaker, but cheap, fast, private and fully under your control.</li>
+          <li>Parameter count is not quality: it drives cost, latency and where the model can run.</li>
+        </ul>
+        <p class="small muted">SmolLM2: Allal et al. (2025).</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:42 · 1 min] Quick slide. We deliberately use small open models all semester so that
+      everything runs on free compute and students can fine-tune them. The trade-off (capability
+      vs cost and control) is the heart of Part 3.
+    </aside>
+  </section>
+
+  <!-- 22 · Business lens 2 -->
+  <section>
+    <p class="kicker">Vendor dependence</p>
+    <h2>Homogenization is a supplier risk</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>Andes Bank</strong> (fictional) builds its chatbot, its email summaries and its fraud-alert
+          explanations on the same foundation model from one provider.</p>
+        <p class="small">One provider update, or one deprecated model version, changes all three products at once.</p>
+      </div>
+      <div>
+        <h4>Questions to ask any model provider</h4>
+        <ul class="small">
+          <li>How are model versions pinned, updated and retired?</li>
+          <li>Is our data stored, used for training, or processed abroad?</li>
+          <li>Can we test a new version on our own cases before switching?</li>
+        </ul>
+        <p class="small muted">Your own evaluation set is your insurance (Sessions 05 and 11).</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:43 · 2 min] Business lens for Part 2. Shared foundation models concentrate risk: a
+      single change propagates everywhere. The practical defence is a small, representative
+      evaluation set that you run before any model change. That idea returns in S05 and S11.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 3 · OWN MODELS VS APIS                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 23 · Part 3 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 3</p>
+    <h2>Own models vs APIs</h2>
+    <p>Where on the adaptation spectrum should your use case sit?</p>
+    <aside class="notes">
+      [0:45] Part 3: the business core of the session and of the challenge's "Explica y decide" task.
+    </aside>
+  </section>
+
+  <!-- 24 · Adaptation spectrum -->
+  <section>
+    <p class="kicker">The adaptation spectrum</p>
+    <h2>Four ways to make a model yours</h2>
+    <div class="cols-3" style="grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+      <div class="card"><h4>1 · Prompting</h4><p class="small"><strong>Change:</strong> instructions and examples in the prompt.</p><p class="small muted">Needs: a good prompt and test cases. Hours to days.</p></div>
+      <div class="card"><h4>2 · RAG</h4><p class="small"><strong>Change:</strong> the context: retrieve your documents and add them to the prompt.</p><p class="small muted">Needs: clean, searchable documents. Days to weeks.</p></div>
+      <div class="card"><h4>3 · Fine-tuning</h4><p class="small"><strong>Change:</strong> the weights, starting from a pretrained model (full or LoRA).</p><p class="small muted">Needs: curated examples and a GPU. Weeks.</p></div>
+      <div class="card"><h4>4 · From scratch</h4><p class="small"><strong>Change:</strong> everything; the weights start random.</p><p class="small muted">Needs: very large data, compute and a specialised team. Months.</p></div>
+    </div>
+    <div style="height: 10px; margin: 20px 0 6px; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--block-theory), var(--brand))"></div>
+    <div class="small muted" style="display: flex; justify-content: space-between"><span>← faster · cheaper · less data</span><span>more control · specialisation · cost →</span></div>
+    <p class="small" style="margin-top: 12px">They combine: a fine-tuned model can also use RAG. RAG: Lewis et al. (2020) · LoRA: Hu et al. (2022).</p>
+    <aside class="notes">
+      [0:45 · 3 min] The time ranges are qualitative orders of magnitude, not benchmarks. Prompting
+      changes nothing in the model; RAG changes what the model reads; fine-tuning changes the
+      weights; training from scratch builds new weights. Only the last two produce a model that
+      is "yours" in the sense of the final project. Point out that most real systems combine steps.
+    </aside>
+  </section>
+
+  <!-- 25 · Buy vs build -->
+  <section>
+    <p class="kicker">Build vs buy</p>
+    <h2>Four lenses: cost, control, privacy, IP</h2>
+    <table class="compact">
+      <thead>
+        <tr><th></th><th>Buy: vendor API</th><th>Build: own or open-weights model</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Cost</strong></td><td>Pay per token; no infrastructure; the bill grows with volume</td><td>Upfront work, GPUs or servers, operations; low cost per extra request</td></tr>
+        <tr><td><strong>Control</strong></td><td>The vendor decides updates, limits and retirements</td><td>You pin versions, decide when to update and can change the weights</td></tr>
+        <tr><td><strong>Privacy</strong></td><td>Data leaves your perimeter; you rely on contract terms</td><td>Data can stay on your own infrastructure</td></tr>
+        <tr><td><strong>IP &amp; licences</strong></td><td>Read the provider's terms on data and outputs</td><td>Read the model licence: open weights ≠ unrestricted use; your fine-tuned weights are an asset</td></tr>
+      </tbody>
+    </table>
+    <p class="small">The options are not exclusive: you can call an API for one task and run your own model for another.</p>
+    <aside class="notes">
+      [0:48 · 2 min] Go row by row and ask for one example from their companies. Colombian
+      context: personal data processing is regulated (Ley 1581 de 2012), which weighs heavily on
+      the privacy row. Licences: some open-weights models restrict commercial use or require
+      attribution; always read the model card.
+    </aside>
+  </section>
+
+  <!-- 26 · Simulator: build vs buy -->
+  <section>
+    <p class="kicker">Simulator · build vs buy</p>
+    <h2>Where should this use case sit?</h2>
+    <div class="sim">
+      <div class="sim-controls">
+        <div class="control">
+          <label for="bb-sens">Data sensitivity <output id="bb-sens-out">–</output></label>
+          <input type="range" id="bb-sens" min="1" max="5" step="1" value="2">
+        </div>
+        <div class="control">
+          <label for="bb-vol">Requests / month <output id="bb-vol-out">–</output></label>
+          <input type="range" id="bb-vol" min="3" max="7" step="0.5" value="4">
+        </div>
+        <div class="control">
+          <label for="bb-cust">Customization need <output id="bb-cust-out">–</output></label>
+          <input type="range" id="bb-cust" min="1" max="5" step="1" value="2">
+        </div>
+        <div class="control">
+          <label for="bb-know">Internal knowledge <output id="bb-know-out">–</output></label>
+          <input type="range" id="bb-know" min="1" max="5" step="1" value="2">
+        </div>
+        <p class="small muted" style="margin:0">A teaching heuristic to structure the discussion, not a decision rule.</p>
+      </div>
+      <div class="sim-output">
+        <div id="bb-chart"></div>
+        <p class="stat" style="margin-bottom: 6px">Recommended position: <strong id="bb-rec">–</strong></p>
+        <p class="small" id="bb-why" style="margin-bottom: 6px"></p>
+        <p class="small" id="bb-host" style="margin-bottom: 6px"></p>
+        <p class="small" id="bb-risk"></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:50 · 5 min] Interaction. Start with the default (a generic, low-volume task): prompting
+      wins. Then: raise "internal knowledge" to 5 → RAG. Lower it and raise "customization" to 4 →
+      fine-tuning. Raise "data sensitivity" to 4 → the hosting line switches to a self-hosted open
+      model. Finally push customization, volume and sensitivity to the maximum → "from scratch"
+      appears, with its warning. Ask: "Which slider mattered most for your own use case?"
+      The scores are a transparent heuristic written for class (see the source), not an industry formula.
+    </aside>
+  </section>
+
+  <!-- 27 · Breakout -->
+  <section>
+    <p class="kicker">Apply it</p>
+    <h2>Place five scenarios on the spectrum</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr)">
+      <div class="prompt-card" data-kind="breakout">
+        <h4>Classify each scenario · 6 min</h4>
+        <ol class="small" style="margin-bottom: 8px">
+          <li><strong>NovaTel:</strong> draft polite replies to about 200 routine customer emails a day.</li>
+          <li><strong>Andes Bank:</strong> agents need answers from 2,000 pages of product manuals that change monthly.</li>
+          <li><strong>Clínica Serena:</strong> extract fields from clinical notes full of in-house abbreviations; data cannot leave the clinic.</li>
+          <li><strong>Café Alto Montaña:</strong> 20 social-media captions a week; no sensitive data; no tech team.</li>
+          <li><strong>GeoSens:</strong> generate realistic readings for a new sensor no public model has seen; millions of unlabelled recordings.</li>
+        </ol>
+        <p class="small muted" style="margin: 0">For each: prompting, RAG, fine-tuning or from scratch, plus one reason. All companies are fictional.</p>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="6" data-label="Breakout rooms"></div>
+        <p class="small">Rooms of 3–4. One person per room reports one scenario in 30 seconds.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:55 · 6 min + 2 min debrief] Open breakout rooms (3–4 people, mix profiles), then press
+      Start. Suggested answers for the debrief (discuss, do not just announce):
+      1 NovaTel → prompting (generic task, low volume, a human can review).
+      2 Andes Bank → RAG (knowledge lives in changing documents; fine-tuning would go stale).
+      3 Clínica Serena → fine-tune a small open model on the clinic's own servers (special jargon + sensitive data).
+      4 Café Alto Montaña → prompting with an off-the-shelf assistant (cheap, no data risk).
+      5 GeoSens → training from scratch is defensible: new data modality, no pretrained model, lots of data;
+      even so, start with a small model.
+      Reasonable disagreement is welcome if the reason is sound.
+    </aside>
+  </section>
+
+  <!-- 28 · Business lens 3 -->
+  <section>
+    <p class="kicker">Total cost of ownership</p>
+    <h2>The token bill is only one line</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">50 M</span>
+        <p class="caption muted">tokens per month for 50,000 conversations of about 1,000 tokens each (illustrative
+          arithmetic). Multiply by your provider's current price per million tokens, then add the rest.</p>
+      </div>
+      <div class="callout business">
+        <p>Beyond tokens, budget for:</p>
+        <ul class="small">
+          <li>Data preparation and labelling</li>
+          <li>Evaluation before launch and after every change</li>
+          <li>Monitoring, incidents and human review</li>
+          <li>People, training and change management</li>
+          <li>Switching costs if the provider changes terms</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:03 · 1 min] Business lens for Part 3. Prices change often and differ by model, so we never
+      quote them in class: students look up a current price and cite the date. In the challenge they
+      estimate monthly tokens for their own scenario from their measured output lengths.
+    </aside>
+  </section>
+
+  <!-- 29 · Quiz: privacy -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · build vs buy</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Andes Bank's policy forbids sending customer data to third parties. It needs call summaries in its own style. Best first option?</p>
+      <button class="quiz-opt" data-key="a">A public chat assistant with a very detailed prompt</button>
+      <button class="quiz-opt" data-key="b">Fine-tune a small open-weights model and run it on the bank's own infrastructure</button>
+      <button class="quiz-opt" data-key="c">Train a very large model from scratch</button>
+      <button class="quiz-opt" data-key="d">RAG over public web pages</button>
+      <div class="quiz-explain">The policy rules out sending data outside; the "own style" requirement suggests adapting
+        the weights. A small open model fine-tuned in-house meets both at a fraction of the cost of training from scratch.
+        A private deployment with contractual guarantees could also be discussed with legal.</div>
+    </div>
+    <aside class="notes">
+      [1:04 · 1 min] Quick poll; if time is short, just click and read the explanation. This is the
+      reasoning pattern expected in the challenge's task 3.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 4 · TOOLS, SECTORS AND ROADMAP                            -->
+  <!-- ===================================================================== -->
+
+  <!-- 30 · Part 4 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 4</p>
+    <h2>Tools, sectors and the road ahead</h2>
+    <p>The toolbox for the lab, where generative AI is being applied, and how this course works.</p>
+    <aside class="notes">
+      [1:05] Part 4 is fast: the lab shows the tools in action. If you are running late, skip the
+      compute slide (the lab header repeats it).
+    </aside>
+  </section>
+
+  <!-- 31 · Frameworks -->
+  <section>
+    <p class="kicker">Tools &amp; frameworks</p>
+    <h2>The open-source toolbox</h2>
+    <div class="cols-3">
+      <div class="card"><h4>PyTorch</h4><p class="small">Tensors, automatic differentiation and GPU support; the main backend of Hugging Face <code>transformers</code>.</p></div>
+      <div class="card"><h4>TensorFlow · Keras 3</h4><p class="small">Keras 3 is multi-backend: the same model code runs on JAX, TensorFlow or PyTorch.</p></div>
+      <div class="card"><h4>JAX</h4><p class="small">NumPy-style arrays with composable transformations: <code>grad</code>, <code>jit</code>, <code>vmap</code>.</p></div>
+      <div class="card"><h4>Hugging Face Hub</h4><p class="small">Models, datasets and demo apps (Spaces), each with a card and a licence.</p></div>
+      <div class="card"><h4>transformers · datasets</h4><p class="small">Load pretrained models, tokenizers and datasets in a few lines.</p></div>
+      <div class="card"><h4>PEFT</h4><p class="small">Parameter-efficient fine-tuning such as LoRA: train a small fraction of the weights (S04).</p></div>
+    </div>
+    <aside class="notes">
+      [1:05 · 1.5 min] Name each tool and where it appears in the course. Lab today: PyTorch
+      (part 1), Keras 3 (part 2), transformers (parts 3–4). PEFT and LoRA come in Session 04.
+    </aside>
+  </section>
+
+  <!-- 32 · Code preview -->
+  <section>
+    <p class="kicker">Lab preview</p>
+    <h2>Two pretrained models in a few lines</h2>
+    <pre><code class="language-python" data-trim data-noescape data-line-numbers="3-5|7-14">
+from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
+
+clf = pipeline("sentiment-analysis",
+               model="distilbert/distilbert-base-uncased-finetuned-sst-2-english")
+print(clf("The new app is fast and easy to use"))   # [{'label': 'POSITIVE', ...}]
+
+name = "HuggingFaceTB/SmolLM2-135M-Instruct"
+tok = AutoTokenizer.from_pretrained(name)
+model = AutoModelForCausalLM.from_pretrained(name)
+messages = [{"role": "user", "content": "Write a slogan for a coffee shop."}]
+inputs = tok.apply_chat_template(messages, add_generation_prompt=True,
+                                 return_tensors="pt", return_dict=True)
+out = model.generate(**inputs, max_new_tokens=40, do_sample=True, temperature=0.7)
+print(tok.decode(out[0, inputs["input_ids"].shape[1]:], skip_special_tokens=True))
+    </code></pre>
+    <aside class="notes">
+      [1:06 · 1 min] Press the right arrow to step through the highlighted lines. First block: a
+      ready-made classifier. Second block: a chat model with its chat template and a sampling
+      temperature. The lab explains every line.
+    </aside>
+  </section>
+
+  <!-- 33 · Compute -->
+  <section>
+    <p class="kicker">Compute</p>
+    <h2>Where the code runs: Kaggle and Colab</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Kaggle Notebooks (default)</h4>
+        <ul class="small">
+          <li>Free GPU (T4 x2 or P100) with a weekly quota, about 30 h; Kaggle may change it.</li>
+          <li>GPU and Internet require a verified phone number.</li>
+          <li>“Open in Kaggle” creates a private copy in your account.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Google Colab (fallback)</h4>
+        <ul class="small">
+          <li>Same notebooks, one click from each session guide.</li>
+          <li>Free GPU availability varies.</li>
+          <li>Use it if Kaggle is down or your quota runs out.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout tip"><strong>Today:</strong> the lab and the challenge run on CPU. Keep Internet on; save your GPU quota for later sessions.</div>
+    <aside class="notes">
+      [1:07 · 0.5 min] If anyone has not verified their phone yet, they should do it now during the
+      break: the guide is docs/configuracion-kaggle.md in the course repository.
+    </aside>
+  </section>
+
+  <!-- 34 · Sectors -->
+  <section>
+    <p class="kicker">Applications</p>
+    <h2>Generative AI across sectors</h2>
+    <div class="cols-3">
+      <div class="card"><h4>🏦 Banking &amp; insurance</h4><p class="small">Summarise complaint calls, draft customer letters, explain products in plain language.</p></div>
+      <div class="card"><h4>🛒 Retail</h4><p class="small">Product descriptions, campaign variants, analysis of customer reviews.</p></div>
+      <div class="card"><h4>🏥 Health</h4><p class="small">Draft clinical documentation and patient-friendly summaries, always reviewed by professionals.</p></div>
+      <div class="card"><h4>🏛️ Public sector</h4><p class="small">Answer citizen questions about procedures; route and summarise requests.</p></div>
+      <div class="card"><h4>📡 Telecom</h4><p class="small">Support assistants, call summaries, agent coaching.</p></div>
+      <div class="card"><h4>💻 Software &amp; IT</h4><p class="small">Code assistants, test generation, documentation.</p></div>
+    </div>
+    <aside class="notes">
+      [1:07 · 1 min] Ask: "Which card is closest to your organisation?" Keep the answers for the
+      next slide's chat prompt. In health and public services, stress human review.
+    </aside>
+  </section>
+
+  <!-- 35 · Business lens 4 -->
+  <section>
+    <p class="kicker">Value at stake</p>
+    <h2>Where the value is expected</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number" style="font-size: 64px; white-space: nowrap">USD 2.6–4.4 T</span>
+        <p class="caption muted">estimated annual value across 63 use cases analysed by McKinsey (2023); about 75% of it falls in
+          four areas: customer operations, marketing and sales, software engineering, and R&amp;D.</p>
+      </div>
+      <div>
+        <div class="callout business">
+          <p>These are <strong>scenario estimates</strong>, not measured results. Use them to decide where to look first,
+            then build your own business case with a baseline you can measure.</p>
+        </div>
+        <div class="prompt-card" data-kind="chat">
+          <h4>Your process</h4>
+          <p class="small">One process in your organisation that generative AI could improve, and how you would measure it.</p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:08 · 1 min] Business lens for Part 4. Source: McKinsey Global Institute and McKinsey
+      Digital, "The economic potential of generative AI: The next productivity frontier" (June 2023).
+      The chat answers are raw material for final-project ideas; save the chat.
+    </aside>
+  </section>
+
+  <!-- 36 · Roadmap -->
+  <section>
+    <p class="kicker">Course roadmap</p>
+    <h2>Twelve sessions, three stages</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>Foundations</h4>
+        <ol class="small" start="1">
+          <li>Intro to generative &amp; pretrained models</li>
+          <li>Training generative models</li>
+          <li>Transfer learning</li>
+          <li>Fine-tuning</li>
+          <li>Evaluating generative models</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h4>Applications</h4>
+        <ol class="small" start="6">
+          <li>Basic AI applications</li>
+          <li>Chatbots and agents</li>
+          <li>Generative classifiers</li>
+          <li>Real-world use cases</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h4>Responsible &amp; continuous</h4>
+        <ol class="small" start="10">
+          <li>Ethics and sustainability</li>
+          <li>Continuous improvement</li>
+          <li>Integrative project: demos</li>
+        </ol>
+      </div>
+    </div>
+    <div class="callout tip"><strong>Every session:</strong> theory with simulators → guided lab on Kaggle → graded challenge.
+      The final project runs in parallel, with milestones at S03, before S06, S09 and S11.</div>
+    <aside class="notes">
+      [1:08 · 0.5 min] The first stage gives the technical base, the second builds applications
+      (Gradio apps, Startti agents), the third makes them responsible and improvable. Session 12
+      is the final-project showcase.
+    </aside>
+  </section>
+
+  <!-- 37 · Final project preview -->
+  <section>
+    <p class="kicker">Final project · 30%</p>
+    <h2>Your own model, from idea to demo</h2>
+    <div class="cols">
+      <div>
+        <p class="small"><strong>Groups of 3</strong> (mix business and technical profiles). The model must be fine-tuned or trained by the group, then:</p>
+        <ul class="small">
+          <li>compared against a simple baseline with at least 2 justified metrics;</li>
+          <li>analysed for errors and improved in at least one documented iteration;</li>
+          <li>reviewed for ethics and sustainability, with a model card;</li>
+          <li>shown in a working demo (Gradio app or Startti agent).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Milestones</h4>
+        <table class="compact" style="margin: 0">
+          <tbody>
+            <tr><td><strong>H1</strong> · S03</td><td>Groups formed</td></tr>
+            <tr><td><strong>H2</strong> · before S06</td><td>One-page canvas</td></tr>
+            <tr><td><strong>H3</strong> · S09</td><td>Use-case canvas and baseline</td></tr>
+            <tr><td><strong>H4</strong> · S11</td><td>Improvement iteration</td></tr>
+            <tr><td><strong>Final</strong> · S12</td><td>Deliverables, pitch and demo</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:09 · 0.5 min] Full brief in proyecto-final/README.md. Prompting an API alone does not
+      count as an own model, but an API can be the baseline. Start looking for group mates now;
+      groups are registered at Session 03.
+    </aside>
+  </section>
+
+  <!-- 38 · Assessment (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Evaluación del curso</p>
+    <h2>¿Cómo se calcula tu nota?</h2>
+    <div class="cols">
+      <div>
+        <div class="card" style="margin-bottom: 14px">
+          <h4>70% · Challenges de sesión</h4>
+          <p class="small">11 challenges individuales (S01–S11); cuentan tus <strong>mejores 10</strong>, 7% cada uno.
+            Rúbrica: ejecución técnica 40% · análisis e interpretación 40% · reflexión y registro de IA 20%.</p>
+        </div>
+        <div class="card">
+          <h4>30% · Proyecto final</h4>
+          <p class="small">Entregable técnico 15% · socialización y demo 10% · defensa individual 5%,
+            multiplicado por el factor de coevaluación (0.7–1.0).</p>
+        </div>
+      </div>
+      <div>
+        <div class="callout">
+          <h4>Política de uso de IA</h4>
+          <ul class="small">
+            <li><strong>Puedes usar IA</strong> y debes declararla en el registro: sin registro, ese 20% vale 0.0.</li>
+            <li>Eres responsable de todo lo que entregas.</li>
+            <li><strong>Micro-sustentaciones</strong> al azar: si no puedes explicar tu entrega, la nota máxima es 3.0.</li>
+          </ul>
+        </div>
+        <p class="small">Escala 0.0–5.0 · se aprueba con 3.0 · entrega del challenge el mismo día, 23:59.</p>
+        <p class="small"><a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/evaluacion.md" target="_blank" rel="noopener">Evaluación</a> ·
+          <a href="https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/docs/politica-uso-ia.md" target="_blank" rel="noopener">Política de uso de IA</a></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:09 · 1 min] This slide is in Spanish because it is assessment content. Key points: no
+      exams; one challenge per session, best 10 of 11 count; the AI log is mandatory; random
+      micro-vivas of 2–3 minutes without AI help, and failing one caps that challenge at 3.0.
+      Everyone gets at least two micro-vivas in the semester.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- BREAK                                                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 39 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Stretch, refill your coffee, and check that your Kaggle phone number is verified.</p>
+    <div class="timer" data-minutes="10" data-label="Break"></div>
+    <aside class="notes">
+      [1:10 · 10 min] Press Start before you mute. Stay on the call for students who need help with
+      Kaggle phone verification.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- LAB                                                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 40 · Lab divider -->
+  <section class="section-slide" data-block="lab">
+    <p class="kicker">Hands-on</p>
+    <h2>Guided lab</h2>
+    <p>From a line fitted by hand to a chat model: PyTorch, Keras and Hugging Face on Kaggle.</p>
+    <span class="block-tag" data-block="lab">Lab · 60'</span>
+    <aside class="notes">
+      [1:20] Lab block. Share your screen with the notebook and code along; students run each
+      cell after you.
+    </aside>
+  </section>
+
+  <!-- 41 · Lab bridge -->
+  <section>
+    <p class="kicker">Lab bridge</p>
+    <h2>What we will build</h2>
+    <div class="cols">
+      <table class="compact">
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Kaggle tour · PyTorch tensors and autograd: fit \(y = 3x + 2\) by gradient descent</td><td class="num">15'</td></tr>
+          <tr><td><strong>2</strong></td><td>The same model in Keras 3, in three lines</td><td class="num">10'</td></tr>
+          <tr><td><strong>3</strong></td><td>Hugging Face: sentiment, fill-mask and a SmolLM2 chat</td><td class="num">20'</td></tr>
+          <tr><td><strong>4</strong></td><td>Tokens (English vs Spanish) and generation parameters</td><td class="num">15'</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h4>Open the notebook</h4>
+        <p class="small">Kaggle checklist: Internet on · Accelerator none (CPU is enough today).</p>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/lab.ipynb" target="_blank" rel="noopener">Open in Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/lab.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <div class="callout tip"><strong>How to follow:</strong> run each cell right after the instructor (Shift + Enter).
+      ✋ Checkpoints are answered in the Zoom chat; 🧪 “Try it” exercises are stretch goals with a hidden solution.</div>
+    <aside class="notes">
+      [1:20 · 3 min] Everyone opens the notebook now. Common blockers: not signed in to Kaggle,
+      Internet switched off (model downloads fail), phone not verified. Timing: Part 1 until 1:38,
+      Part 2 until 1:48, Part 3 until 2:08, Part 4 until 2:20.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CHALLENGE                                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 42 · Challenge divider -->
+  <section class="section-slide" data-block="challenge">
+    <h2>Session challenge</h2>
+    <p>Individual, graded, 40 minutes in class. Submit by 23:59 today.</p>
+    <aside class="notes">
+      [2:20] Challenge block. The next slide is the only slide in Spanish.
+    </aside>
+  </section>
+
+  <!-- 43 · Challenge briefing (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Challenge de la sesión · evaluado</p>
+    <h2>Challenge S01: temperatura, diversidad y decisión</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr)">
+      <div>
+        <ol class="small">
+          <li><strong>Ejecución:</strong> genera 5 muestras por prompt × temperatura con SmolLM2 y mide distinct-1, distinct-2 y longitud.</li>
+          <li><strong>Análisis:</strong> ¿cómo cambiaron la diversidad y la calidad con <em>tus</em> números? Elige la mejor temperatura por prompt.</li>
+          <li><strong>Explica y decide:</strong> ubica tu escenario de negocio en el espectro de adaptación.</li>
+          <li><strong>Crítica a la IA:</strong> encuentra, explica y corrige 3 errores sobre BERT y GPT.</li>
+        </ol>
+        <ul class="small">
+          <li><strong>Rúbrica:</strong> ejecución 40% · análisis 40% · reflexión y registro de IA 20%.</li>
+          <li><strong>IA permitida</strong> con registro; <strong>micro-sustentaciones</strong>: si no explicas tu entrega, máximo 3.0.</li>
+          <li><strong>Entrega:</strong> Archivo → Descargar notebook → e-Aulas como <code>S01_&lt;codigo&gt;.ipynb</code>, 23:59.</li>
+        </ul>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="40" data-label="Challenge"></div>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/challenge.ipynb" target="_blank" rel="noopener">Abrir en Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/01-intro-generative-models/challenge.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:20 · 38 min] This briefing slide is in Spanish by course convention. Read the rules aloud,
+      remind students to type their STUDENT_ID in the first cell (their personal configuration
+      depends on it), then start the 40' timer. During the block, run 3–4 random micro-vivas
+      (2–3 minutes each, screen shared, no AI help).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WRAP-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 44 · Wrap-up -->
+  <section>
+    <p class="kicker">Wrap-up</p>
+    <h2>Key takeaways</h2>
+    <div class="cols">
+      <ul>
+        <li>Generative models learn \(p(x)\) and sample from it; language models do it one token at a time.</li>
+        <li>Temperature and top-k trade consistency for diversity; neither guarantees truth.</li>
+        <li>Pick the model family by the task: encoders understand, decoders generate.</li>
+        <li>Prompting → RAG → fine-tuning → from scratch: more control, more cost.</li>
+      </ul>
+      <div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">For your own use case: where on the adaptation spectrum would you start, and what would make you move one step to the right?</p>
+        </div>
+        <p class="small"><strong>Next session:</strong> Training generative models (loss functions, training loops, a VAE).
+          <span class="muted">Pre-work: finish the challenge by 23:59 and read the session 02 guide.</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:58 · 2 min] Collect exit answers in the chat while students finish the challenge. Remind
+      them of the 23:59 deadline and the file name S01_codigo.ipynb.
+    </aside>
+  </section>
+
+  <!-- 45 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Sources for this session</h2>
+    <div class="cols" style="font-size: 18px; line-height: 1.35">
+      <ul>
+        <li>Vaswani, A., et al. (2017). Attention is all you need. <em>NeurIPS</em>. arXiv:1706.03762.</li>
+        <li>Devlin, J., Chang, M.-W., Lee, K., &amp; Toutanova, K. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. <em>NAACL</em>.</li>
+        <li>Radford, A., et al. (2019). Language models are unsupervised multitask learners. OpenAI.</li>
+        <li>Raffel, C., et al. (2020). Exploring the limits of transfer learning with a unified text-to-text transformer. <em>JMLR</em>.</li>
+        <li>Kingma, D. P., &amp; Welling, M. (2014). Auto-encoding variational Bayes. <em>ICLR</em>. arXiv:1312.6114.</li>
+        <li>Goodfellow, I., et al. (2014). Generative adversarial nets. <em>NeurIPS</em>.</li>
+        <li>Ho, J., Jain, A., &amp; Abbeel, P. (2020). Denoising diffusion probabilistic models. <em>NeurIPS</em>.</li>
+        <li>Rombach, R., et al. (2022). High-resolution image synthesis with latent diffusion models. <em>CVPR</em>.</li>
+        <li>Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). <em>Deep learning</em>. MIT Press.</li>
+      </ul>
+      <ul>
+        <li>Bommasani, R., et al. (2021). On the opportunities and risks of foundation models. arXiv:2108.07258.</li>
+        <li>Brown, T. B., et al. (2020). Language models are few-shot learners. <em>NeurIPS</em>.</li>
+        <li>Chen, M., et al. (2021). Evaluating large language models trained on code. arXiv:2107.03374.</li>
+        <li>Lewis, P., et al. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. <em>NeurIPS</em>.</li>
+        <li>Hu, E. J., et al. (2022). LoRA: Low-rank adaptation of large language models. <em>ICLR</em>.</li>
+        <li>Allal, L. B., et al. (2025). SmolLM2: When smol goes big. arXiv:2502.02737.</li>
+        <li>Bender, E. M., Gebru, T., McMillan-Major, A., &amp; Shmitchell, S. (2021). On the dangers of stochastic parrots. <em>FAccT</em>.</li>
+        <li>McKinsey &amp; Company (2023). The economic potential of generative AI: The next productivity frontier.</li>
+        <li>Hugging Face. LLM Course (Spanish edition): <a href="https://huggingface.co/learn/llm-course/es/chapter1/1" target="_blank" rel="noopener">huggingface.co/learn/llm-course/es</a></li>
+      </ul>
+    </div>
+    <aside class="notes">
+      Primary sources for every claim in the deck. Bender et al. (2021) is a recommended critical
+      reading on the risks of large language models; we return to it in Session 10.
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "01" });
+  Course.onReady(() => {
+    const pct = (v) => (v * 100).toFixed(1) + "%";
+
+    // --- Simulator 1: next-token sampling (temperature + top-k) -------------------------
+    // Toy vocabulary with fixed, illustrative logits (not taken from a real model).
+    const VOCAB = ["received", "approved", "processed", "forwarded", "escalated", "delayed", "rejected", "banana"];
+    const LOGITS = [3.0, 2.3, 2.1, 1.5, 1.0, 0.5, 0.2, -2.5];
+    const SEED = 42;
+    const ntTemp = document.getElementById("nt-temp");
+    const ntTopk = document.getElementById("nt-topk");
+    const ntChart = document.getElementById("nt-chart");
+    const ntSamples = document.getElementById("nt-samples");
+    const entropyBits = (ps) => -ps.reduce((h, p) => (p > 0 ? h + p * Math.log2(p) : h), 0);
+    let rng = Course.seededRandom(SEED);
+    let T = Number(ntTemp.value);
+    let K = Number(ntTopk.value);
+    let probs = [];
+
+    function updateNextToken() {
+      probs = Course.topK(Course.softmax(LOGITS, T), K);
+      const best = probs.indexOf(Math.max(...probs));
+      Course.barChart(ntChart, VOCAB, probs, { max: 1, format: pct, highlight: best, title: "Next-token probabilities" });
+      document.getElementById("nt-top").textContent = VOCAB[best];
+      document.getElementById("nt-entropy").textContent = entropyBits(probs).toFixed(2);
+      document.getElementById("nt-inplay").textContent = String(probs.filter((p) => p > 0).length);
+    }
+
+    Course.bindRange(ntTemp, document.getElementById("nt-temp-out"),
+      (v) => (v === 0 ? "0 · greedy" : v.toFixed(2)), (v) => { T = v; updateNextToken(); });
+    Course.bindRange(ntTopk, document.getElementById("nt-topk-out"), String, (v) => { K = v; updateNextToken(); });
+
+    document.getElementById("nt-sample").addEventListener("click", () => {
+      ntSamples.textContent = "";
+      for (let i = 0; i < 10; i++) {
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = VOCAB[Course.sample(probs, rng)];
+        ntSamples.appendChild(tag);
+      }
+    });
+    document.getElementById("nt-reset").addEventListener("click", () => {
+      rng = Course.seededRandom(SEED);
+      ntSamples.textContent = "";
+    });
+
+    // --- Simulator 2: build vs buy (adaptation spectrum) --------------------------------
+    // Transparent teaching heuristic: every input is normalised to 0..1 and each option gets
+    // a 0..10 "fit" score. It structures the discussion; it is not an industry formula.
+    const OPTIONS = ["Prompting", "RAG", "Fine-tuning", "From scratch"];
+    const SENS = ["", "public", "internal", "confidential", "personal", "regulated"];
+    const CUST = ["", "generic", "light", "moderate", "high", "unique"];
+    const KNOW = ["", "none", "a few FAQs", "some docs", "many docs", "changing docs"];
+    const WHY = [
+      "The task is generic and needs little internal knowledge: good instructions and a few examples are enough.",
+      "Answers depend on internal documents: retrieve them at question time instead of baking them into the weights.",
+      "The task needs a specific format, tone or jargon: adapt the weights of a pretrained model with curated examples.",
+      "Only at the extreme corner: maximum customization, very high volume and strict control of data and IP."
+    ];
+    const RISK = [
+      "Outputs vary between runs and can sound right while being wrong: build a small test set before launch.",
+      "Answers are only as good as the documents: stale or contradictory sources become confident wrong answers.",
+      "Needs curated examples and retraining when the task changes; always compare against a prompting baseline.",
+      "Months of work, a large compute budget and a specialised team; test fine-tuning an open model first."
+    ];
+    const clamp10 = (x) => Math.max(0, Math.min(10, x));
+    const bbIds = ["bb-sens", "bb-vol", "bb-cust", "bb-know"];
+    const bbIn = Object.fromEntries(bbIds.map((id) => [id, document.getElementById(id)]));
+
+    function fmtVolume(v) {
+      const n = Math.pow(10, v);
+      const rounded = Number.isInteger(v) ? n : Number(n.toPrecision(2));
+      return (Number.isInteger(v) ? "" : "≈") + rounded.toLocaleString("en-US");
+    }
+
+    function updateBuildVsBuy() {
+      const sens = Number(bbIn["bb-sens"].value);
+      const vol = Number(bbIn["bb-vol"].value);
+      const cust = Number(bbIn["bb-cust"].value);
+      const know = Number(bbIn["bb-know"].value);
+      const s = (sens - 1) / 4, v = (vol - 3) / 4, c = (cust - 1) / 4, k = (know - 1) / 4;
+      const scores = [
+        clamp10(10 - 7 * c - 3 * k),                           // prompting
+        clamp10(2 + 7 * k - 2 * c),                            // RAG
+        clamp10(Math.min(9, 1 + 7.5 * c + 1.5 * v - 1.5 * k)), // fine-tuning
+        clamp10(-9 + 9 * c + 7 * v + 3 * s)                    // from scratch
+      ];
+      const best = scores.indexOf(Math.max(...scores));
+      Course.barChart(document.getElementById("bb-chart"), OPTIONS, scores,
+        { max: 10, format: (x) => x.toFixed(1), highlight: best, title: "Fit score (teaching heuristic, 0–10)" });
+      document.getElementById("bb-rec").textContent = OPTIONS[best];
+      let why = WHY[best];
+      if (best === 2 && scores[1] >= scores[2] - 1) why += " Knowledge also matters here: combine fine-tuning with RAG.";
+      document.getElementById("bb-why").innerHTML = "<strong>Why:</strong> " + why;
+      let host;
+      if (sens >= 4) {
+        host = "self-hosted open-weights model, or a private deployment with contractual guarantees: data should not leave your perimeter.";
+      } else if (vol >= 6) {
+        host = "start with an API; at this volume, compare the monthly bill with hosting a small open model.";
+      } else {
+        host = "a vendor API is the fastest start; review the provider's data-use terms.";
+      }
+      document.getElementById("bb-host").innerHTML = "<strong>Hosting:</strong> " + host;
+      document.getElementById("bb-risk").innerHTML = "<strong>Watch out:</strong> " + RISK[best];
+    }
+
+    Course.bindRange(bbIn["bb-sens"], document.getElementById("bb-sens-out"), (x) => `${x} · ${SENS[x]}`, updateBuildVsBuy);
+    Course.bindRange(bbIn["bb-vol"], document.getElementById("bb-vol-out"), fmtVolume, updateBuildVsBuy);
+    Course.bindRange(bbIn["bb-cust"], document.getElementById("bb-cust-out"), (x) => `${x} · ${CUST[x]}`, updateBuildVsBuy);
+    Course.bindRange(bbIn["bb-know"], document.getElementById("bb-know-out"), (x) => `${x} · ${KNOW[x]}`, updateBuildVsBuy);
+  });
+</script>
+</body>
+</html>
