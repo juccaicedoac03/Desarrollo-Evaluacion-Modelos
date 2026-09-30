@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S03 · Pretrained Models and Transfer Learning</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ===================================================================== -->
+  <!-- OPENING                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="03">
+    <div class="title-main">
+      <h1>Pretrained Models and Transfer Learning</h1>
+      <p class="subtitle">Modelos preentrenados y transferencia de aprendizaje</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome back. Today we stop training from scratch and start reusing models
+      that someone else pretrained at scale. Two announcements for later: the lab compares four
+      ways of reusing a model on the same data, and today we form the final-project groups (H1).
+      Keys: S speaker view, F fullscreen, Esc overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Warm-up: three questions on training generative models (S02) <span class="time">10'</span></li>
+      <li data-block="theory">Theory: why pretraining works, Transformers, tokens, transfer strategies <span class="time">60'</span></li>
+      <li data-block="break">Break <span class="time">10'</span></li>
+      <li data-block="lab">Guided lab: tokenizers, BERT, embeddings + logistic regression, zero/few-shot LLM <span class="time">60'</span></li>
+      <li data-block="challenge">Session challenge (graded, individual) + project groups (H1) <span class="time">40'</span></li>
+    </ol>
+    <aside class="notes">
+      [0:01 · 1 min] Same five-block structure as always. Flag that the final-project groups of 3
+      must be registered today (milestone H1, deadline 23:59): they can start talking in the
+      breakout rooms.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WARM-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 3 · Warm-up divider -->
+  <section class="section-slide" data-block="warmup">
+    <h2>Warm-up</h2>
+    <p>Three questions to reactivate Session 02: the training loop, overfitting and VAEs.</p>
+    <span class="block-tag" data-block="warmup">Warm-up · 10'</span>
+    <aside class="notes">
+      [0:02] Warm-up block. Three retrieval questions on last session. Launch each as a Zoom
+      poll, then click the majority answer.
+    </aside>
+  </section>
+
+  <!-- 4 · Warm-up Q1 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q1</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Which order is correct for one training step in PyTorch?</p>
+      <button class="quiz-opt" data-key="a"><code>loss.backward()</code> → forward pass → <code>optimizer.step()</code> → <code>zero_grad()</code></button>
+      <button class="quiz-opt" data-key="b"><code>optimizer.zero_grad()</code> → forward pass → loss → <code>loss.backward()</code> → <code>optimizer.step()</code></button>
+      <button class="quiz-opt" data-key="c">forward pass → <code>optimizer.step()</code> → loss → <code>loss.backward()</code></button>
+      <button class="quiz-opt" data-key="d">forward pass → loss → <code>optimizer.step()</code> → <code>loss.backward()</code></button>
+      <div class="quiz-explain">PyTorch accumulates gradients by default, so each step clears them, computes the loss,
+        back-propagates and only then updates the weights. Forgetting <code>zero_grad()</code> was one of the planted bugs in the S02 challenge.</div>
+    </div>
+    <aside class="notes">
+      [0:02 · 3 min] Poll, then click. If people hesitate, remind them of the S02 "Crítica a la IA"
+      task: missing zero_grad means gradients from previous batches keep adding up. Today the
+      heavy lifting (pretraining) was done by someone else, but fine-tuning in S04 uses this exact loop.
+    </aside>
+  </section>
+
+  <!-- 5 · Warm-up Q2 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q2</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">Training loss keeps falling, but validation loss starts rising after epoch 6. What is the best reading?</p>
+      <button class="quiz-opt" data-key="a">The learning rate is too low: train for more epochs</button>
+      <button class="quiz-opt" data-key="b">The validation set is broken: ignore it</button>
+      <button class="quiz-opt" data-key="c">The model is overfitting: stop near epoch 6, regularise or get more data</button>
+      <button class="quiz-opt" data-key="d">The model is underfitting: make it bigger</button>
+      <div class="quiz-explain">A widening gap between training and validation loss is the signature of overfitting.
+        Early stopping keeps the checkpoint with the lowest validation loss; dropout, weight decay and more data also help.</div>
+    </div>
+    <aside class="notes">
+      [0:05 · 2 min] Link to today: transfer learning is itself a defence against overfitting when
+      labels are scarce, because most of the knowledge comes from pretraining instead of from your
+      few labelled examples.
+    </aside>
+  </section>
+
+  <!-- 6 · Warm-up Q3 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q3</span>
+    <div class="quiz" data-correct="a" style="margin-top: 18px">
+      <p class="quiz-q">In a VAE, what usually happens when you increase β, the weight of the KL term?</p>
+      <button class="quiz-opt" data-key="a">The latent space stays closer to the prior: smoother sampling, blurrier reconstructions</button>
+      <button class="quiz-opt" data-key="b">Reconstructions get sharper and the KL term grows</button>
+      <button class="quiz-opt" data-key="c">Nothing: β only changes the training speed</button>
+      <button class="quiz-opt" data-key="d">The decoder stops being used</button>
+      <div class="quiz-explain">The loss is reconstruction + β · KL. A larger β pushes the encoder's distribution towards
+        \(\mathcal{N}(0, I)\), which makes sampling from the prior work better at the cost of reconstruction detail.</div>
+    </div>
+    <aside class="notes">
+      [0:07 · 2 min] Ask two students who had different β values in the S02 challenge to compare
+      their reconstruction and KL numbers in one sentence each.
+    </aside>
+  </section>
+
+  <!-- 7 · Learning objectives -->
+  <section>
+    <p class="kicker">Learning objectives</p>
+    <h2>By the end of this session you can…</h2>
+    <ol>
+      <li>Explain why self-supervised pretraining produces knowledge you can reuse <span class="pill">RAE 1</span></li>
+      <li>Describe self-attention and contrast BERT, GPT and T5 <span class="pill">RAE 1</span></li>
+      <li>Measure how tokenization changes the cost of Spanish text <span class="pill">RAE 3</span></li>
+      <li>Build a classifier on frozen embeddings and compare it with zero- and few-shot prompting <span class="pill">RAE 1</span> <span class="pill">RAE 3</span></li>
+      <li>Choose a transfer strategy and a model (size, licence, language) for a business case <span class="pill">RAE 3</span></li>
+    </ol>
+    <p class="small muted">RAE numbers refer to the learning outcomes in the course syllabus (guía de asignatura).</p>
+    <aside class="notes">
+      [0:09 · 1 min] RAE 1 is designing and adapting models; RAE 3 is building prototypes that fit
+      real requirements such as cost and latency. The challenge assesses objectives 4 and 5 directly.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 1 · WHY PRETRAINING WORKS                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 8 · Part 1 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 1</p>
+    <h2>Why pretraining works</h2>
+    <p>Labels from the data itself, at a scale no company could label by hand.</p>
+    <span class="block-tag" data-block="theory">Theory · 60'</span>
+    <aside class="notes">
+      [0:10] Theory block: three parts (why pretraining works, Transformer essentials, transfer
+      strategies) with an interaction every 8 to 10 minutes.
+    </aside>
+  </section>
+
+  <!-- 9 · Self-supervision -->
+  <section>
+    <p class="kicker">Self-supervised learning</p>
+    <h2>The data labels itself</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Next-token prediction (GPT)</h4>
+        <p class="small"><span class="tag">The client paid the</span> → <strong>?</strong></p>
+        <p class="small">Every position of every text is a free training example:
+          \(\;p(x_1,\dots,x_T) = \prod_t p(x_t \mid x_{&lt;t})\).</p>
+      </div>
+      <div class="card">
+        <h4>Masked-token prediction (BERT)</h4>
+        <p class="small"><span class="tag">The client [MASK] the invoice</span> → <strong>paid</strong></p>
+        <p class="small">Hide some tokens and recover them using the context on <em>both</em> sides.</p>
+      </div>
+    </div>
+    <table class="compact" style="margin-top: 18px">
+      <tbody>
+        <tr><td><strong>BERT</strong> (Devlin et al., 2019)</td><td>BooksCorpus + English Wikipedia: about 3.3 billion words</td></tr>
+        <tr><td><strong>GPT-3</strong> (Brown et al., 2020)</td><td>175 billion parameters trained on 300 billion tokens</td></tr>
+      </tbody>
+    </table>
+    <aside class="notes">
+      [0:10 · 3 min] The key idea: no human labels are needed, so the corpus can be enormous. To
+      predict the missing word well, the model has to learn grammar, facts, style and some
+      reasoning patterns, and that knowledge is what we reuse. Figures come from the two papers
+      (BERT: 800M words of BooksCorpus + 2,500M words of Wikipedia).
+    </aside>
+  </section>
+
+  <!-- 10 · What a pretrained model knows -->
+  <section>
+    <p class="kicker">What did it learn?</p>
+    <h2>Ask BERT to fill in the blank</h2>
+    <table class="compact" style="font-size: 19px; margin-top: 0">
+      <thead><tr><th>Input to <span class="tag">bert-base-uncased</span></th><th>Top predictions (probability)</th><th>What it shows</th></tr></thead>
+      <tbody>
+        <tr><td>The bank approved my [MASK] application.</td><td>loan 0.50 · bank 0.04 · initial 0.03</td><td>Domain knowledge</td></tr>
+        <tr><td>Paris is the [MASK] of France.</td><td>capital 0.997</td><td>World facts</td></tr>
+        <tr><td>The nurse said [MASK] would be back soon.*</td><td>she 0.77 · they 0.10 · he 0.08</td><td rowspan="2">Social bias from the data</td></tr>
+        <tr><td>The engineer said [MASK] would be back soon.*</td><td>he 0.62 · they 0.23 · she 0.06</td></tr>
+        <tr><td>El banco aprobó mi [MASK] de crédito.</td><td>##o 0.49 · casa 0.05</td><td>No Spanish: wrong language</td></tr>
+      </tbody>
+      <caption>Outputs of the fill-mask pipeline, rounded; you reproduce them in Part 2 of the lab. *Full sentence: “… would be back in five minutes.”</caption>
+    </table>
+    <div class="prompt-card" data-kind="chat" style="padding-top: 10px; padding-bottom: 10px">
+      <p class="small" style="margin: 0"><strong>Your corpus:</strong> what could a model learn from your organisation's unlabelled text (emails, tickets, contracts)? One line in the chat.</p>
+    </div>
+    <aside class="notes">
+      [0:13 · 3 min] These are real outputs (the lab reproduces them). Pretraining gives domain
+      knowledge and facts for free, but also the biases of the corpus (nurse → she, engineer →
+      he): we return to this in S10. The last row shows that an English model is useless for
+      Spanish, which motivates Spanish and multilingual models (Part 3). Read two or three chat
+      answers aloud.
+    </aside>
+  </section>
+
+  <!-- 11 · Pretrain once, adapt many -->
+  <section>
+    <p class="kicker">Transfer learning</p>
+    <h2>Pretrain once, reuse many times</h2>
+    <div style="display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 14px; align-items: center">
+      <div class="card"><h4>Pretraining</h4><p class="small">Huge unlabelled corpus, self-supervised. Weeks of compute, done once by a lab.</p></div>
+      <span class="big-number" style="font-size: 48px">→</span>
+      <div class="card"><h4>Pretrained model</h4><p class="small">General representations of language: a starting point published on the Hub.</p></div>
+      <span class="big-number" style="font-size: 48px">→</span>
+      <div class="card"><h4>Adaptation</h4><p class="small">Your task and your data: prompting, a small head, or fine-tuning.</p></div>
+    </div>
+    <div class="cols" style="margin-top: 22px">
+      <div class="callout"><strong>Transfer learning:</strong> reuse what a model learned on one task (predicting tokens) to learn another task (classifying tickets) with far less labelled data.</div>
+      <div class="callout tip"><strong>Why it helps:</strong> with 16 labels per class you cannot learn language, but you can learn a boundary on top of a model that already knows it.</div>
+    </div>
+    <aside class="notes">
+      [0:16 · 2 min] Same idea as ImageNet-pretrained CNNs in computer vision, now standard in
+      NLP since ULMFiT (Howard &amp; Ruder, 2018) and BERT. The tip is the hypothesis of today's
+      lab: we will see how far 16 or 64 labels per class go on top of a frozen encoder.
+    </aside>
+  </section>
+
+  <!-- 12 · Business lens 1 -->
+  <section>
+    <p class="kicker">Who pays for what</p>
+    <h2>Someone else paid for pretraining</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>Andes Bank</strong> (fictional) wants to route complaint emails. It will not pretrain a model:
+          it downloads a pretrained encoder and adapts it.</p>
+        <p class="small">What remains on the bank's bill: labelling examples, evaluation, hosting, monitoring and people.</p>
+      </div>
+      <div>
+        <h4>But you also inherit…</h4>
+        <ul class="small">
+          <li>the <strong>language</strong> of the corpus (an English model cannot read Spanish emails);</li>
+          <li>its <strong>biases</strong> (the nurse/engineer example);</li>
+          <li>its <strong>licence</strong> and the terms of its training data;</li>
+          <li>its <strong>knowledge cut-off</strong>: nothing after the corpus was collected.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:18 · 2 min] Business lens for Part 1. Reusing a model is a supply-chain decision: you
+      get the capabilities for free and the defects too. The model card (Part 3) is where you
+      check language, data, licence and known limitations.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 2 · TRANSFORMER ESSENTIALS                                 -->
+  <!-- ===================================================================== -->
+
+  <!-- 13 · Part 2 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 2</p>
+    <h2>Transformer essentials</h2>
+    <p>Tokens, embeddings and attention: the engine inside BERT, GPT and T5.</p>
+    <aside class="notes">
+      [0:20] Part 2. Keep the maths light: one formula (attention) and one simulator.
+    </aside>
+  </section>
+
+  <!-- 14 · From text to vectors -->
+  <section>
+    <p class="kicker">The pipeline</p>
+    <h2>From text to contextual vectors</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+      <div class="card"><h4>1 · Tokens</h4><p class="small">A tokenizer splits text into pieces from a fixed vocabulary.</p><p class="token-row"><span class="tag">the</span><span class="tag">ref</span><span class="tag">##und</span><span class="tag">arrived</span></p></div>
+      <div class="card"><h4>2 · Ids</h4><p class="small">Each token becomes an integer index.</p><p class="token-row"><span class="tag">1996</span><span class="tag">25416</span><span class="tag">8630</span><span class="tag">3369</span></p></div>
+      <div class="card"><h4>3 · Embeddings</h4><p class="small">Each id looks up a learned vector (768 numbers in BERT-base), plus a <strong>position</strong> vector.</p></div>
+      <div class="card"><h4>4 · Transformer blocks</h4><p class="small">Attention mixes information between tokens, layer after layer (12 in BERT-base).</p></div>
+    </div>
+    <p style="margin-top: 20px">Output: one <strong>contextual</strong> vector per token. “bank” gets a different vector in “river bank” and in “bank loan”.</p>
+    <div class="callout tip small"><strong>Positional information:</strong> attention on its own ignores word order, so the model adds position vectors: fixed sinusoids in the original Transformer, learned in BERT and GPT-2.</div>
+    <aside class="notes">
+      [0:20 · 3 min] The pieces and ids shown are the real bert-base-uncased output for "the
+      refund arrived" (the lab prints them; [CLS] = 101 and [SEP] = 102 are added around them).
+      Even a common English word like "refund" is split in two. The static embedding of "bank" is the same everywhere; after the
+      attention layers the vector depends on the context. That is what "contextual embedding"
+      means, and why these vectors are good features for classification.
+    </aside>
+  </section>
+
+  <!-- 15 · Attention formula -->
+  <section>
+    <p class="kicker">Self-attention</p>
+    <h2>Every token asks: who is relevant to me?</h2>
+    $$ \text{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{Q K^{\top}}{\sqrt{d_k}}\right) V $$
+    <div class="cols-3">
+      <div class="card"><h4>Query, key, value</h4><p class="small">Three learned projections of each token vector: \(Q = XW_Q\), \(K = XW_K\), \(V = XW_V\).</p></div>
+      <div class="card"><h4>Scores → weights</h4><p class="small">\(QK^{\top}\) scores every pair of tokens; softmax turns each row into weights that sum to 1.</p></div>
+      <div class="card"><h4>Why \(\sqrt{d_k}\)?</h4><p class="small">Dot products grow with the dimension \(d_k\). Dividing keeps softmax from saturating, which would leave tiny gradients.</p></div>
+    </div>
+    <p class="small" style="margin-top: 14px">The output for each token is a weighted average of the value vectors of all tokens it attends to (Vaswani et al., 2017).</p>
+    <aside class="notes">
+      [0:23 · 3 min] Read the formula right to left: compare my query with everyone's key,
+      normalise with softmax, take the weighted average of their values. On the scaling: with
+      components of variance 1, the dot product of two d_k-dimensional vectors has variance d_k;
+      dividing by the square root brings it back to about 1 (Vaswani et al., section 3.2.1).
+      The challenge's "Crítica a la IA" task touches this point.
+    </aside>
+  </section>
+
+  <!-- 16 · Simulator: attention heatmap -->
+  <section>
+    <p class="kicker">Simulator · attention map</p>
+    <h2>Where does “it” look?</h2>
+    <div class="sim" style="grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); padding: 14px 20px">
+      <div class="sim-controls" style="gap: 12px">
+        <div role="group" aria-label="Attention head" style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button class="btn btn-sm" id="att-h0" type="button" aria-pressed="true">Head 1 · meaning</button>
+          <button class="btn btn-sm btn-ghost" id="att-h1" type="button" aria-pressed="false">Head 2 · previous word</button>
+        </div>
+        <label style="display: flex; gap: 10px; align-items: center; font-weight: 600; justify-content: flex-start">
+          <input type="checkbox" id="att-causal" style="width: 22px; height: 22px; accent-color: var(--accent)">
+          Causal mask (GPT-style decoder)
+        </label>
+        <p class="small muted" style="margin: 0">Hover or tap a word: its row of weights lights up and the sentence is shaded by attention.</p>
+        <div class="token-row" id="att-sentence" style="gap: 6px"></div>
+        <p class="stat" id="att-stat" style="margin: 0">–</p>
+        <p class="small muted" style="margin: 0; font-size: 17px">Hand-made toy weights for teaching, not extracted from a real model. Each row is a softmax over its keys, so it sums to 1.</p>
+      </div>
+      <div class="sim-output" style="padding: 8px 10px">
+        <div id="att-grid" aria-label="Attention weights heatmap"></div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:26 · 5 min] Interaction. 1) Head 1, hover "it": most weight goes to "phone", some to
+      "customer". Ask: "how does the model know 'it' is the phone?" (it learned it from data;
+      this head specialised in it). 2) Switch to Head 2: every word looks at the previous word, a
+      positional pattern that real models do learn. 3) Turn on the causal mask: the upper
+      triangle goes blank; "phone" can no longer look at "broken". That is the difference between
+      an encoder (BERT, sees both sides) and a decoder (GPT, sees only the past). Real models
+      have many heads per layer; tools such as BertViz show their actual weights.
+    </aside>
+  </section>
+
+  <!-- 17 · Multi-head & the block -->
+  <section>
+    <p class="kicker">Multi-head attention</p>
+    <h2>Many heads, many layers</h2>
+    <div class="cols">
+      <div>
+        $$ \text{MultiHead}(X) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)\, W^{O} $$
+        <ul class="small">
+          <li>Each head has its own \(W_Q, W_K, W_V\), so it can specialise (coreference, syntax, position…).</li>
+          <li>BERT-base: 12 layers × 12 heads, hidden size 768, so \(d_k = 768 / 12 = 64\).</li>
+          <li>Each block: attention → add &amp; normalise → feed-forward network → add &amp; normalise.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Encoder vs decoder</h4>
+        <p class="small"><strong>Encoder:</strong> every token attends to every token (bidirectional). Good for understanding: classification, extraction, embeddings.</p>
+        <p class="small"><strong>Decoder:</strong> a causal mask hides future tokens. Good for generating text one token at a time.</p>
+        <p class="small"><strong>Encoder–decoder:</strong> the decoder also attends to the encoder's outputs (cross-attention).</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:31 · 2 min] Heads run in parallel on smaller projections and their outputs are
+      concatenated. The residual connections ("add") and layer normalisation make deep stacks
+      trainable. The encoder/decoder distinction is exactly the mask you toggled in the simulator.
+    </aside>
+  </section>
+
+  <!-- 18 · BERT, GPT, T5 -->
+  <section>
+    <p class="kicker">Three pretrained families</p>
+    <h2>BERT, GPT and T5</h2>
+    <table class="compact">
+      <thead><tr><th></th><th>BERT</th><th>GPT (GPT-2, GPT-3)</th><th>T5</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Architecture</strong></td><td>Encoder</td><td>Decoder</td><td>Encoder–decoder</td></tr>
+        <tr><td><strong>Pretraining</strong></td><td>Masked LM: 15% of tokens selected and predicted (+ next-sentence prediction)</td><td>Causal LM: predict the next token</td><td>Span corruption: rebuild masked spans of text</td></tr>
+        <tr><td><strong>How you use it</strong></td><td>The <span class="tag">[CLS]</span> vector or pooled token vectors + a small head</td><td>Prompting: zero-shot, few-shot (in-context)</td><td>Every task as text-to-text: <span class="tag">summarize: …</span></td></tr>
+        <tr><td><strong>Size</strong></td><td>110M (base) · 340M (large)</td><td>up to 1.5B (GPT-2) · 175B (GPT-3)</td><td>up to 11B</td></tr>
+      </tbody>
+      <caption>Devlin et al. (2019) · Radford et al. (2019) · Brown et al. (2020) · Raffel et al. (2020).</caption>
+    </table>
+    <aside class="notes">
+      [0:33 · 3 min] BERT's masking: of the 15% of positions selected, 80% become [MASK], 10% a
+      random token and 10% stay unchanged, so the model cannot rely on seeing [MASK] at
+      fine-tuning time. [CLS] is a special first token whose final vector summarises the input
+      for classification. GPT-2 showed zero-shot transfer; GPT-3 made few-shot in-context
+      learning famous. T5 casts translation, summarisation and classification as text in, text out.
+    </aside>
+  </section>
+
+  <!-- 19 · Quiz: causal mask -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · attention</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">A GPT-style model reads “The customer returned the phone because it was broken”. When it computes the vector for “it”, which tokens can it attend to?</p>
+      <button class="quiz-opt" data-key="a">All nine tokens, including “was broken”</button>
+      <button class="quiz-opt" data-key="b">Only “it” itself</button>
+      <button class="quiz-opt" data-key="c">“The customer returned the phone because it”: itself and everything before it</button>
+      <button class="quiz-opt" data-key="d">Only the tokens after “it”</button>
+      <div class="quiz-explain">The causal mask sets the scores of future positions to \(-\infty\) before the softmax, so their weights are 0.
+        A BERT-style encoder would see all nine tokens.</div>
+    </div>
+    <aside class="notes">
+      [0:36 · 1 min] Quick poll. If many choose (a), go back to the simulator and toggle the mask.
+    </aside>
+  </section>
+
+  <!-- 20 · Tokenization -->
+  <section>
+    <p class="kicker">Tokenization</p>
+    <h2>WordPiece and BPE: sub-words, not words</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>WordPiece · BERT</h4>
+        <p class="small">Vocabulary of 30,522 pieces; <span class="tag">##</span> marks a continuation. <span class="tag">bert-base-uncased</span> also lowercases and strips accents.</p>
+        <p class="token-row small"><span class="tag">ref</span><span class="tag">##und</span> <span class="muted">(“refund”)</span></p>
+        <p class="token-row small"><span class="tag">re</span><span class="tag">##em</span><span class="tag">##bol</span><span class="tag">##sar</span><span class="tag">##em</span><span class="tag">##os</span> <span class="muted">(“reembolsaremos”)</span></p>
+      </div>
+      <div class="card">
+        <h4>Byte-level BPE · GPT-2</h4>
+        <p class="small">Vocabulary of 50,257 pieces built by merging frequent byte pairs; <span class="tag">Ġ</span> marks a leading space, and accented letters cost extra bytes.</p>
+        <p class="token-row small"><span class="tag">Ġdays</span></p>
+        <p class="token-row small"><span class="tag">Ġd</span><span class="tag">ÃŃ</span><span class="tag">as</span> <span class="muted">(“días”)</span></p>
+      </div>
+    </div>
+    <p class="small">Frequent words in the training corpus get one token; rare words, and most Spanish words for English-centric tokenizers, get split into several.
+      BPE: Sennrich, Haddow &amp; Birch (2016).</p>
+    <aside class="notes">
+      [0:37 · 3 min] Real outputs from the two tokenizers (lab, Part 1): "refund" is two
+      WordPieces, "reembolsaremos" six; in GPT-2, "days" is a single token with its leading
+      space while "días" needs three. GPT-2 works on bytes, so "í" (two bytes in
+      UTF-8) shows up as the odd-looking "ÃŃ" piece. Tokens are the unit of cost, context length
+      and generation speed, which is the next slide.
+    </aside>
+  </section>
+
+  <!-- 21 · Simulator: token cost -->
+  <section>
+    <p class="kicker">Simulator · token cost</p>
+    <h2>The Spanish token premium</h2>
+    <div class="sim">
+      <div class="sim-controls" style="gap: 12px">
+        <div class="control">
+          <label for="tc-tok">Tokenizer</label>
+          <select id="tc-tok">
+            <option value="gpt2">GPT-2 byte-level BPE (English-centric)</option>
+            <option value="bert">BERT WordPiece (English-centric)</option>
+            <option value="qwen">Qwen2.5 BPE (multilingual)</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="tc-words">Words per request <output id="tc-words-out">–</output></label>
+          <input type="range" id="tc-words" min="50" max="2000" step="50" value="400">
+        </div>
+        <div class="control">
+          <label for="tc-vol">Requests / month <output id="tc-vol-out">–</output></label>
+          <input type="range" id="tc-vol" min="3" max="7" step="0.5" value="5">
+        </div>
+        <div class="control">
+          <label for="tc-price">Price per 1K tokens <output id="tc-price-out">–</output></label>
+          <input type="range" id="tc-price" min="-4" max="-1.5" step="0.25" value="-3">
+        </div>
+        <p class="small muted" style="margin: 0; font-size: 17px">Ratios measured on the lab's 8 parallel EN/ES sentences. The price is illustrative: use your provider's current price.</p>
+      </div>
+      <div class="sim-output">
+        <div id="tc-chart"></div>
+        <p class="stat" style="margin-bottom: 6px">Monthly cost · EN <strong id="tc-cost-en">–</strong> · ES <strong id="tc-cost-es">–</strong> · premium <strong id="tc-prem">–</strong></p>
+        <p class="small" id="tc-ctx" style="margin-bottom: 0"></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:40 · 5 min] Interaction. Content is measured in English words; the Spanish version of the
+      same content costs "ES/EN ratio" times more tokens. 1) GPT-2 tokenizer: the Spanish bill is
+      about 2.2× the English one. 2) Switch to Qwen2.5: the premium drops to about 1.5× because its
+      vocabulary was built for many languages. 3) Move volume to 10 million: the premium becomes a
+      budget line. Also point at the context line: the same window holds fewer Spanish words, and
+      generation time grows with the number of output tokens. Petrov et al. (2023) report gaps of
+      up to 15× for some languages.
+    </aside>
+  </section>
+
+  <!-- 22 · Business lens 2 -->
+  <section>
+    <p class="kicker">Budgeting in tokens</p>
+    <h2>Measure your tokenizer on your own text</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">2.2×</span>
+        <p class="caption muted">tokens for the Spanish version of the same 8 sentences with GPT-2's tokenizer,
+          vs 1.5× with Qwen2.5's (lab, Part 1). Your texts will give different ratios.</p>
+      </div>
+      <div class="callout business">
+        <p><strong>NovaTel</strong> (fictional) budgets a Spanish support assistant from an English price example. Tokens drive three lines of the business case:</p>
+        <ul class="small">
+          <li><strong>Cost:</strong> APIs bill per input and output token.</li>
+          <li><strong>Context:</strong> fewer Spanish words fit in the same window.</li>
+          <li><strong>Latency:</strong> each output token is one more decoding step.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:45 · 1 min] Business lens for Part 2. The practical rule: before comparing providers or
+      models, run each tokenizer on a sample of your real texts (the lab shows how in five
+      lines). Multilingual and Spanish-specific tokenizers reduce the premium.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 3 · TRANSFER STRATEGIES                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 23 · Part 3 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 3</p>
+    <h2>Transfer strategies</h2>
+    <p>From a prompt with no examples to continuing pretraining on your own data.</p>
+    <aside class="notes">
+      [0:46] Part 3: the decision core of the session and of the challenge's "Explica y decide".
+    </aside>
+  </section>
+
+  <!-- 24 · Strategy spectrum -->
+  <section>
+    <p class="kicker">The transfer spectrum</p>
+    <h2>Six ways to reuse a pretrained model</h2>
+    <table class="compact">
+      <thead><tr><th>Strategy</th><th>What changes</th><th>Labelled data</th><th>Compute</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Zero-shot</strong></td><td>Only the instruction in the prompt</td><td>None (a test set to evaluate)</td><td>Inference only</td></tr>
+        <tr><td><strong>Few-shot</strong> (in-context)</td><td>A few solved examples in the prompt; weights frozen</td><td>A handful per class</td><td>Inference, longer prompts</td></tr>
+        <tr><td><strong>Feature extraction</strong></td><td>A small head (e.g., logistic regression) on frozen embeddings</td><td>Dozens to hundreds per class</td><td>CPU is enough</td></tr>
+        <tr><td><strong>Partial fine-tuning</strong></td><td>Top layers + head</td><td>Hundreds+ per class</td><td>GPU helps</td></tr>
+        <tr><td><strong>Full fine-tuning</strong></td><td>All weights (or LoRA adapters, S04)</td><td>Hundreds to thousands per class</td><td>GPU</td></tr>
+        <tr><td><strong>Domain adaptation</strong></td><td>Continue self-supervised pretraining on in-domain text, then fine-tune</td><td>Much unlabelled text + labels</td><td>GPU, hours or more</td></tr>
+      </tbody>
+      <caption>Data sizes are rough orders of magnitude for classification, not rules. Domain-adaptive pretraining: Gururangan et al. (2020).</caption>
+    </table>
+    <aside class="notes">
+      [0:46 · 3 min] Walk top to bottom: more data and compute, more control and usually more
+      accuracy on your task. Top two rows need a generative LLM; the middle rows usually use an
+      encoder. The lab covers rows 1 to 3; S04 covers full fine-tuning and LoRA.
+    </aside>
+  </section>
+
+  <!-- 25 · Zero-shot and few-shot -->
+  <section>
+    <p class="kicker">In-context learning</p>
+    <h2>Zero-shot and few-shot prompting</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr)">
+      <pre><code class="language-python" data-trim data-noescape>
+messages = [
+  {"role": "system", "content": "Classify the news article. "
+   "Answer with one label: World, Sports, Business, Sci/Tech."},
+  # few-shot: solved examples as previous turns
+  {"role": "user", "content": "Article: Stocks rallied after…"},
+  {"role": "assistant", "content": "Business"},
+  {"role": "user", "content": "Article: " + new_article},
+]
+inputs = tok.apply_chat_template(messages, add_generation_prompt=True,
+                                 return_tensors="pt", return_dict=True)
+      </code></pre>
+      <div>
+        <ul class="small">
+          <li><strong>No weight updates:</strong> the examples live only in this prompt (Brown et al., 2020).</li>
+          <li>Output is free text: parse it into a label and count failures as <span class="tag">unknown</span>.</li>
+          <li>Results depend on the choice, order and format of the examples (Zhao et al., 2021).</li>
+          <li>Every example is paid for in tokens and latency, on every request.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:49 · 2 min] This is exactly the lab's code with Qwen2.5-0.5B-Instruct. Emphasise the
+      first bullet: the model does not "remember" the examples after the call; the challenge's
+      AI-critique task plants this misconception. Zhao et al. (2021) show how sensitive few-shot
+      accuracy is to example order and to a bias towards labels that appear often in the prompt.
+    </aside>
+  </section>
+
+  <!-- 26 · Feature extraction -->
+  <section>
+    <p class="kicker">Feature extraction</p>
+    <h2>Frozen encoder + a small head</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr)">
+      <pre><code class="language-python" data-trim data-noescape>
+@torch.no_grad()
+def embed(texts):
+    enc = tok(texts, padding=True, truncation=True,
+              return_tensors="pt")
+    h = encoder(**enc).last_hidden_state    # (batch, tokens, 384)
+    mask = enc["attention_mask"].unsqueeze(-1)
+    e = (h * mask).sum(1) / mask.sum(1)     # mean pooling
+    return F.normalize(e, dim=1).numpy()
+
+clf = LogisticRegression(max_iter=1000).fit(embed(X_train), y_train)
+      </code></pre>
+      <div>
+        <ul class="small">
+          <li><span class="tag">all-MiniLM-L6-v2</span>: a 6-layer encoder tuned for sentence similarity (Reimers &amp; Gurevych, 2019): 384 numbers per text.</li>
+          <li>Compute embeddings once; the head trains in seconds on a CPU.</li>
+          <li>Predictions are fast and deterministic, and the head is easy to audit.</li>
+          <li>The encoder never learns your task: accuracy has a ceiling.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:51 · 2 min] Mean pooling averages the token vectors, ignoring padding thanks to the
+      attention mask; this is what the sentence-transformers library does for this model, and
+      the lab checks that both give the same vectors. The head can be any classic model:
+      logistic regression, an SVM or a small MLP (S08).
+    </aside>
+  </section>
+
+  <!-- 27 · Fine-tuning & domain adaptation -->
+  <section>
+    <p class="kicker">Changing the weights</p>
+    <h2>Fine-tuning and domain adaptation</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>Partial fine-tuning</h4>
+        <p class="small">Unfreeze the top layers and the head. Cheaper, less risk of damaging general knowledge. Gradual unfreezing: Howard &amp; Ruder (2018).</p>
+      </div>
+      <div class="card">
+        <h4>Full fine-tuning</h4>
+        <p class="small">Update every weight with a small learning rate. Usually the best accuracy with enough labels; risk of <em>catastrophic forgetting</em>. Session 04.</p>
+      </div>
+      <div class="card">
+        <h4>Domain adaptation</h4>
+        <p class="small">Continue masked-LM pretraining on unlabelled in-domain text (clinical notes, contracts), then fine-tune. Gururangan et al. (2020) report consistent gains from this second pretraining phase.</p>
+      </div>
+    </div>
+    <div class="callout warn" style="margin-top: 18px"><strong>Same data, same split:</strong> compare strategies on the same held-out test set, or the comparison means nothing.</div>
+    <aside class="notes">
+      [0:53 · 2 min] Fine-tuning is next session's topic, so stay conceptual. Domain-adaptive
+      pretraining ("Don't stop pretraining") is the answer when your texts use a language the
+      pretrained model rarely saw: medical abbreviations, legal Spanish, internal jargon. The
+      warning is the lab's comparison rule.
+    </aside>
+  </section>
+
+  <!-- 28 · Quiz: learning curve -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · labelled data</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">You train logistic regression on frozen embeddings with 16, 64, 256 and 1,024 examples per class. What shape do you expect for test accuracy?</p>
+      <button class="quiz-opt" data-key="a">A straight line: 4× the data always adds the same number of points</button>
+      <button class="quiz-opt" data-key="b">Fast gains first, then diminishing returns (a curve that flattens)</button>
+      <button class="quiz-opt" data-key="c">Flat: pretrained features do not benefit from labels</button>
+      <button class="quiz-opt" data-key="d">Decreasing: more data confuses a simple head</button>
+      <div class="quiz-explain">Learning curves usually rise quickly and then flatten: the frozen encoder sets a ceiling.
+        In the challenge you measure your own curve and decide whether labelling more data is worth it.</div>
+    </div>
+    <aside class="notes">
+      [0:55 · 1 min] Poll, then click. Do not give numbers: the challenge's task 1 is to measure
+      this curve with each student's own k and test slice. The business question behind it:
+      "is the next 1,000 labels worth paying for?"
+    </aside>
+  </section>
+
+  <!-- 29 · Breakout -->
+  <section>
+    <p class="kicker">Apply it</p>
+    <h2>Pick a transfer strategy for four scenarios</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1fr) 270px; gap: 20px">
+      <div class="prompt-card" data-kind="breakout">
+        <h4>Choose and justify · 7 min</h4>
+        <table class="compact" style="font-size: 18px; margin: 0 0 8px">
+          <thead><tr><th>Scenario</th><th>Labelled data</th><th>Budget · latency</th></tr></thead>
+          <tbody>
+            <tr><td><strong>NovaTel:</strong> tag app reviews into 5 topics</td><td>None</td><td>Very low, no ML team · overnight batch</td></tr>
+            <tr><td><strong>Andes Bank:</strong> 2 M card transactions/month into 20 categories</td><td>20,000</td><td>Moderate · &lt; 20 ms each, on-premise</td></tr>
+            <tr><td><strong>Clínica Serena:</strong> Spanish clinical notes with in-house abbreviations → 6 services</td><td>1,500 + 150,000 unlabelled</td><td>GPU available · on-premise</td></tr>
+            <tr><td><strong>Río Claro</strong> (media): news into 4 sections</td><td>50 per section</td><td>Small · hourly batch</td></tr>
+          </tbody>
+        </table>
+        <p class="small" style="margin: 0">For each: a strategy, one reason, and the first metric you would check. All companies are fictional.</p>
+      </div>
+      <div class="center">
+        <div class="timer timer-sm" data-minutes="7" data-label="Breakout rooms"></div>
+        <p class="small muted" style="margin-top: 10px">Sit with possible project partners: groups of 3 are registered today.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:56 · 7 min + 2 min debrief] Rooms of 3 (suggest they sit with potential project
+      partners). Suggested answers for the debrief (discuss, do not just announce):
+      NovaTel → zero-shot with an LLM, then label ~100 reviews to evaluate; later embeddings + LR.
+      Andes Bank → fine-tune a small encoder (or embeddings + LR as a first baseline): plenty of
+      labels, strict latency and volume rule out an LLM per transaction; on-premise.
+      Clínica Serena → domain-adaptive pretraining of a Spanish encoder (e.g., BETO) on the
+      150,000 notes, then fine-tune on the 1,500 labels; data stays in the clinic.
+      Río Claro → feature extraction with a multilingual encoder + logistic regression (50 per
+      class is enough for news topics, as the lab shows in English); few-shot as a baseline.
+    </aside>
+  </section>
+
+  <!-- 30 · Choosing a model -->
+  <section>
+    <p class="kicker">Choosing a model</p>
+    <h2>Read the model card before the leaderboard</h2>
+    <div class="cols">
+      <div>
+        <table class="compact" style="margin: 0">
+          <thead><tr><th>Question</th><th>Where to look</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Size:</strong> does it fit my hardware and latency?</td><td>Parameters × bytes per parameter</td></tr>
+            <tr><td><strong>Licence:</strong> can I use it commercially?</td><td>Card metadata + licence text</td></tr>
+            <tr><td><strong>Language:</strong> was it trained on Spanish?</td><td>Training data section</td></tr>
+            <tr><td><strong>Task fit:</strong> encoder, decoder, instruct?</td><td>Architecture, intended uses</td></tr>
+            <tr><td><strong>Limits:</strong> known biases and risks</td><td>Limitations section</td></tr>
+          </tbody>
+        </table>
+        <p class="small muted" style="margin-top: 8px">Model cards: Mitchell et al. (2019).</p>
+      </div>
+      <div class="card">
+        <h4>Memory arithmetic (weights only)</h4>
+        <p class="small">32-bit floats: 4 bytes per parameter · 16-bit: 2 bytes.</p>
+        <ul class="small">
+          <li>BERT-base, 110M → ≈ 0.44 GB in fp32</li>
+          <li>Qwen2.5-0.5B, ≈ 0.5B → ≈ 2 GB in fp32, ≈ 1 GB in fp16</li>
+        </ul>
+        <p class="small">Licences seen today: Apache-2.0 (BERT, MiniLM, Qwen2.5-0.5B), MIT (GPT-2). Some licences forbid commercial use or add usage policies.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:05 · 2 min] Parameter count sets memory and latency; activations and long contexts add
+      more on top. Licences: "open weights" does not mean "anything goes"; non-commercial (e.g.,
+      CC BY-NC) and custom community licences with acceptable-use policies exist. Always check
+      the licence of the exact checkpoint you download, and of the data you fine-tune on.
+    </aside>
+  </section>
+
+  <!-- 31 · Spanish models -->
+  <section>
+    <p class="kicker">Models for Spanish</p>
+    <h2>Spanish and multilingual options</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>BETO</h4>
+        <p class="small">BERT-base-sized encoder trained on Spanish text by the Universidad de Chile; beat multilingual BERT on most tasks of its Spanish benchmark (Cañete et al., 2020).</p>
+        <p class="small muted"><span class="tag">dccuchile/bert-base-spanish-wwm-cased</span></p>
+      </div>
+      <div class="card">
+        <h4>MarIA · RoBERTuito</h4>
+        <p class="small">MarIA: RoBERTa and GPT-2 models trained on web text archived by the National Library of Spain (Gutiérrez-Fandiño et al., 2022). RoBERTuito: Spanish social-media text (Pérez et al., 2022).</p>
+      </div>
+      <div class="card">
+        <h4>Multilingual</h4>
+        <p class="small">XLM-RoBERTa covers 100 languages (Conneau et al., 2020). Multilingual chat LLMs such as Qwen2.5 handle Spanish prompts and tokenize it more efficiently than GPT-2.</p>
+      </div>
+    </div>
+    <div class="callout tip" style="margin-top: 16px"><strong>Rule of thumb:</strong> for Spanish classification, compare a Spanish encoder, a multilingual encoder and an LLM baseline on <em>your</em> test set. Check each licence, including the terms of the training data.</div>
+    <aside class="notes">
+      [1:07 · 1 min] BETO is the classic LatAm reference; its repository has a licence note about
+      the training corpora worth reading before commercial use. RoBERTuito comes from Argentina
+      and is useful for informal text. Several final-project ideas (PQRS, reviews in Colombian
+      Spanish) should start from one of these instead of an English model.
+    </aside>
+  </section>
+
+  <!-- 32 · Business lens 3 -->
+  <section>
+    <p class="kicker">A decision path</p>
+    <h2>Start cheap, measure, then climb</h2>
+    <div style="display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: center">
+      <div class="card"><h4>Day 1</h4><p class="small">Zero-/few-shot baseline on 50–100 labelled test cases.</p></div>
+      <span class="big-number" style="font-size: 44px">→</span>
+      <div class="card"><h4>Week 1</h4><p class="small">Embeddings + logistic regression: cheap, fast, auditable.</p></div>
+      <span class="big-number" style="font-size: 44px">→</span>
+      <div class="card"><h4>Only if needed</h4><p class="small">Fine-tune or adapt the domain when the gap justifies the cost.</p></div>
+    </div>
+    <div class="callout business" style="margin-top: 20px">
+      <p><strong>Banco Andino</strong> (fictional) should ask of every step: how many points of accuracy did it buy, at what cost per 1,000 predictions, and with what latency? The lab's final table answers those three questions on real numbers.</p>
+    </div>
+    <aside class="notes">
+      [1:08 · 1 min] Business lens for Part 3. The order is a default, not a law: with strict
+      latency or privacy you may skip the LLM baseline. The key habit is to keep a fixed test set
+      and log accuracy, cost and latency at every step: that is also the structure of the final
+      project (baseline → own model → iteration).
+    </aside>
+  </section>
+
+  <!-- 33 · Quiz: licence -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · model choice</span>
+    <div class="quiz" data-correct="d" style="margin-top: 18px">
+      <p class="quiz-q">Andes Bank finds a Spanish model with the best benchmark score for its task. Which line in the model card should stop the rollout until legal reviews it?</p>
+      <button class="quiz-opt" data-key="a">“Architecture: RoBERTa-base”</button>
+      <button class="quiz-opt" data-key="b">“Evaluated on 6 Spanish benchmarks”</button>
+      <button class="quiz-opt" data-key="c">“Maximum sequence length: 512 tokens”</button>
+      <button class="quiz-opt" data-key="d">“License: CC BY-NC 4.0 (non-commercial)”</button>
+      <div class="quiz-explain">A non-commercial licence rules out use in a bank's product, whatever the score.
+        Size and sequence length are engineering constraints; the licence is a hard constraint.</div>
+    </div>
+    <aside class="notes">
+      [1:09 · 1 min] If time is short, just click and read the explanation. Then announce the
+      break. Theory ends here.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- BREAK                                                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 34 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Stretch, and start messaging possible project partners: groups of 3 are registered today.</p>
+    <div class="timer" data-minutes="10" data-label="Break"></div>
+    <aside class="notes">
+      [1:10 · 10 min] Press Start before you mute. Suggest that students open the lab notebook
+      during the break so the model downloads start early.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- LAB                                                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 35 · Lab divider -->
+  <section class="section-slide" data-block="lab">
+    <p class="kicker">Hands-on</p>
+    <h2>Guided lab</h2>
+    <p>Four ways to reuse pretrained models, compared on the same news test set.</p>
+    <span class="block-tag" data-block="lab">Lab · 60'</span>
+    <aside class="notes">
+      [1:20] Lab block. Share your screen with the notebook and code along.
+    </aside>
+  </section>
+
+  <!-- 36 · Lab bridge -->
+  <section>
+    <p class="kicker">Lab bridge</p>
+    <h2>What we will build</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr)">
+      <table class="compact">
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Tokenizers: BERT vs GPT-2 (and Qwen2.5) on parallel EN/ES sentences, cost of the ES/EN ratio</td><td class="num">12'</td></tr>
+          <tr><td><strong>2</strong></td><td>Fill-mask with BERT: knowledge, bias, and what [CLS] and [SEP] are</td><td class="num">8'</td></tr>
+          <tr><td><strong>3</strong></td><td>Feature extraction: MiniLM embeddings + logistic regression on AG News</td><td class="num">15'</td></tr>
+          <tr><td><strong>4</strong></td><td>Zero- and few-shot classification with <span class="tag">Qwen2.5-0.5B-Instruct</span></td><td class="num">15'</td></tr>
+          <tr><td><strong>5</strong></td><td>Comparison table: accuracy, labels used, latency · project groups</td><td class="num">10'</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h4>Open the notebook</h4>
+        <p class="small">Kaggle checklist: Internet on · Accelerator GPU T4 x2 recommended for Part 4 (CPU also works, just slower).</p>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/03-transfer-learning/lab.ipynb" target="_blank" rel="noopener">Open in Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/03-transfer-learning/lab.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:20 · 3 min] Everyone opens the notebook now. Timing: Part 1 until 1:32, Part 2 until
+      1:40, Part 3 until 1:55, Part 4 until 2:10, Part 5 and the groups announcement until 2:20.
+      If the GPU is not available, CPU works: Part 4 just takes a few minutes longer.
+    </aside>
+  </section>
+
+  <!-- 37 · Project H1 -->
+  <section>
+    <p class="kicker">Final project · milestone H1</p>
+    <h2>Form your group of 3 today</h2>
+    <div class="cols">
+      <div>
+        <ul class="small">
+          <li><strong>Groups of 3</strong>, ideally mixing business and technical profiles.</li>
+          <li>One member uploads the group registration to e-Aulas as <span class="tag">PF_H1_&lt;codigo&gt;</span> (the uploader's student code) by <strong>23:59 today</strong>.</li>
+          <li>The registration lists members and profiles, a communication channel, where the code will live, a 1–2 line idea and working agreements.</li>
+          <li>Missing a milestone deducts 0.3 from the technical deliverable. Anyone without a group at the deadline is assigned to one.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Suggested roles</h4>
+        <p class="small"><strong>Product &amp; business:</strong> problem, users, KPI, ROI, pitch.</p>
+        <p class="small"><strong>Data &amp; evaluation:</strong> data, splits, metrics, errors, ethics.</p>
+        <p class="small"><strong>Modelling &amp; demo:</strong> training, iterations, Gradio app or Startti agent.</p>
+        <p class="small"><a href="../../proyecto-final/README.md" target="_blank" rel="noopener">Final-project brief and H1 template</a></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:15 · 5 min] Announce at the end of the lab, before the challenge. The registration block
+      to copy is in section 3 of proyecto-final/README.md. Everyone codes and everyone must be
+      able to explain everything; roles only say who leads each front. Encourage groups to
+      think about which transfer strategy from today fits their idea.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CHALLENGE                                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 38 · Challenge divider -->
+  <section class="section-slide" data-block="challenge">
+    <h2>Session challenge</h2>
+    <p>Individual, graded, 40 minutes in class. Submit by 23:59 today.</p>
+    <aside class="notes">
+      [2:20] Challenge block. The next slide is the only slide in Spanish.
+    </aside>
+  </section>
+
+  <!-- 39 · Challenge briefing (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Challenge de la sesión · evaluado</p>
+    <h2>Challenge S03: ¿cuántos datos necesitas?</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <div>
+        <ol class="small">
+          <li><strong>Ejecución:</strong> embeddings + regresión logística con tu <code>k_train</code> asignado y curva de aprendizaje (16, 64 y 256 ejemplos por clase).</li>
+          <li><strong>Análisis:</strong> few-shot con Qwen2.5-0.5B y tus <code>n_shots</code> sobre tu corte personal de 40 noticias; compara exactitud y latencia.</li>
+          <li><strong>Explica y decide:</strong> estrategia de transferencia y modelo para tu caso de negocio.</li>
+          <li><strong>Crítica a la IA:</strong> encuentra, explica y corrige 3 errores sobre atención y transferencia.</li>
+        </ol>
+        <ul class="small">
+          <li><strong>Rúbrica:</strong> ejecución 40% · análisis 40% · reflexión y registro de IA 20%.</li>
+          <li><strong>IA permitida</strong> con registro; <strong>micro-sustentaciones</strong>: si no explicas tu entrega, máximo 3.0.</li>
+          <li><strong>Entrega:</strong> Archivo → Descargar notebook → e-Aulas como <code>S03_&lt;codigo&gt;.ipynb</code>, 23:59.</li>
+        </ul>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="40" data-label="Challenge"></div>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/03-transfer-learning/challenge.ipynb" target="_blank" rel="noopener">Abrir en Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/03-transfer-learning/challenge.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+        <p class="small">Además: registro del grupo <code>PF_H1_&lt;codigo&gt;</code> hoy, 23:59.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:20 · 38 min] This briefing slide is in Spanish by course convention. Remind students to
+      type their STUDENT_ID first (k_train, n_shots, test slice and business case depend on it)
+      and to switch on the GPU if available. Start the 40' timer. Run 3–4 random micro-vivas
+      (2–3 minutes, screen shared, no AI help).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WRAP-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 40 · Wrap-up -->
+  <section>
+    <p class="kicker">Wrap-up</p>
+    <h2>Key takeaways</h2>
+    <div class="cols">
+      <ul>
+        <li>Self-supervised pretraining turns unlabelled text into reusable knowledge, biases included.</li>
+        <li>Attention lets every token weigh every other token; the causal mask makes a decoder.</li>
+        <li>Tokens are the unit of cost: measure your tokenizer on Spanish text.</li>
+        <li>Climb the transfer spectrum only as far as your data, budget and latency justify.</li>
+      </ul>
+      <div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">For your project idea: which transfer strategy would you try first, and what number would make you move to the next one?</p>
+        </div>
+        <p class="small"><strong>Next session:</strong> fine-tuning (full fine-tuning, LoRA, chat templates) on a Kaggle GPU.
+          <span class="muted">Pre-work: submit the challenge and the <a href="../../proyecto-final/README.md" target="_blank" rel="noopener">H1 group registration</a> by 23:59; check your Kaggle GPU quota.</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:58 · 2 min] Collect exit answers in the chat. Remind students of two deadlines tonight:
+      challenge S03_codigo.ipynb and group registration PF_H1_codigo. S04 needs the GPU.
+    </aside>
+  </section>
+
+  <!-- 41 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Sources for this session</h2>
+    <div class="cols" style="font-size: 16px; line-height: 1.3">
+      <ul>
+        <li>Vaswani, A., et al. (2017). Attention is all you need. <em>NeurIPS</em>. arXiv:1706.03762.</li>
+        <li>Devlin, J., Chang, M.-W., Lee, K., &amp; Toutanova, K. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. <em>NAACL</em>.</li>
+        <li>Radford, A., et al. (2019). Language models are unsupervised multitask learners. OpenAI.</li>
+        <li>Brown, T. B., et al. (2020). Language models are few-shot learners. <em>NeurIPS</em>.</li>
+        <li>Raffel, C., et al. (2020). Exploring the limits of transfer learning with a unified text-to-text transformer. <em>JMLR</em>.</li>
+        <li>Cañete, J., Chaperon, G., Fuentes, R., Ho, J.-H., Kang, H., &amp; Pérez, J. (2020). Spanish pre-trained BERT model and evaluation data. <em>PML4DC workshop, ICLR</em>.</li>
+        <li>Jurafsky, D., &amp; Martin, J. H. <em>Speech and Language Processing</em> (3rd ed. draft), chapters on Transformers and large language models. web.stanford.edu/~jurafsky/slp3</li>
+        <li>Tunstall, L., von Werra, L., &amp; Wolf, T. (2022). <em>Natural Language Processing with Transformers</em>. O'Reilly.</li>
+        <li>Alammar, J. (2018). The illustrated transformer. jalammar.github.io/illustrated-transformer</li>
+      </ul>
+      <ul>
+        <li>Sennrich, R., Haddow, B., &amp; Birch, A. (2016). Neural machine translation of rare words with subword units. <em>ACL</em>.</li>
+        <li>Petrov, A., La Malfa, E., Torr, P., &amp; Bibi, A. (2023). Language model tokenizers introduce unfairness between languages. <em>NeurIPS</em>.</li>
+        <li>Howard, J., &amp; Ruder, S. (2018). Universal language model fine-tuning for text classification. <em>ACL</em>.</li>
+        <li>Reimers, N., &amp; Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. <em>EMNLP</em>.</li>
+        <li>Gururangan, S., Marasović, A., Swayamdipta, S., Lo, K., Beltagy, I., Downey, D., &amp; Smith, N. A. (2020). Don't stop pretraining. <em>ACL</em>.</li>
+        <li>Zhao, Z., Wallace, E., Feng, S., Klein, D., &amp; Singh, S. (2021). Calibrate before use: Improving few-shot performance of language models. <em>ICML</em>.</li>
+        <li>Mitchell, M., et al. (2019). Model cards for model reporting. <em>FAT*</em>.</li>
+        <li>Conneau, A., et al. (2020). Unsupervised cross-lingual representation learning at scale. <em>ACL</em>.</li>
+        <li>Gutiérrez-Fandiño, A., et al. (2022). MarIA: Spanish language models. <em>Procesamiento del Lenguaje Natural</em>, 68.</li>
+        <li>Pérez, J. M., Furman, D. A., Alonso Alemany, L., &amp; Luque, F. (2022). RoBERTuito: A pre-trained language model for social media text in Spanish. <em>LREC</em>.</li>
+      </ul>
+    </div>
+    <aside class="notes">
+      Primary sources for every claim in the deck. Recommended first readings: Alammar's
+      illustrated guide, then Vaswani et al. and Devlin et al. Spanish-language resources are
+      listed in the session README.
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "03" });
+  Course.onReady(() => {
+    // --- Simulator 1: self-attention heatmap (toy weights, 2 heads, optional causal mask) --------
+    // Hand-made logits for teaching (not taken from a real model). Each row goes through a
+    // softmax, so the weights of a row sum to 1, exactly as in softmax(QK^T / sqrt(d_k)).
+    const TOKENS = ["The", "customer", "returned", "the", "phone", "because", "it", "was", "broken"];
+    const N = TOKENS.length;
+    // [query, key, logit] pairs for head 1 ("meaning": who refers to what)
+    const HEAD1_PAIRS = [
+      [0, 1, 2.5], [1, 1, 1.8], [1, 2, 1.5], [2, 1, 2.0], [2, 4, 2.2], [3, 4, 2.6],
+      [4, 2, 1.6], [4, 3, 0.8], [4, 8, 1.8], [5, 2, 1.8], [5, 8, 1.8],
+      [6, 4, 3.2], [6, 1, 1.4], [7, 6, 1.8], [7, 8, 2.0], [8, 4, 2.4], [8, 6, 2.0]
+    ];
+    function headLogits(head) {
+      const L = [];
+      for (let i = 0; i < N; i++) {
+        const row = [];
+        for (let j = 0; j < N; j++) row.push(i === j ? (head === 0 ? 1.2 : 0.8) : 0);
+        L.push(row);
+      }
+      if (head === 0) HEAD1_PAIRS.forEach(([i, j, v]) => { L[i][j] = v; });
+      else for (let i = 1; i < N; i++) L[i][i - 1] = 3.0; // head 2: look at the previous word
+      return L;
+    }
+    function attentionWeights(head, causal) {
+      // the causal mask sets future scores to -Infinity BEFORE the softmax
+      return headLogits(head).map((row, i) =>
+        Course.softmax(row.map((v, j) => (causal && j > i ? -Infinity : v))));
+    }
+
+    const attGrid = document.getElementById("att-grid");
+    const attSentence = document.getElementById("att-sentence");
+    const attStat = document.getElementById("att-stat");
+    const attCausal = document.getElementById("att-causal");
+    const headBtns = [document.getElementById("att-h0"), document.getElementById("att-h1")];
+    let head = 0;
+    let query = 6; // "it"
+    let W = attentionWeights(head, false);
+    const CELL = 40;
+    const LABEL_W = 116;
+    const HEADER_H = 78;
+    const shade = (w) => `color-mix(in srgb, var(--block-theory) ${Math.round(w * 100)}%, white)`;
+
+    // Build the grid once (header row + N rows of N cells), then only recolour it.
+    attGrid.style.display = "grid";
+    attGrid.style.gridTemplateColumns = `${LABEL_W}px repeat(${N}, ${CELL}px)`;
+    attGrid.style.gridTemplateRows = `${HEADER_H}px repeat(${N}, ${CELL - 4}px)`;
+    attGrid.style.gap = "2px";
+    attGrid.style.justifyContent = "center";
+    attGrid.style.fontSize = "16px";
+    const corner = document.createElement("div");
+    corner.style.height = HEADER_H + "px";
+    corner.style.display = "flex";
+    corner.style.alignItems = "flex-end";
+    corner.style.justifyContent = "flex-end";
+    corner.style.paddingRight = "8px";
+    corner.style.color = "var(--muted)";
+    corner.style.fontSize = "15px";
+    corner.style.textAlign = "right";
+    corner.style.lineHeight = "1.25";
+    corner.innerHTML = "key →<br>query ↓";
+    attGrid.appendChild(corner);
+    const colHeads = TOKENS.map((t) => {
+      const h = document.createElement("div");
+      h.textContent = t;
+      h.style.height = HEADER_H + "px";
+      h.style.writingMode = "vertical-rl";
+      h.style.transform = "rotate(180deg)";
+      h.style.display = "flex";
+      h.style.alignItems = "center";
+      h.style.color = "var(--muted)";
+      h.style.fontFamily = "var(--font-mono)";
+      attGrid.appendChild(h);
+      return h;
+    });
+    const rowHeads = [];
+    const cells = [];
+    for (let i = 0; i < N; i++) {
+      const rh = document.createElement("button");
+      rh.type = "button";
+      rh.textContent = TOKENS[i];
+      Object.assign(rh.style, {
+        font: "inherit", fontFamily: "var(--font-mono)", textAlign: "right", paddingRight: "8px",
+        background: "none", border: "0", cursor: "pointer", color: "var(--ink)", borderRadius: "6px"
+      });
+      rh.addEventListener("mouseenter", () => selectQuery(i));
+      rh.addEventListener("focus", () => selectQuery(i));
+      rh.addEventListener("click", () => selectQuery(i));
+      attGrid.appendChild(rh);
+      rowHeads.push(rh);
+      const row = [];
+      for (let j = 0; j < N; j++) {
+        const c = document.createElement("div");
+        Object.assign(c.style, {
+          borderRadius: "5px", display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: "var(--font-mono)", fontSize: "13px", cursor: "pointer", boxSizing: "border-box"
+        });
+        c.addEventListener("mouseenter", () => selectQuery(i));
+        attGrid.appendChild(c);
+        row.push(c);
+      }
+      cells.push(row);
+    }
+    // Sentence as focusable chips (hover/tap selects the query word)
+    const chips = TOKENS.map((t, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "tag";
+      b.textContent = t;
+      b.style.cursor = "pointer";
+      b.addEventListener("mouseenter", () => selectQuery(i));
+      b.addEventListener("focus", () => selectQuery(i));
+      b.addEventListener("click", () => selectQuery(i));
+      attSentence.appendChild(b);
+      return b;
+    });
+
+    function renderAttention() {
+      const causal = attCausal.checked;
+      for (let i = 0; i < N; i++) {
+        rowHeads[i].style.fontWeight = i === query ? "700" : "400";
+        rowHeads[i].style.color = i === query ? "var(--brand)" : "var(--ink)";
+        for (let j = 0; j < N; j++) {
+          const w = W[i][j];
+          const c = cells[i][j];
+          const masked = causal && j > i;
+          c.style.background = masked ? "repeating-linear-gradient(45deg, #f1eeeb, #f1eeeb 4px, #fff 4px, #fff 8px)" : shade(w);
+          c.style.color = w > 0.45 ? "#fff" : "var(--ink)";
+          c.style.outline = i === query ? "2px solid var(--accent-2)" : "none";
+          c.style.outlineOffset = "-2px";
+          c.textContent = i === query && !masked ? w.toFixed(2).replace(/^0/, "") : "";
+          c.title = `${TOKENS[i]} → ${TOKENS[j]}: ${masked ? "masked" : w.toFixed(3)}`;
+        }
+      }
+      colHeads.forEach((h, j) => { h.style.fontWeight = "400"; });
+      const row = W[query];
+      chips.forEach((b, j) => {
+        const w = row[j];
+        b.style.background = shade(w);
+        b.style.color = w > 0.45 ? "#fff" : "var(--ink)";
+        b.style.borderColor = j === query ? "var(--accent-2)" : "var(--line-strong)";
+        b.style.borderWidth = j === query ? "3px" : "1.5px";
+      });
+      let best = -1;
+      row.forEach((w, j) => { if (j !== query && (best < 0 || w > row[best])) best = j; });
+      const maskedCount = causal ? N - 1 - query : 0;
+      attStat.innerHTML = best < 0
+        ? `Query <strong>“${TOKENS[query]}”</strong> can only see itself (weight 1.00).`
+        : `Query <strong>“${TOKENS[query]}”</strong> → looks most at <strong>“${TOKENS[best]}”</strong> (${row[best].toFixed(2)}) · self ${row[query].toFixed(2)} · masked keys: <strong>${maskedCount}</strong>`;
+    }
+    function selectQuery(i) { query = i; renderAttention(); }
+    function setHead(h) {
+      head = h;
+      headBtns.forEach((b, k) => {
+        b.setAttribute("aria-pressed", String(k === h));
+        b.classList.toggle("btn-ghost", k !== h);
+      });
+      W = attentionWeights(head, attCausal.checked);
+      renderAttention();
+    }
+    headBtns.forEach((b, k) => b.addEventListener("click", () => setHead(k)));
+    attCausal.addEventListener("change", () => setHead(head));
+    setHead(0);
+
+    // --- Simulator 2: token-cost calculator (EN vs ES) -------------------------------------------
+    // Ratios measured in the lab (Part 1) on 8 parallel English/Spanish sentences:
+    // tokens per English word, and ES/EN token ratio for the same content.
+    const TOKENIZERS = {
+      gpt2: { name: "GPT-2", perEnWord: 1.11, esEn: 2.18, perEsWord: 2.20 },
+      bert: { name: "BERT", perEnWord: 1.12, esEn: 1.93, perEsWord: 1.98 },
+      qwen: { name: "Qwen2.5", perEnWord: 1.11, esEn: 1.49, perEsWord: 1.51 }
+    };
+    const tcTok = document.getElementById("tc-tok");
+    const tcWords = document.getElementById("tc-words");
+    const tcVol = document.getElementById("tc-vol");
+    const tcPrice = document.getElementById("tc-price");
+    const fmtInt = (x) => Math.round(x).toLocaleString("en-US");
+    const fmtVolume = (v) => {
+      const n = Math.pow(10, v);
+      return (Number.isInteger(v) ? "" : "≈") + Number(n.toPrecision(2)).toLocaleString("en-US");
+    };
+    const fmtPrice = (v) => "USD " + Math.pow(10, v).toPrecision(2);
+    const fmtUsd = (x) => "USD " + (x >= 100 ? fmtInt(x) : x.toFixed(2));
+    const fmtTokens = (x) => (x >= 1e6 ? (x / 1e6).toFixed(1) + " M" : fmtInt(x / 1e3) + " K");
+
+    function updateTokenCost() {
+      const t = TOKENIZERS[tcTok.value];
+      const words = Number(tcWords.value);
+      const requests = Math.pow(10, Number(tcVol.value));
+      const pricePer1k = Math.pow(10, Number(tcPrice.value));
+      const tokEn = words * t.perEnWord * requests;
+      const tokEs = tokEn * t.esEn;
+      Course.barChart(document.getElementById("tc-chart"), ["English", "Spanish"], [tokEn, tokEs],
+        { format: fmtTokens, highlight: 1, width: 640, title: "Tokens per month (same content)" });
+      document.getElementById("tc-cost-en").textContent = fmtUsd(tokEn / 1000 * pricePer1k);
+      document.getElementById("tc-cost-es").textContent = fmtUsd(tokEs / 1000 * pricePer1k);
+      document.getElementById("tc-prem").textContent = "+" + Math.round((t.esEn - 1) * 100) + "%";
+      document.getElementById("tc-ctx").innerHTML =
+        `<strong>Context:</strong> a 4,096-token window holds ≈ ${fmtInt(4096 / t.perEnWord)} English words ` +
+        `but ≈ ${fmtInt(4096 / t.perEsWord)} Spanish words with the ${t.name} tokenizer.`;
+    }
+    Course.bindRange(tcWords, document.getElementById("tc-words-out"), (v) => fmtInt(v), updateTokenCost);
+    Course.bindRange(tcVol, document.getElementById("tc-vol-out"), fmtVolume, updateTokenCost);
+    Course.bindRange(tcPrice, document.getElementById("tc-price-out"), fmtPrice, updateTokenCost);
+    tcTok.addEventListener("change", updateTokenCost);
+  });
+</script>
+</body>
+</html>
