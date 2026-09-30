@@ -206,6 +206,23 @@ def test_startti_run_without_key_raises_and_does_not_call_network(monkeypatch):
     assert post.calls == []
 
 
+MISSING_KEY_HELP = r"(?s)Kaggle.*Secrets.*Colab.*own computer.*environment variable"
+
+
+def test_startti_run_without_key_explains_kaggle_colab_and_local(monkeypatch):
+    monkeypatch.delenv("STARTTI_API_KEY", raising=False)
+    with pytest.raises(RuntimeError, match=MISSING_KEY_HELP):
+        cs.startti_run("a", "p")
+
+
+def test_startti_client_snippet_without_key_explains_kaggle_colab_and_local(monkeypatch):
+    monkeypatch.delenv("STARTTI_API_KEY", raising=False)
+    ns = {}
+    exec(compile(read_snippet("startti_client.py"), "startti_client.py", "exec"), ns)
+    with pytest.raises(RuntimeError, match=MISSING_KEY_HELP):
+        ns["startti_run"]("a", "p")
+
+
 def test_startti_run_reads_key_from_environment(monkeypatch):
     post = PostRecorder(ok())
     monkeypatch.setattr(requests, "post", post)
@@ -323,6 +340,16 @@ def test_setup_lab_snippet_stops_with_instructions_when_offline(monkeypatch, off
 
 def test_setup_challenge_snippet_stops_with_instructions_when_offline(monkeypatch, offline):
     with pytest.raises(RuntimeError, match=r"(?s)Sin conexión a internet.*Kaggle.*Internet.*teléfono"):
+        run_setup("setup_challenge.py", monkeypatch)
+
+
+def test_setup_lab_offline_message_also_covers_running_on_your_own_computer(monkeypatch, offline):
+    with pytest.raises(RuntimeError, match=r"(?s)own computer.*HF_HUB_OFFLINE=1"):
+        run_setup("setup_lab.py", monkeypatch)
+
+
+def test_setup_challenge_offline_message_also_covers_running_on_your_own_computer(monkeypatch, offline):
+    with pytest.raises(RuntimeError, match=r"(?s)propio computador.*HF_HUB_OFFLINE=1"):
         run_setup("setup_challenge.py", monkeypatch)
 
 

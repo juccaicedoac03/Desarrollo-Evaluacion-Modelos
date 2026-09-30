@@ -9,11 +9,12 @@ Usage:
 Each notebook is executed from an in-memory copy (the file on disk is never modified) in a
 kernel started with *this* Python interpreter, working directory = the notebook's folder, and
 
-    COURSE_FAST_DEV_RUN=1  KERAS_BACKEND=torch  TOKENIZERS_PARALLELISM=false
+    COURSE_FAST_DEV_RUN=1  TOKENIZERS_PARALLELISM=false
     PYTORCH_ENABLE_MPS_FALLBACK=1
 
 ``STARTTI_API_KEY`` is removed from the environment so the "no key" path of every Startti cell is
-what gets exercised.  Notebooks run one after another (the target machine has 8 GB of RAM).
+what gets exercised, and ``KERAS_BACKEND`` is removed so the notebooks pick their own Keras
+backend exactly as on a student's computer without TensorFlow.  Notebooks run one after another (the target machine has 8 GB of RAM).
 
 Prints ``PASS <path> <seconds>s`` or ``FAIL <path> <seconds>s`` followed by the failing cell's source
 (first 40 lines) and the tail of the traceback, and exits with status 1 if any notebook failed.
@@ -51,7 +52,6 @@ SLOW_SECONDS = 360  # total time per notebook above which it is flagged "slow"
 KERNEL_NAME = "course-smoke"
 KERNEL_ENV = {
     "COURSE_FAST_DEV_RUN": "1",
-    "KERAS_BACKEND": "torch",
     "TOKENIZERS_PARALLELISM": "false",
     "PYTORCH_ENABLE_MPS_FALLBACK": "1",
 }
@@ -185,6 +185,7 @@ def main(argv=None):
         print("No sessions/*/lab.ipynb or challenge.ipynb found - nothing to run.")
 
     os.environ.pop("STARTTI_API_KEY", None)  # hermetic: exercise the no-key path of Startti cells
+    os.environ.pop("KERAS_BACKEND", None)  # let notebooks choose the backend, as on a local install
     print(f"Kernel Python: {sys.executable} | per-cell timeout: {args.timeout}s | notebooks: {len(notebooks)}")
 
     results = []

@@ -95,7 +95,7 @@ Las prácticas se realizan en notebooks de Kaggle, que ofrece GPU gratuita (con 
 
 **Idiomas.** Las presentaciones y los notebooks de práctica guiada están en inglés (lectura técnica); los challenges, las rúbricas, el proyecto final y los documentos del curso están en español.
 
-**Requisitos técnicos.** Computador con navegador actualizado, conexión estable a internet, cámara y micrófono (se usan en las micro-sustentaciones y en la socialización del proyecto), cuenta de Kaggle con verificación telefónica y cuenta en Startti ADP (licencia sin costo entregada por el curso). No se requiere instalar software ni contar con un computador de alto desempeño.
+**Requisitos técnicos.** Computador con navegador actualizado, conexión estable a internet, cámara y micrófono (se usan en las micro-sustentaciones y en la socialización del proyecto), cuenta de Kaggle con verificación telefónica y cuenta en Startti ADP (licencia sin costo entregada por el curso). No se requiere instalar software ni contar con un computador de alto desempeño. Ejecutar los notebooks en el propio computador es opcional, con la guía de ejecución local del repositorio (docs/ejecucion-local.md).
 
 ## 7. Estrategias de aprendizaje
 

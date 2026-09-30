@@ -1,0 +1,35 @@
+# Librerías para ejecutar los labs y challenges del curso en tu propio computador.
+# Guía: docs/ejecucion-local.md · Python 3.11 o 3.12.
+# Versiones mínimas = las del entorno con el que se probaron los 22 notebooks (Python 3.12, CPU).
+# En Kaggle y Colab no hace falta instalar este archivo.
+
+# Jupyter
+jupyterlab>=4.0
+ipykernel>=6.29
+ipywidgets>=8.1
+
+# Deep learning y Hugging Face
+torch>=2.14
+transformers>=5.17
+datasets>=5.0
+huggingface_hub>=1.33
+accelerate>=1.15
+peft>=0.21
+sentence-transformers>=6.1
+keras>=3.15
+sentencepiece>=0.2  # tokenizer of the opus-mt translation models (S05)
+
+# Ciencia de datos y evaluación
+numpy>=2.5
+pandas>=3.0
+scipy>=1.18
+scikit-learn>=1.9
+matplotlib>=3.11
+sacrebleu>=2.6
+rouge_score>=0.1.2
+optuna>=5.0
+
+# Aplicaciones, sostenibilidad y APIs
+gradio>=6.29
+codecarbon>=3.3
+requests>=2.34

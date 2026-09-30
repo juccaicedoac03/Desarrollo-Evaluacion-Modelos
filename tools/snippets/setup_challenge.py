@@ -35,7 +35,8 @@ if os.environ.get("HF_HUB_OFFLINE") != "1":  # los modelos y datos se descargan 
             "Sin conexión a internet: este notebook descarga modelos y datos de Hugging Face.\n"
             "Kaggle: en el panel derecho abre Settings (Session options) y activa Internet. "
             "La opción solo aparece si tu cuenta tiene el teléfono verificado (kaggle.com/settings). "
-            "Luego vuelve a ejecutar esta celda. En Colab el internet viene activado."
+            "Luego vuelve a ejecutar esta celda. En Colab el internet viene activado. "
+            "En tu propio computador: revisa tu conexión, o define HF_HUB_OFFLINE=1 si ya tienes los modelos descargados."
         ) from None
 
 import numpy as np
