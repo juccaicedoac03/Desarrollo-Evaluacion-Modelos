@@ -292,6 +292,7 @@ body {
   text-transform: uppercase;
   color: var(--brand);
 }
+.reveal .callout.business:lang(es)::before { content: "💼 Mirada de negocio"; }
 
 /* ---------- Buttons -------------------------------------------------------- */
 
@@ -563,10 +564,21 @@ body {
   font-size: 30px;
   color: rgba(255, 255, 255, 0.9);
 }
-.reveal .slides section.section-slide .kicker { color: rgba(255, 255, 255, 0.8); }
+/* Solid white text on a darker translucent chip: >= 4.5:1 on every block colour
+   (translucent white on the block colour drops below 4.5:1 for warm-up and lab). */
+.reveal .slides section.section-slide .kicker {
+  display: block;
+  width: fit-content;
+  margin: 0 0 14px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.22);
+  color: #fff;
+}
 .reveal .slides section.section-slide .block-tag {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.22);
   border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #fff;
 }
 .reveal .slides section.section-slide a { color: #fff; }
 
@@ -598,7 +610,7 @@ body {
   white-space: nowrap;
 }
 
-.reveal ol.agenda {
+.reveal .agenda {
   display: grid;
   gap: 10px;
   margin: 0;
@@ -606,7 +618,7 @@ body {
   list-style: none;
   counter-reset: agenda;
 }
-.reveal ol.agenda > li {
+.reveal .agenda > li {
   counter-increment: agenda;
   display: flex;
   align-items: center;
@@ -618,10 +630,10 @@ body {
   background: var(--surface);
   font-size: 27px;
   line-height: 1.25;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
-.reveal ol.agenda > li::marker { content: none; }
-.reveal ol.agenda > li::before {
+.reveal .agenda > li::marker { content: none; }
+.reveal .agenda > li::before {
   content: counter(agenda);
   flex: none;
   display: grid;
@@ -634,24 +646,24 @@ body {
   font-size: 20px;
   font-weight: 700;
 }
-.reveal ol.agenda > li .time {
+.reveal .agenda > li .time {
   margin-left: auto;
   color: var(--muted);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.reveal ol.agenda > li.is-current,
-.reveal ol.agenda[data-current="warmup"] > li[data-block="warmup"],
-.reveal ol.agenda[data-current="theory"] > li[data-block="theory"],
-.reveal ol.agenda[data-current="break"] > li[data-block="break"],
-.reveal ol.agenda[data-current="lab"] > li[data-block="lab"],
-.reveal ol.agenda[data-current="challenge"] > li[data-block="challenge"] {
+.reveal .agenda > li.is-current,
+.reveal .agenda[data-current="warmup"] > li[data-block="warmup"],
+.reveal .agenda[data-current="theory"] > li[data-block="theory"],
+.reveal .agenda[data-current="break"] > li[data-block="break"],
+.reveal .agenda[data-current="lab"] > li[data-block="lab"],
+.reveal .agenda[data-current="challenge"] > li[data-block="challenge"] {
   border-color: var(--b);
   background: color-mix(in srgb, var(--b) 11%, white);
   font-weight: 700;
 }
-.reveal ol.agenda > li.is-current::after {
+.reveal .agenda > li.is-current::after {
   content: "Now";
   flex: none;
   margin-left: 12px;
@@ -664,8 +676,10 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-.reveal ol.agenda > li.is-current .time { color: var(--ink); }
-.reveal ol.agenda > li.is-past { opacity: 0.5; }
+.reveal .agenda > li.is-current .time { color: var(--ink); }
+/* Past items: muted colour instead of opacity, so text stays >= 4.5:1 */
+.reveal .agenda > li.is-past { color: var(--muted); }
+.reveal .agenda > li.is-past::before { background: var(--muted); }
 
 /* ---------- Quiz ---------------------------------------------------------------- */
 
@@ -837,7 +851,8 @@ body {
 .reveal .timer.is-warning .timer-bar > span { background: var(--accent-2); }
 .reveal .timer.is-done { border-color: var(--bad); animation: course-timer-flash 0.5s ease-in-out 8 alternate; }
 .reveal .timer.is-done .timer-display { color: var(--bad); }
-.reveal .timer.is-done .timer-label::after { content: " · time's up!"; color: var(--bad); }
+/* data-done-label is set by course.js (localized: "time's up!" / "¡Tiempo!") */
+.reveal .timer.is-done .timer-label::after { content: " · " attr(data-done-label); color: var(--bad); }
 
 @keyframes course-timer-flash {
   from { background-color: #fff; }
@@ -926,6 +941,12 @@ body {
 .reveal .prompt-card[data-kind="chat"] { --k: var(--accent); --k-label: "💬 Chat"; }
 .reveal .prompt-card[data-kind="breakout"] { --k: var(--brand); --k-label: "👥 Breakout"; }
 .reveal .prompt-card[data-kind="think"] { --k: var(--accent-2); --k-label: "🤔 Think"; }
+/* Spanish labels inside lang="es" */
+.reveal .prompt-card:lang(es) { --k-label: "💬 Actividad"; }
+.reveal .prompt-card:lang(es)[data-kind="poll"] { --k-label: "📊 Encuesta"; }
+.reveal .prompt-card:lang(es)[data-kind="chat"] { --k-label: "💬 Chat"; }
+.reveal .prompt-card:lang(es)[data-kind="breakout"] { --k-label: "👥 Salas de trabajo"; }
+.reveal .prompt-card:lang(es)[data-kind="think"] { --k-label: "🤔 Reflexiona"; }
 .reveal .prompt-card::before {
   content: var(--k-label);
   display: inline-block;
@@ -1125,6 +1146,11 @@ body {
 
 html.print-pdf .reveal .course-footer,
 html.reveal-print .reveal .course-footer { display: none; }
+/* reveal 5.1.0 print CSS sets `html.reveal-print .reveal .slides section { padding: 0 !important }`;
+   restore the on-screen padding (dividers use their own; the title slide keeps 0). */
+html.reveal-print .reveal .slides section:not(.stack) { padding: 44px 56px 36px !important; }
+html.reveal-print .reveal .slides section.section-slide { padding: 0 110px !important; }
+html.reveal-print .reveal .slides section.title-slide { padding: 0 !important; }
 html.print-pdf .reveal .flip-card,
 html.print-pdf .reveal .reveal-card {
   grid-template-columns: minmax(0, 1fr);
