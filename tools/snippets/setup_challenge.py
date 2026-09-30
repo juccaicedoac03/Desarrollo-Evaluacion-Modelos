@@ -26,6 +26,18 @@ def pick(options):
     """Elige una opción de forma determinística a partir de tu código estudiantil."""
     return rng.choice(list(options))
 
+import socket
+if os.environ.get("HF_HUB_OFFLINE") != "1":  # los modelos y datos se descargan de Hugging Face
+    try:
+        socket.create_connection(("huggingface.co", 443), timeout=10).close()
+    except OSError:
+        raise RuntimeError(
+            "Sin conexión a internet: este notebook descarga modelos y datos de Hugging Face.\n"
+            "Kaggle: en el panel derecho abre Settings (Session options) y activa Internet. "
+            "La opción solo aparece si tu cuenta tiene el teléfono verificado (kaggle.com/settings). "
+            "Luego vuelve a ejecutar esta celda. En Colab el internet viene activado."
+        ) from None
+
 import numpy as np
 import torch
 random.seed(PERSONAL_SEED); np.random.seed(PERSONAL_SEED % (2**32)); torch.manual_seed(PERSONAL_SEED)
