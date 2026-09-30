@@ -273,7 +273,66 @@ def _fake_torch():
     return torch
 
 
-def test_setup_challenge_snippet_agrees_with_course_snippets(monkeypatch, capsys):
+class _FakeSocket:
+    def close(self):
+        pass
+
+
+@pytest.fixture
+def online(monkeypatch):
+    """Pretend the notebook has internet: the connectivity probe succeeds without touching the network."""
+    calls = []
+
+    def fake_connect(address, timeout=None):
+        calls.append(address)
+        return _FakeSocket()
+
+    monkeypatch.setattr("socket.create_connection", fake_connect)
+    monkeypatch.delenv("HF_HUB_OFFLINE", raising=False)
+    return calls
+
+
+@pytest.fixture
+def offline(monkeypatch):
+    """Pretend the notebook has no internet (Kaggle with Internet switched off)."""
+    def fail(address, timeout=None):
+        raise OSError(-3, "Temporary failure in name resolution")
+
+    monkeypatch.setattr("socket.create_connection", fail)
+    monkeypatch.delenv("HF_HUB_OFFLINE", raising=False)
+
+
+def run_setup(name, monkeypatch):
+    monkeypatch.setitem(sys.modules, "torch", _fake_torch())
+    monkeypatch.setenv("COURSE_FAST_DEV_RUN", "1")
+    ns = {}
+    exec(compile(read_snippet(name), name, "exec"), ns)
+    return ns
+
+
+@pytest.mark.parametrize("name", ["setup_lab.py", "setup_challenge.py"])
+def test_setup_snippets_probe_hugging_face_when_online(name, monkeypatch, online):
+    run_setup(name, monkeypatch)
+    assert online == [("huggingface.co", 443)]
+
+
+def test_setup_lab_snippet_stops_with_instructions_when_offline(monkeypatch, offline):
+    with pytest.raises(RuntimeError, match=r"(?s)No internet.*Kaggle.*Internet.*phone"):
+        run_setup("setup_lab.py", monkeypatch)
+
+
+def test_setup_challenge_snippet_stops_with_instructions_when_offline(monkeypatch, offline):
+    with pytest.raises(RuntimeError, match=r"(?s)Sin conexión a internet.*Kaggle.*Internet.*teléfono"):
+        run_setup("setup_challenge.py", monkeypatch)
+
+
+@pytest.mark.parametrize("name", ["setup_lab.py", "setup_challenge.py"])
+def test_setup_snippets_skip_probe_when_hub_is_offline_on_purpose(name, monkeypatch, offline):
+    monkeypatch.setenv("HF_HUB_OFFLINE", "1")  # cached models only: do not require internet
+    run_setup(name, monkeypatch)
+
+
+def test_setup_challenge_snippet_agrees_with_course_snippets(monkeypatch, capsys, online):
     monkeypatch.setitem(sys.modules, "torch", _fake_torch())
     monkeypatch.setenv("COURSE_FAST_DEV_RUN", "1")  # snippet fills in a placeholder student id
     ns = {}
@@ -286,7 +345,7 @@ def test_setup_challenge_snippet_agrees_with_course_snippets(monkeypatch, capsys
     assert "Semilla personal" in capsys.readouterr().out
 
 
-def test_setup_challenge_snippet_requires_student_id(monkeypatch):
+def test_setup_challenge_snippet_requires_student_id(monkeypatch, online):
     monkeypatch.setitem(sys.modules, "torch", _fake_torch())
     monkeypatch.delenv("COURSE_FAST_DEV_RUN", raising=False)
     with pytest.raises(AssertionError, match="STUDENT_ID"):

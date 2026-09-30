@@ -11,6 +11,18 @@ def ensure(package, import_name=None):
     except ImportError:
         subprocess.run([sys.executable, "-m", "pip", "install", "-q", package], check=True)
 
+import socket
+if os.environ.get("HF_HUB_OFFLINE") != "1":  # models and datasets come from the Hugging Face Hub
+    try:
+        socket.create_connection(("huggingface.co", 443), timeout=10).close()
+    except OSError:
+        raise RuntimeError(
+            "No internet connection: this notebook downloads models and datasets from Hugging Face.\n"
+            "Kaggle: in the right-hand panel open Settings (Session options) and switch Internet on. "
+            "The switch only appears once your account is phone-verified (kaggle.com/settings). "
+            "Then run this cell again. Colab has internet by default."
+        ) from None
+
 import numpy as np
 import torch
 SEED = 42
