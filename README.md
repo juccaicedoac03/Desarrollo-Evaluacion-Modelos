@@ -63,7 +63,7 @@ Cada sesión dura 180 minutos: calentamiento (10') · teoría interactiva (60') 
 | 11 | **Evaluation and Continuous Model Improvement**<br>*Evaluación y mejora continua de modelos* | [Guía](sessions/11-continuous-improvement/README.md) | [Slides](https://juccaicedoac03.github.io/Desarrollo-Evaluacion-Modelos/sessions/11-continuous-improvement/slides.html) | [Kaggle](https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/lab.ipynb) · [Colab](https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/lab.ipynb) | [Kaggle](https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/challenge.ipynb) · [Colab](https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/challenge.ipynb) |
 | 12 | **Integrative Project: Complete Solution**<br>*Proyecto integrador: desarrollo de solución completa* | [Guía](sessions/12-integrative-project/README.md) | [Slides](https://juccaicedoac03.github.io/Desarrollo-Evaluacion-Modelos/sessions/12-integrative-project/slides.html) | — | [Proyecto final](proyecto-final/README.md) |
 
-> Los enlaces de Kaggle crean una copia del notebook en tu cuenta. Si es tu primera vez, revisa antes la [configuración de Kaggle](docs/configuracion-kaggle.md).
+> Los enlaces de Kaggle crean una copia del notebook en tu cuenta. Si es tu primera vez, revisa antes la [configuración de Kaggle](docs/configuracion-kaggle.md). ¿Prefieres tu propio computador? Sigue la guía de [ejecución local](docs/ejecucion-local.md) (opcional).
 
 ## Cómo está organizado el repositorio
 
@@ -139,6 +139,7 @@ Todos los detalles están en [docs/evaluacion.md](docs/evaluacion.md).
 | [Política de uso de IA](docs/politica-uso-ia.md) | Qué puedes hacer con asistentes de IA, cómo declararlo y qué está prohibido |
 | [Configuración de Kaggle](docs/configuracion-kaggle.md) | Cuenta, verificación, GPU, Internet, Secrets, entrega y plan B en Colab |
 | [Configuración de Startti](docs/configuracion-startti.md) | Licencia, primer agente, base de conocimiento, API key y llamadas desde Kaggle |
+| [Ejecución local (opcional)](docs/ejecucion-local.md) | Correr los notebooks en tu computador: instalación, Startti, CPU/GPU y problemas frecuentes |
 | [Proyecto final](proyecto-final/README.md) · [Rúbrica](proyecto-final/rubrica.md) | Reto, hitos, entregables, socialización y criterios de evaluación |
 
 ## Licencia

@@ -67,7 +67,8 @@ def startti_run(agent_id: str, prompt: str, session_key: str = None, timeout_s: 
     """
     api_key = api_key or get_secret("STARTTI_API_KEY")
     if not api_key:
-        raise RuntimeError("STARTTI_API_KEY not found. Add it in Kaggle → Add-ons → Secrets.")
+        raise RuntimeError("STARTTI_API_KEY not found. Kaggle: Add-ons → Secrets. Colab: Secrets (key icon). "
+                           "On your own computer: set the STARTTI_API_KEY environment variable before starting Jupyter.")
     body = {"agentId": agent_id, "prompt": prompt}
     if session_key:
         body["sessionKey"] = session_key

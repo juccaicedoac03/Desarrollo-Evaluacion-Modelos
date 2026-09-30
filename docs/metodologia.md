@@ -86,6 +86,7 @@ El challenge se empieza en clase y se entrega hasta las **23:59 del mismo día**
 | **Portal y repositorio del curso** | Presentaciones, guías de sesión, notebooks y documentos | [Portal](https://juccaicedoac03.github.io/Desarrollo-Evaluacion-Modelos/) · [README](../README.md) |
 | **Kaggle Notebooks** | Labs y challenges con GPU gratuita, sin instalar nada | [Configuración de Kaggle](configuracion-kaggle.md) |
 | **Google Colab** | Plan B cuando Kaggle no está disponible | [Configuración de Kaggle, sección Colab](configuracion-kaggle.md) |
+| **Tu computador (opcional)** | Correr los notebooks localmente con Jupyter | [Ejecución local](ejecucion-local.md) |
 | **Startti ADP** | Construcción, publicación y evaluación de agentes (S06, S07, S09 y, opcionalmente, el proyecto) | [Configuración de Startti](configuracion-startti.md) |
 | **e-Aulas** | Anuncios, entregas de challenges y del proyecto, notas y retroalimentación | Plataforma institucional |
 | **Zoom o Teams** | Sesiones sincrónicas, salas de grupo, encuestas y micro-sustentaciones | La plataforma que indique la Universidad |

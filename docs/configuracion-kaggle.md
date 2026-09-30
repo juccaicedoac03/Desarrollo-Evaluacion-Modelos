@@ -127,6 +127,8 @@ Si Kaggle no está disponible o agotaste tu cuota, puedes usar **Google Colab** 
 
 Ten en cuenta que en la versión gratuita de Colab la GPU no siempre está disponible y la sesión se desconecta tras un tiempo de inactividad.
 
+**Otra alternativa (opcional):** si ya trabajas con Python, puedes correr los notebooks en tu propio computador con Jupyter. Sigue la guía de [ejecución local](ejecucion-local.md).
+
 ## 10. Lista de verificación antes de la Sesión 01 (viernes 2 de octubre)
 
 - [ ] Tengo cuenta en Kaggle y sé iniciar sesión.

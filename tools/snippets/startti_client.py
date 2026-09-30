@@ -24,7 +24,8 @@ _STARTTI_HINTS = {401: "invalid or revoked API key", 402: "plan limit reached",
 def startti_run(agent_id, prompt, session_key=None, timeout_s=120):
     """Send one message to a published Startti agent and return its text answer."""
     if not STARTTI_API_KEY:
-        raise RuntimeError("STARTTI_API_KEY not found. Add it in Kaggle → Add-ons → Secrets.")
+        raise RuntimeError("STARTTI_API_KEY not found. Kaggle: Add-ons → Secrets. Colab: Secrets (key icon). "
+                           "On your own computer: set the STARTTI_API_KEY environment variable before starting Jupyter.")
     body = {"agentId": agent_id, "prompt": prompt}
     if session_key:
         body["sessionKey"] = session_key

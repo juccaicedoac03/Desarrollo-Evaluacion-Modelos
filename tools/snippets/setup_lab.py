@@ -20,7 +20,8 @@ if os.environ.get("HF_HUB_OFFLINE") != "1":  # models and datasets come from the
             "No internet connection: this notebook downloads models and datasets from Hugging Face.\n"
             "Kaggle: in the right-hand panel open Settings (Session options) and switch Internet on. "
             "The switch only appears once your account is phone-verified (kaggle.com/settings). "
-            "Then run this cell again. Colab has internet by default."
+            "Then run this cell again. Colab has internet by default. "
+            "On your own computer: check your connection, or set HF_HUB_OFFLINE=1 if the models are already cached."
         ) from None
 
 import numpy as np
