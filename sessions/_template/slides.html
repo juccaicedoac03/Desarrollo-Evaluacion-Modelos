@@ -39,6 +39,9 @@
               Course.lineChart(el, [{name, points:[[x,y],…], dashed?, color?}], {xLabel, yLabel, yMin, yMax, width, height})
               Course.bindRange(input, output, fmt, onChange) · Course.tokenize(text) · Course.ngrams(tokens, n)
               Put deck-specific simulators inside Course.onReady(() => { … }).
+  Language    Auto labels (timer buttons, quiz feedback, prompt-card kind, business lens) are
+              English by default and Spanish inside any element with lang="es"
+              (e.g. <section lang="es">). Do not repeat them in your own headings or kickers.
   Charts are sized by their viewBox (default 640 wide for bars, 800 for lines). In a
   half-width column pass { width: 640 } or less so labels stay ≥16px on screen.
   ============================================================================
@@ -199,7 +202,7 @@
 
   <!-- 10 · Business lens + big number -->
   <section>
-    <p class="kicker">Business lens</p>
+    <p class="kicker">Cost of errors</p>
     <h2>Small error rates, large volumes</h2>
     <div class="cols">
       <div>
@@ -371,7 +374,7 @@ for t in (0.5, 1.0, 1.5):
     <h2>Choose settings for a real use case</h2>
     <div class="cols">
       <div class="prompt-card" data-kind="breakout">
-        <h4>Groups of 3 · 6 min</h4>
+        <h4>Pick the settings · 6 min</h4>
         <ol class="small">
           <li>Pick one: support replies, product descriptions or meeting minutes.</li>
           <li>Choose a temperature and a top-k, and justify both.</li>

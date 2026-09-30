@@ -9,7 +9,7 @@
    Course.init({ session: "01" })     Reveal.initialize(...) + auto-mount components
    Course.onReady(fn)                 run fn once Reveal is ready and components are mounted
    Course.softmax(logits, temperature = 1)       -> number[]
-   Course.sample(probs, rng = Math.random)       -> index
+   Course.sample(probs, rng = Math.random)       -> index (never -1; see sample())
    Course.topK(probs, k)                         -> renormalized probs, zeros outside top-k
    Course.seededRandom(seed)                     -> () => number   (mulberry32)
    Course.barChart(el, labels, values, opts?)    opts: { max, format, highlight, color, ... }
@@ -166,7 +166,10 @@
         last = i;
       }
     }
-    if (last === -1) return -1; // no positive probability mass
+    // No positive probability mass (all zeros, negatives, NaN or empty input): there is nothing
+    // to sample from, so fall back to the argmax of the input (0 for an empty array) instead of
+    // returning -1. Callers can therefore always index with the result, e.g. VOCAB[sample(p)].
+    if (last === -1) return argmaxIndex(ps);
     var r = random() * total;
     for (var j = 0; j < ps.length; j++) {
       var p = ps[j] > 0 && isFinite(ps[j]) ? ps[j] : 0;
@@ -335,6 +338,13 @@
       'V' + yBase + 'Z';
   }
 
+  // Truncate a label with an ellipsis so its estimated width fits in maxWidth (SVG user units).
+  function fitLabel(str, maxWidth, fontSize) {
+    if (textWidth(str, fontSize) <= maxWidth) return str;
+    var keep = Math.max(1, Math.floor(maxWidth / (fontSize * 0.56)) - 1);
+    return str.slice(0, keep).replace(/\s+$/, '') + '…';
+  }
+
   function barChart(host, labels, values, opts) {
     opts = opts || {};
     var vals = toArray(values).map(function (v) { v = Number(v); return isFinite(v) ? v : 0; });
@@ -374,7 +384,7 @@
         var yc = pad + i * rowH + rowH / 2;
         var row = svg('g', { class: 'bar-row' + (i === highlight ? ' is-highlight' : '') }, g);
         svg('title', null, row).textContent = labs[i] + ': ' + formatted[i];
-        svgText(row, labelW, yc, labs[i], {
+        svgText(row, labelW, yc, fitLabel(labs[i], labelW - 14, fs), {
           class: 'label' + (i === highlight ? ' is-highlight-label' : ''),
           'text-anchor': 'end', dy: '0.35em'
         });
@@ -565,6 +575,35 @@
   }
 
   // ------------------------------------------------------------------------
+  // UI strings (component labels are English by default, Spanish inside lang="es")
+  // ------------------------------------------------------------------------
+
+  var STRINGS = {
+    en: {
+      start: 'Start', pause: 'Pause', resume: 'Resume', reset: 'Reset', plus: '+1 min',
+      plusAria: 'Add one minute', done: "time's up!", timer: 'Timer', flip: 'flip card',
+      correct: '✓ Correct!', tryAgain: 'Try again',
+      notQuite: function (keys) { return '✗ Not quite: the answer is ' + keys + '.'; },
+      chose: function (key) { return 'You chose ' + key + '.'; }
+    },
+    es: {
+      start: 'Iniciar', pause: 'Pausar', resume: 'Reanudar', reset: 'Reiniciar', plus: '+1 min',
+      plusAria: 'Añadir un minuto', done: '¡Tiempo!', timer: 'Temporizador', flip: 'tarjeta giratoria',
+      correct: '✓ ¡Correcto!', tryAgain: 'Intentar de nuevo',
+      notQuite: function (keys) { return '✗ No exactamente: la respuesta es ' + keys + '.'; },
+      chose: function (key) { return 'Elegiste ' + key + '.'; }
+    }
+  };
+
+  // Strings for a component: Spanish when the nearest ancestor with a `lang` attribute
+  // (the element itself included) starts with "es", English otherwise.
+  function strings(node) {
+    var host = node && node.closest ? node.closest('[lang]') : null;
+    var lang = host ? String(host.getAttribute('lang') || '') : '';
+    return /^es(?:$|[-_])/i.test(lang) ? STRINGS.es : STRINGS.en;
+  }
+
+  // ------------------------------------------------------------------------
   // Declarative components
   // ------------------------------------------------------------------------
 
@@ -572,6 +611,7 @@
     removeGenerated(q);
     q.classList.remove('is-answered', 'is-correct', 'is-wrong');
     q.setAttribute('data-prevent-swipe', '');
+    var ui = strings(q);
     var options = toArray(q.querySelectorAll('.quiz-opt'));
     var correct = String(q.getAttribute('data-correct') || '')
       .split(/[\s,]+/).filter(Boolean).map(function (s) { return s.toLowerCase(); });
@@ -623,14 +663,14 @@
           else o.classList.add('is-dimmed');
         });
         verdict.textContent = ok
-          ? '✓ Correct!'
-          : '✗ Not quite: the answer is ' + correct.map(function (k) { return k.toUpperCase(); }).join(', ') + '.';
+          ? ui.correct
+          : ui.notQuite(correct.map(function (k) { return k.toUpperCase(); }).join(', '));
       } else {
         options.forEach(function (o) { if (o !== b) o.classList.add('is-dimmed'); });
-        verdict.textContent = 'You chose ' + key.toUpperCase() + '.';
+        verdict.textContent = ui.chose(key.toUpperCase());
       }
       options.forEach(function (o) { o.setAttribute('aria-disabled', 'true'); });
-      var again = el('button', 'quiz-reset', 'Try again');
+      var again = el('button', 'quiz-reset', ui.tryAgain);
       again.type = 'button';
       feedback.appendChild(verdict);
       feedback.appendChild(again);
@@ -693,6 +733,7 @@
 
   function mountTimer(t) {
     removeGenerated(t);
+    var ui = strings(t);
     var minutes = parseFloat(t.getAttribute('data-minutes'));
     var extra = parseFloat(t.getAttribute('data-seconds'));
     var initial = Math.round((isFinite(minutes) ? minutes : (isFinite(extra) ? 0 : 5)) * 60 + (isFinite(extra) ? extra : 0));
@@ -701,11 +742,16 @@
     var sound = t.getAttribute('data-sound') !== 'off' && t.getAttribute('data-sound') !== 'false';
 
     t.setAttribute('role', 'group');
-    t.setAttribute('aria-label', (labelText || 'Timer') + ' (' + fmtClock(initial) + ')');
+    t.setAttribute('aria-label', (labelText || ui.timer) + ' (' + fmtClock(initial) + ')');
     t.setAttribute('data-prevent-swipe', '');
     t.classList.remove('is-running', 'is-warning', 'is-done');
 
-    if (labelText) t.appendChild(gen(el('div', 'timer-label', labelText)));
+    if (labelText) {
+      var labelEl = gen(el('div', 'timer-label', labelText));
+      // CSS shows this after the label once the timer is done (content: attr(data-done-label)).
+      labelEl.setAttribute('data-done-label', t.getAttribute('data-done-label') || ui.done);
+      t.appendChild(labelEl);
+    }
     var display = gen(el('div', 'timer-display', fmtClock(initial)));
     display.setAttribute('role', 'timer');
     display.setAttribute('aria-live', 'off');
@@ -715,11 +761,11 @@
     bar.appendChild(fill);
     t.appendChild(bar);
     var controls = gen(el('div', 'timer-controls'));
-    var startBtn = el('button', 'btn btn-sm timer-start', 'Start');
-    var resetBtn = el('button', 'btn btn-sm btn-ghost timer-reset', 'Reset');
-    var plusBtn = el('button', 'btn btn-sm btn-ghost timer-plus', '+1 min');
+    var startBtn = el('button', 'btn btn-sm timer-start', ui.start);
+    var resetBtn = el('button', 'btn btn-sm btn-ghost timer-reset', ui.reset);
+    var plusBtn = el('button', 'btn btn-sm btn-ghost timer-plus', ui.plus);
     [startBtn, resetBtn, plusBtn].forEach(function (b) { b.type = 'button'; controls.appendChild(b); });
-    plusBtn.setAttribute('aria-label', 'Add one minute');
+    plusBtn.setAttribute('aria-label', ui.plusAria);
     t.appendChild(controls);
 
     var total = initial;
@@ -744,7 +790,7 @@
       stopInterval();
       remaining = 0;
       started = false;
-      startBtn.textContent = 'Start';
+      startBtn.textContent = ui.start;
       t.classList.add('is-done');
       render();
       display.setAttribute('aria-live', 'assertive');
@@ -766,7 +812,7 @@
       started = true;
       endAt = Date.now() + remaining * 1000;
       interval = setInterval(tick, 200);
-      startBtn.textContent = 'Pause';
+      startBtn.textContent = ui.pause;
       render();
     }
 
@@ -774,7 +820,7 @@
       if (!interval) return;
       remaining = Math.max(0, (endAt - Date.now()) / 1000);
       stopInterval();
-      startBtn.textContent = 'Resume';
+      startBtn.textContent = ui.resume;
       render();
     }
 
@@ -783,7 +829,7 @@
       total = initial;
       remaining = initial;
       started = false;
-      startBtn.textContent = 'Start';
+      startBtn.textContent = ui.start;
       t.classList.remove('is-done');
       display.setAttribute('aria-live', 'off');
       render();
@@ -819,7 +865,7 @@
     card.setAttribute('data-prevent-swipe', '');
     var front = card.querySelector('.front');
     if (!card.getAttribute('aria-label') && front) {
-      card.setAttribute('aria-label', front.textContent.trim().slice(0, 120) + ' (flip card)');
+      card.setAttribute('aria-label', front.textContent.trim().slice(0, 120) + ' (' + strings(card).flip + ')');
     }
     card.setAttribute('aria-pressed', card.classList.contains('is-flipped') ? 'true' : 'false');
     function toggle() {
@@ -1018,6 +1064,12 @@
       safeCall(function () { bindGlobalHandlers(Reveal); }, 'binding deck handlers');
       updateSlideKind(e && e.currentSlide ? e.currentSlide : Reveal.getCurrentSlide());
       markReady();
+      // Web fonts change text metrics: re-run reveal's layout/scale once they have loaded.
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () {
+          safeCall(function () { Reveal.layout(); }, 'Reveal.layout after fonts');
+        });
+      }
     });
 
     state.readyPromise = Reveal.initialize(config);
