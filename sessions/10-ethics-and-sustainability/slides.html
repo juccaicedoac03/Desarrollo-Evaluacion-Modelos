@@ -1,0 +1,1232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S10 · Ethics and Sustainability in Generative Models</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+<style>
+  /* Deck-specific helpers (S10) */
+  .reveal .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .reveal .grid-4 .card { padding: 12px 14px; }
+  .reveal .grid-4 .card h4 { margin: 0 0 4px; font-size: 22px; }
+  .reveal .grid-4 .card p { margin: 0; font-size: 18px; line-height: 1.3; }
+  .reveal .pipeline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+  .reveal .pipeline .card { position: relative; padding: 12px 14px; }
+  .reveal .pipeline .card h4 { margin: 0 0 6px; font-size: 22px; }
+  .reveal .pipeline .card p { margin: 0 0 4px; font-size: 18px; line-height: 1.3; }
+  .reveal .pipeline .card:not(:last-child)::after {
+    content: "→"; position: absolute; right: -13px; top: 38%; font-size: 22px; color: var(--muted);
+  }
+  .reveal .tiers { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .reveal .tier { box-sizing: border-box; padding: 8px 16px; border-radius: 10px; color: #fff; font-size: 19px; line-height: 1.3; text-align: center; }
+  .reveal .tier strong { display: block; font-size: 21px; }
+  .reveal .tier.t1 { width: 46%; background: #9E1B32; }
+  .reveal .tier.t2 { width: 64%; background: #B45309; }
+  .reveal .tier.t3 { width: 82%; background: #4338CA; }
+  .reveal .tier.t4 { width: 100%; background: #0F766E; }
+  .reveal .timeline { list-style: none; margin: 0; padding: 0; border-left: 4px solid var(--line-strong); }
+  .reveal .timeline li { position: relative; margin: 0 0 10px 0; padding-left: 22px; font-size: 21px; line-height: 1.35; }
+  .reveal .timeline li::before { content: ""; position: absolute; left: -12px; top: 8px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); }
+  .reveal .timeline li.moved::before { background: var(--accent-2); }
+  .reveal .timeline .when { font-family: var(--font-mono); font-weight: 600; color: var(--accent); margin-right: 8px; }
+  .reveal .timeline li.moved .when { color: var(--accent-2); }
+  .reveal .preset-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .reveal .sim .cf-sentence { font-size: 19px; margin: 0 0 6px; }
+  .reveal .sim .cf-chart-title { font-size: 17px; font-weight: 600; color: var(--muted); margin: 2px 0 0; }
+  .reveal .eq-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 8px; }
+  .reveal .eq-row .card { padding: 8px 12px; }
+  .reveal .eq-row .card p { margin: 0; font-size: 18px; }
+  .reveal .eq-row .card .big { font-size: 30px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .reveal .refs { font-size: 15px; line-height: 1.25; }
+  .reveal .refs li { margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ===================================================================== -->
+  <!-- OPENING                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="10">
+    <div class="title-main">
+      <h1>Ethics and Sustainability in Generative Models</h1>
+      <p class="subtitle">Ética y sostenibilidad en modelos generativos</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome to Session 10. Frame the day: until now we asked "does the model work?";
+      today we ask "for whom does it work, what does it cost, and is it allowed?". Everything we do today
+      feeds criterion 6 of the final-project rubric (ethics, sustainability and model card, 15%).
+      Keys: S speaker view, F fullscreen, Esc overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Warm-up: lessons from real use cases (S09) <span class="time">10'</span></li>
+      <li data-block="theory">Theory: risk map, bias &amp; fairness, privacy &amp; regulation, carbon &amp; documentation <span class="time">60'</span></li>
+      <li data-block="break">Break <span class="time">10'</span></li>
+      <li data-block="lab">Guided lab: bias probes, counterfactual test, PII redaction, CodeCarbon, model card <span class="time">60'</span></li>
+      <li data-block="challenge">Session challenge (graded, individual) <span class="time">40'</span></li>
+    </ol>
+    <aside class="notes">
+      [0:01 · 1 min] Same five blocks as always. Two simulators today (a counterfactual bias demo and a
+      carbon calculator) and one breakout where groups classify use cases under the EU AI Act.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WARM-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 3 · Warm-up divider -->
+  <section class="section-slide" data-block="warmup">
+    <h2>Warm-up</h2>
+    <p>Two lessons from last session's real-world cases, and a question about your own use case.</p>
+    <span class="block-tag" data-block="warmup">Warm-up · 10'</span>
+    <aside class="notes">
+      [0:02] Retrieval practice on Session 09 (use cases in real contexts). Both questions connect directly
+      to today's topic: where generative AI fails, and who is accountable when it does.
+    </aside>
+  </section>
+
+  <!-- 4 · Warm-up Q1 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q1</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Dell'Acqua et al. (2023) gave consultants GPT-4 for a task designed to fall <em>outside</em> the AI's capability frontier. What happened?</p>
+      <button class="quiz-opt" data-key="a">Everyone improved by roughly the same amount</button>
+      <button class="quiz-opt" data-key="b">Consultants with AI were less likely to reach the correct answer than those without it</button>
+      <button class="quiz-opt" data-key="c">The model refused to help with the task</button>
+      <button class="quiz-opt" data-key="d">There was no measurable difference between the groups</button>
+      <div class="quiz-explain">The "jagged technological frontier": inside it, AI users were faster and produced higher-quality
+        work; on the task outside it, they were about 19 percentage points less likely to be correct. Fluent output
+        invites over-reliance, which is an ethical risk as much as a quality one.</div>
+    </div>
+    <aside class="notes">
+      [0:02 · 3 min] Poll first, then click. Link to today: over-reliance means people stop checking. That is why
+      human oversight in the EU AI Act is about effective oversight (people who can understand and override the
+      system), not a person who rubber-stamps outputs.
+    </aside>
+  </section>
+
+  <!-- 5 · Warm-up Q2 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q2</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">In <em>Moffatt v. Air Canada</em> (2024), the airline's website chatbot gave a customer wrong information about a fare policy. What did the tribunal decide?</p>
+      <button class="quiz-opt" data-key="a">The chatbot is a separate entity, responsible for its own answers</button>
+      <button class="quiz-opt" data-key="b">The airline was responsible for all the information on its website, chatbot included</button>
+      <button class="quiz-opt" data-key="c">The customer should have known that chatbots make mistakes</button>
+      <button class="quiz-opt" data-key="d">Only the chatbot's vendor could be held liable</button>
+      <div class="quiz-explain">The British Columbia Civil Resolution Tribunal rejected the idea that the chatbot was a separate
+        entity and found the airline liable for negligent misrepresentation. Deploying a model means owning what it says.</div>
+    </div>
+    <aside class="notes">
+      [0:05 · 2 min] Poll, then click. Key message: accountability does not transfer to the model or the vendor.
+      That is the thread of today's session: if you deploy it, you must be able to explain, measure and defend it.
+    </aside>
+  </section>
+
+  <!-- 6 · Bridge to today -->
+  <section>
+    <p class="kicker">From value to risk</p>
+    <h2>Your use case, seen from the other side</h2>
+    <div class="cols">
+      <div class="prompt-card" data-kind="chat">
+        <h4>One line in the chat</h4>
+        <p class="small">Take the use case you analysed in S09 (or your final project). What is the worst thing that could
+          happen to a <strong>person</strong> because of the model? Be concrete: who, what, how often.</p>
+      </div>
+      <div class="callout tip">
+        <p><strong>Today we turn that worry into:</strong></p>
+        <ul class="small">
+          <li>numbers (bias metrics, redaction recall, kWh and kg CO₂e),</li>
+          <li>legal categories (EU AI Act tiers, Ley 1581 de 2012),</li>
+          <li>and documents (model cards, datasheets).</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:07 · 2 min] Read three or four answers aloud and group them: unfair treatment, privacy, wrong
+      information, misuse. Keep them visible: we map them onto a taxonomy in five minutes.
+    </aside>
+  </section>
+
+  <!-- 7 · Learning objectives -->
+  <section>
+    <p class="kicker">Learning objectives</p>
+    <h2>By the end of this session you can…</h2>
+    <ol>
+      <li>Map the main risks of generative models and name a control for each <span class="pill">RAE 6</span></li>
+      <li>Measure bias with counterfactual tests, demographic parity and equal opportunity <span class="pill">RAE 2</span></li>
+      <li>Detect and redact personal data, and explain what Ley 1581 de 2012 requires <span class="pill">RAE 6</span></li>
+      <li>Classify a use case under the EU AI Act and the Colombian framework, and propose controls <span class="pill">RAE 6</span></li>
+      <li>Estimate energy and carbon, and document a model with a model card <span class="pill">RAE 2</span> <span class="pill">RAE 6</span></li>
+    </ol>
+    <p class="small muted">RAE numbers refer to the learning outcomes in the course syllabus (guía de asignatura).</p>
+    <aside class="notes">
+      [0:09 · 1 min] RAE 2 (evaluate performance, applying ethical principles) and RAE 6 (manage risks, ensure
+      quality, sustainability and regulatory compliance). The challenge assesses objectives 2, 4 and 5.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 1 · RISK MAP                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 8 · Part 1 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 1</p>
+    <h2>What can go wrong?</h2>
+    <p>A map of the risks of generative models, and who owns each one.</p>
+    <span class="block-tag" data-block="theory">Theory · 60'</span>
+    <aside class="notes">
+      [0:10] Theory block: four parts of about 15 minutes, with an interaction every 8 to 10 minutes.
+    </aside>
+  </section>
+
+  <!-- 9 · Risk taxonomy -->
+  <section>
+    <p class="kicker">Risk taxonomy</p>
+    <h2>Eight families of risk</h2>
+    <div class="grid-4">
+      <div class="card"><h4>⚖️ Bias</h4><p>Unequal quality or stereotypes for groups of people.</p><p class="muted">A CV ranker that scores some names lower.</p></div>
+      <div class="card"><h4>🔒 Privacy</h4><p>Personal data memorised, leaked or re-identified.</p><p class="muted">A model that repeats a phone number from training data.</p></div>
+      <div class="card"><h4>🌀 Hallucination</h4><p>Fluent, confident and false.</p><p class="muted">An invented refund policy (S01, S09).</p></div>
+      <div class="card"><h4>©️ IP &amp; copyright</h4><p>Rights over training data and outputs; model licences.</p><p class="muted">Outputs that reproduce a protected text.</p></div>
+      <div class="card"><h4>🛡️ Security</h4><p>Prompt injection, data poisoning, data exfiltration.</p><p class="muted">A web page that hijacks an agent.</p></div>
+      <div class="card"><h4>🎭 Misuse</h4><p>Fraud, phishing, disinformation, deepfakes.</p><p class="muted">A cloned voice asking for a transfer.</p></div>
+      <div class="card"><h4>🌍 Environment</h4><p>Energy, emissions, water and hardware.</p><p class="muted">Millions of requests on a carbon-heavy grid.</p></div>
+      <div class="card"><h4>👷 Labour</h4><p>Task displacement, deskilling, hidden annotation work.</p><p class="muted">Agents who only rubber-stamp outputs.</p></div>
+    </div>
+    <p class="small muted" style="margin-top: 12px">Grouping adapted from Weidinger et al. (2021) and Bender et al. (2021). Real systems combine several of these at once.</p>
+    <aside class="notes">
+      [0:10 · 3 min] Map the chat answers from the previous slide onto the eight cards. Point out that some risks
+      fall on users (bias, privacy), some on third parties (misuse, IP), some on society (environment, labour).
+      Hallucination was covered in S05 and S09; IP connects to model licences (S01). Today we go deep on bias,
+      privacy, regulation and environment, the ones students must measure in the project.
+    </aside>
+  </section>
+
+  <!-- 10 · Two papers -->
+  <section>
+    <p class="kicker">Two papers every AI team should read</p>
+    <h2>Stochastic parrots and a taxonomy of harms</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Bender, Gebru, McMillan-Major &amp; Shmitchell (2021)</h4>
+        <p class="small"><em>On the dangers of stochastic parrots: Can language models be too big?</em> (FAccT)</p>
+        <ul class="small">
+          <li>Environmental and financial costs grow with scale, and are not paid by those who benefit.</li>
+          <li>Web-scale data is too large to document ("documentation debt") and over-represents dominant views.</li>
+          <li>Fluent text is easily mistaken for understanding.</li>
+          <li>Recommendation: weigh costs first, curate and document data, run pre-mortems.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Weidinger et al. (2021)</h4>
+        <p class="small"><em>Ethical and social risks of harm from language models</em> (arXiv:2112.04359)</p>
+        <ol class="small">
+          <li>Discrimination, exclusion and toxicity</li>
+          <li>Information hazards (e.g., private data leaks)</li>
+          <li>Misinformation harms</li>
+          <li>Malicious uses</li>
+          <li>Human–computer interaction harms</li>
+          <li>Automation, access and environmental harms</li>
+        </ol>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:13 · 3 min] Bender et al. is one of the most cited critical papers on large language models; its four
+      authors are women, and it is one of today's assigned readings. Weidinger et al. offers a structured
+      list of 21 risks in six areas; use it as a checklist for the project's ethics section.
+    </aside>
+  </section>
+
+  <!-- 11 · Security -->
+  <section>
+    <p class="kicker">Security</p>
+    <h2>When the input is the attack</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>Prompt injection</h4>
+        <p class="small"><strong>Direct:</strong> the user tries to override the instructions. <strong>Indirect:</strong> instructions hidden in a web page, email or file that the model reads (Greshake et al., 2023).</p>
+        <p class="small muted">Riskier with tools and agents (S07).</p>
+      </div>
+      <div class="card">
+        <h4>Data poisoning</h4>
+        <p class="small">An attacker plants examples in training, fine-tuning or RAG data to create a backdoor or bias. Poisoning web-scale data has been shown to be practical (Carlini et al., 2024).</p>
+      </div>
+      <div class="card">
+        <h4>Training-data extraction</h4>
+        <p class="small">Carlini et al. (2021) extracted verbatim training text from GPT-2, including names, phone numbers and emails.</p>
+      </div>
+    </div>
+    <div class="callout warn"><strong>Controls:</strong> least privilege for tools · keep instructions and data separate · human confirmation
+      for irreversible actions · data provenance and validation · red teaming before launch (see the OWASP Top 10 for LLM Applications).</div>
+    <aside class="notes">
+      [0:16 · 3 min] Prompt injection has no complete fix today: design as if the model will sometimes follow
+      injected instructions, and limit what it can do. Ask: "Your agent from S07 reads customer emails and can
+      issue refunds. What could an attacker write in an email?"
+    </aside>
+  </section>
+
+  <!-- 12 · Poll -->
+  <section>
+    <span class="block-tag" data-block="theory">Poll · your project</span>
+    <div class="quiz grid-2" style="margin-top: 18px">
+      <p class="quiz-q">Which risk could hurt the users of your final project the most?</p>
+      <button class="quiz-opt" data-key="a">Bias: worse results for some groups</button>
+      <button class="quiz-opt" data-key="b">Privacy: personal data in training data, prompts or logs</button>
+      <button class="quiz-opt" data-key="c">Hallucination: confident but wrong outputs</button>
+      <button class="quiz-opt" data-key="d">Security or misuse: someone turns it against users</button>
+      <div class="quiz-explain">No single right answer: the risk profile depends on the use case. Keep your answer: it becomes the
+        first line of section 8 (ethical considerations) of your project's model card.</div>
+    </div>
+    <aside class="notes">
+      [0:19 · 2 min] Ungraded poll. Ask one group per option to say why in one sentence. If nobody picks
+      privacy, ask how their training data was collected.
+    </aside>
+  </section>
+
+  <!-- 13 · Business lens: risk register -->
+  <section>
+    <p class="kicker">Risk register</p>
+    <h2>Every risk needs an owner and a control</h2>
+    <table class="compact">
+      <thead><tr><th>Risk (Andes Bank assistant)</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Control</th></tr></thead>
+      <tbody>
+        <tr><td>Invents a fee or an interest rate</td><td>High</td><td>High</td><td>Product owner</td><td>RAG over official tariffs, citations, human review of commitments</td></tr>
+        <tr><td>Customer data sent to an external API</td><td>Medium</td><td>High</td><td>Data protection officer</td><td>Redaction, contract with the provider, data minimisation</td></tr>
+        <tr><td>Prompt injection through uploaded files</td><td>Medium</td><td>Medium</td><td>Security</td><td>No autonomous transfers, tool permissions, logging</td></tr>
+        <tr><td>Worse answers for some regions or groups</td><td>Medium</td><td>Medium</td><td>Data science</td><td>Disaggregated evaluation before every release</td></tr>
+      </tbody>
+    </table>
+    <div class="callout business"><p><strong>Andes Bank</strong> (a fictional digital bank): a risk without an owner is a wish. Rate each row, assign one
+      accountable person, and define a control you can measure.</p></div>
+    <aside class="notes">
+      [0:21 · 3 min] Business lens for Part 1. The ratings are illustrative. Ask a business participant: "Who in
+      your company would own the second row?" Usually the data protection officer or legal. The last row is what
+      Part 2 will teach us to measure.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 2 · BIAS AND FAIRNESS                                     -->
+  <!-- ===================================================================== -->
+
+  <!-- 14 · Part 2 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 2</p>
+    <h2>Bias and fairness</h2>
+    <p>Where bias comes from, how to measure it, and what you can do about it.</p>
+    <aside class="notes">
+      [0:24] Part 2: about 16 minutes, with a simulator and a quiz.
+    </aside>
+  </section>
+
+  <!-- 15 · Bias along the lifecycle -->
+  <section>
+    <p class="kicker">Bias along the lifecycle</p>
+    <h2>Bias enters at every step, not only in the data</h2>
+    <div class="pipeline">
+      <div class="card"><h4>1 · Data</h4><p><strong>Historical:</strong> the world as it was.</p><p><strong>Representation:</strong> who is missing.</p></div>
+      <div class="card"><h4>2 · Labels</h4><p><strong>Measurement:</strong> proxies that mean different things for different groups.</p></div>
+      <div class="card"><h4>3 · Training</h4><p><strong>Aggregation:</strong> one model for all.</p><p><strong>Learning:</strong> an objective that trades groups off.</p></div>
+      <div class="card"><h4>4 · Evaluation</h4><p><strong>Evaluation:</strong> a benchmark that does not look like your users.</p></div>
+      <div class="card"><h4>5 · Deployment</h4><p><strong>Deployment:</strong> used for something else, feedback loops.</p></div>
+    </div>
+    <div class="callout" style="margin-top: 16px"><strong>For generative models:</strong> web-scale pretraining text, the pool of people who rate outputs
+      during alignment, and the prompts themselves add new entry points. Framework: Suresh &amp; Guttag (2021).</div>
+    <aside class="notes">
+      [0:24 · 3 min] Walk left to right with one example per step. Measurement bias: using "number of complaints"
+      as a proxy for customer dissatisfaction penalises groups who complain less. Evaluation bias: testing a
+      Spanish-language assistant only on Bogotá Spanish. Deployment bias: a model built to suggest becomes a model
+      that decides.
+    </aside>
+  </section>
+
+  <!-- 16 · Evidence -->
+  <section>
+    <p class="kicker">Evidence</p>
+    <h2>Aggregate accuracy hides who fails</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr)">
+      <div>
+        <p class="small"><strong>Gender Shades</strong> (Buolamwini &amp; Gebru, 2018) audited three commercial gender classifiers by skin type and gender:</p>
+        <span class="big-number">34.7% vs 0.8%</span>
+        <p class="caption muted">maximum error rate for darker-skinned women vs lighter-skinned men.</p>
+        <p class="small">Lesson: <strong>disaggregate</strong> every metric by the groups your system affects, including intersections.</p>
+      </div>
+      <div>
+        <p class="small" style="margin-bottom: 4px"><strong>What BERT learned</strong>: share of "he" vs "she" in <em>"[MASK] works as a …"</em> and <em>"the … said that [MASK] would be late"</em>.</p>
+        <div id="he-chart"></div>
+        <p class="small muted" style="margin: 0">Real outputs of <span class="tag">bert-base-uncased</span>, computed for this course. 0.5 = no preference. You reproduce this in the lab.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:27 · 3 min] Gender Shades: Joy Buolamwini and Timnit Gebru, FAT* 2018. The companies improved their
+      systems after the audit, which shows that measurement changes behaviour. The chart: BERT's pretraining text
+      pairs occupations with pronouns in stereotyped ways. If a model like this helps write job ads or rank CVs,
+      the pattern is reproduced at scale (representational harm).
+    </aside>
+  </section>
+
+  <!-- 17 · Fairness metrics -->
+  <section>
+    <p class="kicker">Fairness metrics</p>
+    <h2>Two common definitions of "fair"</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Demographic parity</h4>
+        <p>\( P(\hat Y = 1 \mid A = a) = P(\hat Y = 1 \mid A = b) \)</p>
+        <p class="small">Same rate of favourable decisions in every group.</p>
+        <p class="small muted">Credit: both groups are approved at the same rate.</p>
+      </div>
+      <div class="card">
+        <h4>Equal opportunity</h4>
+        <p>\( P(\hat Y = 1 \mid Y = 1, A = a) = P(\hat Y = 1 \mid Y = 1, A = b) \)</p>
+        <p class="small">Same true positive rate: people who deserve the favourable outcome get it equally often (Hardt, Price &amp; Srebro, 2016).</p>
+        <p class="small muted">Credit: among applicants who would repay, approval rates are equal.</p>
+      </div>
+    </div>
+    <div class="callout warn"><p class="small"><strong>You cannot have everything:</strong> when base rates differ between groups, a useful classifier cannot satisfy
+      calibration and equal error rates at once (Kleinberg, Mullainathan &amp; Raghavan, 2017; Chouldechova, 2017).
+      Choose the metric from the harm you want to avoid, and document the choice.</p></div>
+    <aside class="notes">
+      [0:30 · 3 min] We report differences: DPD = rate(A) − rate(B) and EOD = TPR(A) − TPR(B); 0 is ideal.
+      Equalized odds adds equal false positive rates. Reference text for everything in this part: Barocas,
+      Hardt &amp; Narayanan, "Fairness and Machine Learning" (free online book).
+    </aside>
+  </section>
+
+  <!-- 18 · Counterfactual testing -->
+  <section>
+    <p class="kicker">Counterfactual testing</p>
+    <h2>Change only the person, keep everything else</h2>
+    <div class="cols">
+      <div>
+        <p class="small">Same sentence, one identity term swapped:</p>
+        <p class="small"><span class="tag">Carlos is a new customer of the bank.</span></p>
+        <p class="small"><span class="tag">María is a new customer of the bank.</span></p>
+        <p class="small">A fair model gives (almost) the same output. We measure:</p>
+        <ul class="small">
+          <li><strong>Mean score gap</strong> between group A and group B</li>
+          <li><strong>Flip rate:</strong> share of pairs whose decision changes</li>
+          <li>DP and EO differences over the whole template set</li>
+        </ul>
+      </div>
+      <div>
+        <div class="callout"><p class="small">Kiritchenko &amp; Mohammad (2018) used templates like these to test 219 sentiment systems and found
+          several with statistically significant gender or race bias. See also Garg et al. (2019).</p></div>
+        <div class="callout warn"><p class="small"><strong>Limits:</strong> templates are artificial; names are imperfect proxies for gender or origin;
+          binary pairs leave people out; results in English do not transfer to Spanish.</p></div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:33 · 1 min] Short slide: the method behind the simulator and the lab. Emphasise the limits: a
+      counterfactual audit is a smoke detector, not a certificate of fairness.
+    </aside>
+  </section>
+
+  <!-- 19 · Simulator 1: counterfactual bias -->
+  <section>
+    <p class="kicker">Simulator · counterfactual bias</p>
+    <h2>Same sentence, different person</h2>
+    <div class="sim">
+      <div class="sim-controls">
+        <div class="control">
+          <label for="cf-attr">Attribute</label>
+          <select id="cf-attr">
+            <option value="gender">Gender (names and nouns)</option>
+            <option value="age">Age</option>
+            <option value="nationality">Nationality</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="cf-tmpl">Template</label>
+          <select id="cf-tmpl"></select>
+        </div>
+        <div class="control">
+          <label for="cf-thr">Decision threshold <output id="cf-thr-out">0.50</output></label>
+          <input type="range" id="cf-thr" min="0.05" max="0.95" step="0.05" value="0.5">
+        </div>
+        <p class="stat" style="margin: 0">Mean A: <strong id="cf-ma">–</strong> · Mean B: <strong id="cf-mb">–</strong><br>
+          Gap A − B: <strong id="cf-gap">–</strong> · Flips: <strong id="cf-flips">–</strong><br>
+          Positive rate A / B: <strong id="cf-pr">–</strong></p>
+        <p class="small muted" style="margin: 0">Real P(positive) from <span class="tag">distilbert-base-uncased-finetuned-sst-2-english</span>, precomputed.</p>
+      </div>
+      <div class="sim-output">
+        <p class="cf-sentence" id="cf-sentence">–</p>
+        <p class="cf-chart-title" id="cf-title-a">Group A</p>
+        <div id="cf-chart-a"></div>
+        <p class="cf-chart-title" id="cf-title-b">Group B</p>
+        <div id="cf-chart-b"></div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:34 · 6 min] Interaction. 1) Gender, "is a new customer of the bank": small differences. 2) Age, same
+      template: much larger gap; older people get lower "positive" scores for a neutral sentence. 3) Move the
+      threshold: flips and positive rates change, which is why the threshold is a fairness decision too.
+      Ask in the chat: "NovaTel routes negative messages to a priority queue. Who is helped and who is hurt by
+      these differences?" The scores are real outputs of the model, computed once for the course.
+    </aside>
+  </section>
+
+  <!-- 20 · Quiz: metric choice -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · fairness metrics</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">Andes Bank audits its loan model. <em>Among applicants who actually repaid</em>, group B was approved less often than group A. Which metric captures this problem?</p>
+      <button class="quiz-opt" data-key="a">Demographic parity difference</button>
+      <button class="quiz-opt" data-key="b">Equal opportunity difference</button>
+      <button class="quiz-opt" data-key="c">Overall accuracy</button>
+      <button class="quiz-opt" data-key="d">Average model confidence</button>
+      <div class="quiz-explain">Equal opportunity compares true positive rates: among people who deserve the favourable outcome
+        (they repaid), each group should be approved equally often. Demographic parity ignores the true outcome; overall
+        accuracy can look excellent while one group carries most of the errors.</div>
+    </div>
+    <aside class="notes">
+      [0:40 · 1 min] Quick poll, then click. Follow-up: "Which metric would a regulator care about if the two
+      groups have different repayment rates?" There is no universal answer: that is the impossibility result.
+    </aside>
+  </section>
+
+  <!-- 21 · Mitigation -->
+  <section>
+    <p class="kicker">Mitigation</p>
+    <h2>Three places to intervene, plus the product</h2>
+    <div class="cols-3">
+      <div class="card"><h4>Before training</h4><p class="small">Rebalance or reweight data; <strong>counterfactual data augmentation</strong>: add copies with the attribute swapped (Zmigrod et al., 2019, studied it for languages with rich morphology such as Spanish).</p></div>
+      <div class="card"><h4>During training</h4><p class="small">Fairness constraints or penalties in the loss; adversarial debiasing (Zhang, Lemoine &amp; Mitchell, 2018).</p></div>
+      <div class="card"><h4>After training</h4><p class="small"><strong>Group-specific thresholds</strong> (Hardt et al., 2016); output filters; averaging over counterfactual versions of the input.</p></div>
+    </div>
+    <div class="cols" style="margin-top: 14px">
+      <div class="callout tip"><p class="small"><strong>Product controls:</strong> human review of adverse decisions, appeals, monitoring by group.</p></div>
+      <div class="callout business"><p class="small">Group thresholds need the protected attribute at decision time (sensitive data, unequal treatment):
+        get legal review and record the fairness–accuracy–cost trade-off.</p></div>
+    </div>
+    <aside class="notes">
+      [0:41 · 3 min] Business lens for Part 2. Every mitigation has a cost: accuracy, extra compute, or legal
+      exposure. In the challenge students try two post-training mitigations and test whether they generalise to
+      person terms that were not used to tune them. Spoiler: coverage is the weak point.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 3 · PRIVACY AND REGULATION                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 22 · Part 3 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 3</p>
+    <h2>Privacy and regulation</h2>
+    <p>Personal data, Colombian law, international frameworks and the EU AI Act.</p>
+    <aside class="notes">
+      [0:44] Part 3: about 18 minutes, including the breakout. Disclaimer: this is not legal advice; for a real
+      deployment, involve your legal and data-protection team.
+    </aside>
+  </section>
+
+  <!-- 23 · Privacy -->
+  <section>
+    <p class="kicker">Privacy</p>
+    <h2>Where personal data leaks into a generative system</h2>
+    <div class="cols">
+      <ul class="small">
+        <li><strong>Training and fine-tuning data:</strong> web scrapes, customer messages, tickets.</li>
+        <li><strong>Prompts and files</strong> sent to external APIs; <strong>RAG</strong> knowledge bases; <strong>logs</strong>.</li>
+        <li><strong>Memorisation:</strong> models can reproduce rare training strings verbatim (Carlini et al., 2021).</li>
+        <li><strong>Re-identification:</strong> ZIP code + birth date + sex were enough to single out about 87% of the US population (Sweeney, 2000).</li>
+      </ul>
+      <div>
+        <div class="callout"><p class="small"><strong>Truly anonymised</strong> data cannot be linked back to a person by any reasonably likely means, so it is no longer
+          personal data (the anonymisation step itself is still processing). <strong>Pseudonymised</strong> data (names replaced by codes, identifiers removed but re-identification still possible)
+          <strong>is still personal data</strong> (GDPR, Recital 26).</p></div>
+        <div class="callout tip"><p class="small"><strong>Toolbox:</strong> minimise what you collect · redact with regex + NER (lab) · keep pseudonym keys
+          separate · aggregate · review samples by hand.</p></div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:44 · 3 min] The key distinction for the challenge's critique task: deleting names is not anonymisation.
+      Quasi-identifiers (city, employer, dates, rare job titles) can re-identify people, especially when combined
+      with other datasets.
+    </aside>
+  </section>
+
+  <!-- 24 · Colombia: Ley 1581 -->
+  <section>
+    <p class="kicker">Colombia</p>
+    <h2>Ley 1581 de 2012: habeas data in practice</h2>
+    <div class="cols">
+      <ul class="small">
+        <li>Applies to personal data: information linked to an identified or <strong>identifiable</strong> person. Regulated by Decreto 1377 de 2013.</li>
+        <li><strong>Prior, express and informed authorisation</strong> for a stated purpose (principle of finality).</li>
+        <li><strong>Sensitive data</strong> (health, biometrics, ethnic origin, political views, religion, sex life…) get reinforced protection.</li>
+        <li>People can <strong>know, update, rectify</strong> and request <strong>deletion</strong> of their data, or revoke authorisation.</li>
+        <li>International transfers only to countries with adequate protection, unless an exception applies.</li>
+        <li>Authority: the <strong>SIC</strong>. Its <strong>Circular Externa 002 de 2024</strong> gives guidance on personal data in AI systems.</li>
+      </ul>
+      <div>
+        <div class="callout"><p class="small"><strong>GDPR (EU) in comparison:</strong> similar principles, plus explicit data protection impact assessments (Art. 35)
+          and rules on decisions based solely on automated processing (Art. 22).</p></div>
+        <div class="callout business"><p class="small"><strong>NovaTel</strong> (fictional) wants to send support chats to a foreign LLM API. Before the pilot:
+          purpose covered by the authorisation? Cross-border transfer allowed? Redaction in place? A contract that forbids the
+          provider from reusing the data?</p></div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:47 · 3 min] Ask: "Whose authorisation did your company get for the data you plan to use in the project?"
+      Link to the project rules: synthetic or anonymised data only. The SIC circular (August 2024) asks data
+      controllers to apply suitability, necessity, reasonableness and proportionality before processing personal
+      data with AI, and to abstain or take precautions when potential harms are uncertain.
+    </aside>
+  </section>
+
+  <!-- 25 · Frameworks map -->
+  <section>
+    <p class="kicker">Frameworks</p>
+    <h2>From principles to obligations</h2>
+    <table class="compact">
+      <thead><tr><th>Framework</th><th>Type</th><th>What to take from it</th></tr></thead>
+      <tbody>
+        <tr><td><strong>EU HLEG</strong> Ethics Guidelines for Trustworthy AI (2019)</td><td>Voluntary</td><td>7 requirements: human oversight · robustness &amp; safety · privacy &amp; data governance · transparency · non-discrimination &amp; fairness · societal &amp; environmental well-being · accountability</td></tr>
+        <tr><td><strong>OECD</strong> AI Principles (2019, updated 2024)</td><td>Intergovernmental</td><td>Shared values-based principles and recommendations for governments</td></tr>
+        <tr><td><strong>UNESCO</strong> Recommendation on the Ethics of AI (2021)</td><td>Global standard</td><td>Human rights first, incl. environment and gender; impact assessments</td></tr>
+        <tr><td><strong>NIST</strong> AI Risk Management Framework 1.0 (2023)</td><td>Voluntary (US)</td><td>Four functions: <strong>Govern · Map · Measure · Manage</strong>; a generative AI profile followed in 2024</td></tr>
+        <tr><td><strong>EU AI Act</strong>, Regulation (EU) 2024/1689</td><td>Binding law</td><td>Obligations by risk tier (next slide)</td></tr>
+        <tr><td><strong>CONPES 4144</strong> (Colombia, Feb 2025)</td><td>National policy</td><td>Política Nacional de IA: six axes, incl. ethics &amp; governance and risk mitigation</td></tr>
+      </tbody>
+    </table>
+    <aside class="notes">
+      [0:49 · 2 min] Principles tell you what good looks like; laws tell you what is mandatory. For Colombia, the
+      binding pieces today are data protection (Ley 1581) and sector rules; CONPES 4144 is a policy document that
+      guides the State. Several AI bills have been discussed in Congress, some with a risk-based approach similar
+      to the EU's; check their current status before relying on any of them.
+    </aside>
+  </section>
+
+  <!-- 26 · EU AI Act tiers -->
+  <section>
+    <p class="kicker">EU AI Act · Regulation (EU) 2024/1689</p>
+    <h2>Four risk tiers</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr)">
+      <div class="tiers">
+        <div class="tier t1"><strong>Unacceptable → prohibited</strong>Social scoring · emotion recognition at work or school · untargeted face scraping · manipulation causing significant harm</div>
+        <div class="tier t2"><strong>High risk → strict obligations</strong>Annex III areas: biometrics, critical infrastructure, education, employment, access to essential services (e.g., credit scoring), law enforcement, migration, justice</div>
+        <div class="tier t3"><strong>Limited risk → transparency</strong>Tell people they talk to an AI; label deepfakes and AI-generated content</div>
+        <div class="tier t4"><strong>Minimal risk → no new obligations</strong>Spam filters, games, most internal productivity uses</div>
+      </div>
+      <div>
+        <p class="small"><strong>High-risk obligations:</strong> risk management, data governance, technical documentation, logging, human oversight,
+          accuracy and robustness, conformity assessment before market.</p>
+        <p class="small"><strong>General-purpose AI models</strong> have their own duties (documentation, copyright policy, training-data summary), with more for models with systemic risk.</p>
+        <p class="small"><strong>Not every face system is banned:</strong> prohibitions are specific (e.g., real-time remote biometric identification in public spaces for policing, with narrow exceptions); other biometric systems are high-risk.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:51 · 2 min] The tier depends on the use, not on the technology: the same text classifier is minimal risk
+      when it sorts reviews and high risk when it filters job applicants. Fines for prohibited practices can reach
+      35 million euros or 7% of worldwide annual turnover, whichever is higher.
+    </aside>
+  </section>
+
+  <!-- 27 · EU AI Act timeline -->
+  <section>
+    <p class="kicker">EU AI Act · timeline and scope</p>
+    <h2>Phased application: check the current status</h2>
+    <div class="cols">
+      <ul class="timeline">
+        <li><span class="when">1 Aug 2024</span>Entry into force</li>
+        <li><span class="when">2 Feb 2025</span>Prohibited practices and AI literacy apply</li>
+        <li><span class="when">2 Aug 2025</span>Obligations for general-purpose AI models</li>
+        <li><span class="when">2 Aug 2026</span>Transparency obligations (Art. 50)</li>
+        <li class="moved"><span class="when">Aug 2026 → Dec 2027</span>High-risk systems in Annex III (e.g., credit, hiring, education)</li>
+        <li class="moved"><span class="when">Aug 2027 → Aug 2028</span>High-risk AI in regulated products (Annex I)</li>
+      </ul>
+      <div>
+        <div class="callout warn"><p class="small">The high-risk dates were <strong>postponed</strong> by an amendment adopted in 2026 (the "Digital Omnibus on AI"),
+          first proposed in late 2025. Dates can change again: always check the current consolidated text before advising anyone.</p></div>
+        <div class="callout"><p class="small"><strong>Does it apply to a Colombian company?</strong> Yes, if it places an AI system on the EU market or the
+          system's output is used in the EU. Otherwise it is a useful reference, while Colombian law (e.g., Ley 1581) applies.</p></div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:53 · 1 min] Orange dots are the dates that moved. The original schedule applied most high-risk
+      obligations from August 2026 (Annex III) and August 2027 (Annex I). The 2026 amendment moved them to
+      2 December 2027 and 2 August 2028. For reference (checked September 2026): the amendment is Regulation (EU)
+      2026/1744, published in the Official Journal on 24 July 2026; it also gave generative systems already on the
+      market until 2 December 2026 for the Art. 50 marking duty and added a prohibition on "nudifier" / non-consensual
+      intimate-imagery systems from that date. Verify against EUR-Lex before quoting. Teach students the habit: cite
+      the date you checked a regulation.
+    </aside>
+  </section>
+
+  <!-- 28 · Quiz: tier -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · EU AI Act</span>
+    <div class="quiz" data-correct="c" style="margin-top: 18px">
+      <p class="quiz-q">TalentoAndino (fictional) uses a model to rank CVs and automatically discard candidates before a person sees them. Under the EU AI Act, this system is…</p>
+      <button class="quiz-opt" data-key="a">Prohibited</button>
+      <button class="quiz-opt" data-key="b">Minimal risk: it only processes text</button>
+      <button class="quiz-opt" data-key="c">High risk: employment is an Annex III area</button>
+      <button class="quiz-opt" data-key="d">Limited risk: it just needs a transparency notice</button>
+      <div class="quiz-explain">Recruitment and selection, including filtering applications and evaluating candidates, is listed in Annex III
+        (employment). The provider needs risk management, data governance, documentation, logging and effective human oversight.
+        The technology (text only) does not lower the tier; the use does.</div>
+    </div>
+    <aside class="notes">
+      [0:54 · 1 min] Poll, then click. Common wrong answer: B ("it is only text"). Repeat: the tier follows the use.
+    </aside>
+  </section>
+
+  <!-- 29 · Breakout -->
+  <section>
+    <p class="kicker">Apply it</p>
+    <h2>Classify five use cases</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr)">
+      <div class="prompt-card" data-kind="breakout">
+        <h4>Risk tier + one control · 7 min</h4>
+        <ol class="small" style="margin-bottom: 8px">
+          <li><strong>NovaTel:</strong> call-centre software infers agents' emotions from their voice to score their performance.</li>
+          <li><strong>SegurVida:</strong> a model sets life and health insurance premiums for individual customers.</li>
+          <li><strong>AguaClara:</strong> an AI component controls valves in a city's water-supply network.</li>
+          <li><strong>MetroCali:</strong> a website chatbot answers questions about timetables and fares.</li>
+          <li><strong>Café Alto Montaña:</strong> a model drafts Instagram captions for new drinks.</li>
+        </ol>
+        <p class="small muted" style="margin: 0">For each: prohibited, high, limited or minimal, the reason, and one control. All companies are fictional.</p>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="7" data-label="Breakout rooms"></div>
+        <p class="small">Rooms of 3–4. Each room reports one case in 30 seconds.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:55 · 7 min] Open breakout rooms, then press Start. Suggested answers (next slide, flip cards):
+      1 prohibited (Art. 5: emotion recognition in the workplace, except for medical or safety reasons);
+      2 high risk (Annex III: risk assessment and pricing for individuals in life and health insurance);
+      3 high risk (Annex III: safety component in the management of critical infrastructure such as water supply);
+      4 limited risk (Art. 50: tell users they are interacting with an AI);
+      5 minimal risk (voluntary codes; if they generate realistic images or deepfakes, labelling duties apply).
+    </aside>
+  </section>
+
+  <!-- 30 · Debrief -->
+  <section>
+    <p class="kicker">Debrief</p>
+    <h2>Flip to check your room's answers</h2>
+    <div class="cols-3">
+      <div class="flip-card"><div class="front">1 · Emotion recognition of call-centre agents</div><div class="back"><strong>Prohibited</strong> (Art. 5): emotion recognition at work, unless for medical or safety reasons.</div></div>
+      <div class="flip-card"><div class="front">2 · Life and health insurance pricing</div><div class="back"><strong>High risk</strong> (Annex III): control = human review, bias audit, explanation to customers.</div></div>
+      <div class="flip-card"><div class="front">3 · Valves in the water network</div><div class="back"><strong>High risk</strong> (Annex III, critical infrastructure): control = fail-safe, human override, logging.</div></div>
+      <div class="flip-card"><div class="front">4 · Timetable chatbot</div><div class="back"><strong>Limited risk</strong> (Art. 50): tell users they talk to an AI; easy handover to a person.</div></div>
+      <div class="flip-card"><div class="front">5 · Instagram captions</div><div class="back"><strong>Minimal risk</strong>: voluntary codes; label realistic synthetic images if used.</div></div>
+      <div class="card"><h4>In Colombia</h4><p class="small">Ask too: does it process personal data (Ley 1581)? Sensitive data (health, biometrics)? Is there a sector supervisor?</p></div>
+    </div>
+    <aside class="notes">
+      [1:02 · 2 min] Flip each card after the room reports. Case 1 connects back to the labour-impact risk.
+      Case 2: health data is sensitive data under Ley 1581 as well. Remind students that this is exactly the
+      reasoning of challenge task 3, with their own use case.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 4 · SUSTAINABILITY AND DOCUMENTATION                      -->
+  <!-- ===================================================================== -->
+
+  <!-- 31 · Part 4 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 4</p>
+    <h2>Carbon, documentation and governance</h2>
+    <p>What a model costs the planet, and how to write down everything we measured.</p>
+    <aside class="notes">
+      [1:04] Part 4: a fast 6 minutes plus what we could not cover goes to the lab. If running late, click through
+      the carbon quiz and go straight to the levers.
+    </aside>
+  </section>
+
+  <!-- 32 · Energy and carbon -->
+  <section>
+    <p class="kicker">Sustainability</p>
+    <h2>Where the emissions come from</h2>
+    <p>$$ E\,[\text{kWh}] = P\,[\text{kW}] \times t\,[\text{h}] \times \text{PUE} \qquad \text{CO}_2\text{e}\,[\text{kg}] = E \times \text{grid intensity}\,[\text{kg/kWh}] $$</p>
+    <div class="cols-3">
+      <div class="card"><h4>Training</h4><p class="small">Large, one-off, and repeated for every experiment. Strubell, Ganesh &amp; McCallum (2019) made the energy cost of NLP visible and asked for reporting.</p></div>
+      <div class="card"><h4>Inference</h4><p class="small">Small per request, huge at scale. Generative tasks use far more energy per request than classification, and multi-purpose models more than task-specific ones (Luccioni, Jernite &amp; Strubell, 2024).</p></div>
+      <div class="card"><h4>Beyond electricity</h4><p class="small">Manufacturing the hardware (embodied emissions), water for cooling, and the data centre's overhead (PUE = total energy ÷ IT energy).</p></div>
+    </div>
+    <aside class="notes">
+      [1:04 · 1 min] The same job can emit very different amounts depending on the hardware, the data centre and
+      above all the grid. Colombia's grid is hydro-heavy, but its intensity rises in dry years when thermal plants
+      run more; always use the official factor for the period (UPME publishes the national grid factor).
+    </aside>
+  </section>
+
+  <!-- 33 · Simulator 2: carbon calculator -->
+  <section>
+    <p class="kicker">Simulator · carbon calculator</p>
+    <h2>How much CO₂e does a training run emit?</h2>
+    <div class="sim">
+      <div class="sim-controls" style="gap: 10px">
+        <div class="control">
+          <label for="cc-gpu">Accelerator (nominal power)</label>
+          <select id="cc-gpu">
+            <option value="70">NVIDIA T4 · 70 W</option>
+            <option value="400" selected>NVIDIA A100 SXM · 400 W</option>
+            <option value="700">NVIDIA H100 SXM · 700 W</option>
+            <option value="30">Laptop CPU · ~30 W (illustrative)</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="cc-n">Number of devices <output id="cc-n-out">8</output></label>
+          <input type="range" id="cc-n" min="1" max="64" step="1" value="8">
+        </div>
+        <div class="control">
+          <label for="cc-h">Hours <output id="cc-h-out">24</output></label>
+          <input type="range" id="cc-h" min="0" max="3" step="0.02" value="1.38">
+        </div>
+        <div class="control">
+          <label for="cc-pue">PUE <output id="cc-pue-out">1.20</output></label>
+          <input type="range" id="cc-pue" min="1" max="2" step="0.05" value="1.2">
+        </div>
+        <div class="control">
+          <label for="cc-ci">Grid intensity (kg CO₂e/kWh) <output id="cc-ci-out">0.15</output></label>
+          <input type="range" id="cc-ci" min="0" max="1" step="0.01" value="0.15">
+        </div>
+        <div class="preset-row">
+          <button class="btn btn-sm btn-ghost" type="button" data-ci="0.15">Hydro-heavy ~0.1–0.2</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-ci="0.4">Mixed ~0.4</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-ci="0.8">Coal-heavy ~0.7–0.9</button>
+        </div>
+      </div>
+      <div class="sim-output">
+        <div class="eq-row">
+          <div class="card"><p class="muted">Energy</p><p class="big" id="cc-kwh">–</p></div>
+          <div class="card"><p class="muted">Emissions</p><p class="big" id="cc-kg">–</p></div>
+        </div>
+        <p class="stat" style="margin: 0 0 4px">≈ <strong id="cc-km">–</strong> km in a gasoline car · ≈ <strong id="cc-led">–</strong> hours of a 10 W LED bulb</p>
+        <div id="cc-chart"></div>
+        <p class="small muted" style="margin: 0">Illustrative ranges, not official factors: look up your grid's factor (Colombia: UPME). Nominal power overstates real draw. Car ≈ 0.2 kg CO₂e/km.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:05 · 3 min] Interaction. Default: 8 A100 for 24 hours on a hydro-heavy grid. Click "Coal-heavy":
+      the same job emits about five times more. Then change PUE from 1.2 to 1.1: a small effect by comparison.
+      Finally set one T4 for 3 hours (a typical Kaggle fine-tune): tiny in absolute terms, which is why the
+      real lever for most companies is inference volume, not a single training run. All presets are
+      illustrative ranges; ask students to find the official factor for their country.
+    </aside>
+  </section>
+
+  <!-- 34 · Quiz: carbon -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · carbon</span>
+    <div class="quiz" data-correct="a" style="margin-top: 18px">
+      <p class="quiz-q">A team fine-tunes a model for 100 GPU-hours. All else equal, which single change cuts emissions the most?</p>
+      <button class="quiz-opt" data-key="a">Moving the job from a grid at 0.8 to one at 0.15 kg CO₂e/kWh</button>
+      <button class="quiz-opt" data-key="b">Improving the data centre's PUE from 1.2 to 1.1</button>
+      <button class="quiz-opt" data-key="c">Cutting training time by 10%</button>
+      <button class="quiz-opt" data-key="d">Using GPUs with twice the power for the same number of hours</button>
+      <div class="quiz-explain">Emissions scale linearly with each factor: 0.15 / 0.8 is an 81% cut, PUE 1.1 / 1.2 about 8%, and 10% less time
+        10%. Doubling power for the same hours doubles energy. Often the biggest lever of all is not training a new model:
+        a smaller or existing model may be enough.</div>
+    </div>
+    <aside class="notes">
+      [1:08 · 1 min] If short on time, click the answer directly. The arithmetic is the formula from slide 32.
+    </aside>
+  </section>
+
+  <!-- 35 · Green AI levers -->
+  <section>
+    <p class="kicker">Green AI</p>
+    <h2>Levers you control</h2>
+    <div class="cols">
+      <ul class="small">
+        <li><strong>Right-size:</strong> small, distilled or task-specific models; LoRA instead of full fine-tuning (S04).</li>
+        <li><strong>Fewer, smarter experiments:</strong> small subsets first, early stopping, efficient search (S11).</li>
+        <li><strong>Efficient inference:</strong> batching, caching, quantisation (S11), shorter outputs.</li>
+        <li><strong>Where and when:</strong> low-carbon regions, efficient data centres.</li>
+        <li><strong>Measure and report:</strong> CodeCarbon or a cited method; report efficiency next to accuracy (Schwartz et al., 2020).</li>
+      </ul>
+      <div class="callout business"><p><strong>Energy is also cost.</strong> Every kWh saved is money saved. Put <em>Wh per 1,000 requests</em> next to
+        accuracy and latency on the dashboard of <strong>NovaTel</strong>'s assistant, and review it with the same seriousness.</p></div>
+    </div>
+    <aside class="notes">
+      [1:08 · 1 min] Business lens for Part 4. In the lab, students measure the energy of 1,000 predictions and
+      scale it to a million messages a month. Project requirement: report training emissions measured with
+      CodeCarbon or estimated with a cited method.
+    </aside>
+  </section>
+
+  <!-- 36 · Documentation -->
+  <section>
+    <p class="kicker">Documentation</p>
+    <h2>Model cards and datasheets</h2>
+    <div class="cols">
+      <div class="card">
+        <h4>Model cards · Mitchell et al. (2019)</h4>
+        <p class="small">Model details · intended use (and out-of-scope uses) · factors · metrics · evaluation data · training data ·
+          <strong>quantitative analyses disaggregated by group</strong> · ethical considerations · caveats and recommendations.</p>
+        <p class="small muted">Your project template adds environmental impact and how to use the model.</p>
+      </div>
+      <div class="card">
+        <h4>Datasheets for datasets · Gebru et al. (2021)</h4>
+        <p class="small">Motivation · composition · collection process · preprocessing and labelling · uses · distribution ·
+          maintenance.</p>
+        <p class="small muted">Answer them for every dataset you create or scrape, including synthetic data.</p>
+      </div>
+    </div>
+    <div class="callout tip"><strong>Project:</strong> the model card is a graded deliverable (<span class="tag">proyecto-final/plantillas/model-card.md</span>). Start the draft today with the lab's generated card.</div>
+    <aside class="notes">
+      [1:09 · 30 s] Both papers are led by women researchers (Margaret Mitchell, Timnit Gebru). Model cards
+      answer "what is this model for and how does it behave for different people?"; datasheets answer "where did
+      this data come from and what is it fit for?".
+    </aside>
+  </section>
+
+  <!-- 37 · Governance -->
+  <section>
+    <p class="kicker">Governance</p>
+    <h2>Lightweight AI governance for a company</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <table class="compact">
+        <thead><tr><th>Practice</th><th>NIST AI RMF</th></tr></thead>
+        <tbody>
+          <tr><td>Inventory of AI systems, each with an owner</td><td>Govern</td></tr>
+          <tr><td>Risk classification at intake (AI Act tier, personal data)</td><td>Map</td></tr>
+          <tr><td>Impact assessment: privacy and fairness before launch</td><td>Map · Measure</td></tr>
+          <tr><td>Testing: evaluation, bias audit, red teaming</td><td>Measure</td></tr>
+          <tr><td>Human oversight, appeals, incident response, rollback triggers</td><td>Manage</td></tr>
+          <tr><td>Documentation: model cards, datasheets, logs</td><td>Govern</td></tr>
+        </tbody>
+      </table>
+      <div class="callout business"><p><strong>Start small.</strong> A one-page AI policy, an inventory spreadsheet and a pre-launch checklist that is
+        actually used beat a 100-page policy nobody reads. At <strong>Andes Bank</strong>, no model goes live without an owner,
+        a tier and a model card.</p></div>
+    </div>
+    <aside class="notes">
+      [1:09 · 1 min] Close the theory block here. The mapping to NIST functions is ours, for orientation. Tell
+      business participants this is the slide to take to their managers.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- BREAK                                                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 38 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Stretch, refill your coffee, and open Kaggle with Internet switched on.</p>
+    <div class="timer" data-minutes="10" data-label="Break"></div>
+    <aside class="notes">
+      [1:10 · 10 min] Press Start before you mute.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- LAB                                                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 39 · Lab divider -->
+  <section class="section-slide" data-block="lab">
+    <p class="kicker">Hands-on</p>
+    <h2>Guided lab</h2>
+    <p>Audit NovaTel's sentiment model: bias, personal data, energy and a model card.</p>
+    <span class="block-tag" data-block="lab">Lab · 60'</span>
+    <aside class="notes">
+      [1:20] Lab block. Share your screen and code along; students run each cell after you.
+    </aside>
+  </section>
+
+  <!-- 40 · Lab bridge -->
+  <section>
+    <p class="kicker">Lab bridge</p>
+    <h2>What we will build</h2>
+    <div class="cols">
+      <table class="compact">
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Fill-mask probing: "he" vs "she" by occupation with <span class="tag">bert-base-uncased</span></td><td class="num">10'</td></tr>
+          <tr><td><strong>2</strong></td><td>Counterfactual test of the SST-2 classifier: gap, DP, EO, flip rate</td><td class="num">15'</td></tr>
+          <tr><td><strong>3</strong></td><td>PII redaction: regex (cédula, celular, correo) + <span class="tag">dslim/bert-base-NER</span>, with recall</td><td class="num">15'</td></tr>
+          <tr><td><strong>4</strong></td><td>CodeCarbon: inference vs training, scaled to a month</td><td class="num">10'</td></tr>
+          <tr><td><strong>5</strong></td><td>A model card filled with your own numbers</td><td class="num">10'</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h4>Open the notebook</h4>
+        <p class="small">Kaggle checklist: Internet on · Accelerator none (CPU is enough today) · no secrets needed.</p>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/10-ethics-and-sustainability/lab.ipynb" target="_blank" rel="noopener">Open in Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/10-ethics-and-sustainability/lab.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+        <p class="small muted">All personal data in the notebook is synthetic.</p>
+      </div>
+    </div>
+    <div class="callout tip"><strong>How to follow:</strong> run each cell right after the instructor (Shift + Enter).
+      ✋ Checkpoints are answered in the Zoom chat; 🧪 "Try it" exercises are stretch goals with a hidden solution.</div>
+    <aside class="notes">
+      [1:20 · 3 min] Timing: Part 1 until 1:33, Part 2 until 1:48, Part 3 until 2:03, Part 4 until 2:12, Part 5
+      until 2:20. CodeCarbon runs in offline mode (country = Colombia); if it fails, the notebook falls back to a
+      manual estimate and says so. Common blocker: Internet switched off, so the models cannot download.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CHALLENGE                                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 41 · Challenge divider -->
+  <section class="section-slide" data-block="challenge">
+    <h2>Session challenge</h2>
+    <p>Individual, graded, 40 minutes in class. Submit by 23:59 today.</p>
+    <aside class="notes">
+      [2:20] Challenge block. The next slide is the only slide in Spanish.
+    </aside>
+  </section>
+
+  <!-- 42 · Challenge briefing (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Challenge de la sesión · evaluado</p>
+    <h2>Challenge S10: auditoría de sesgo y clasificación regulatoria</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <div>
+        <ol class="small">
+          <li><strong>Auditoría:</strong> brecha, DPD, EOD y tasa de cambio con tu atributo, tus 6 plantillas y tu modelo.</li>
+          <li><strong>Mitigación:</strong> umbral por grupo y aumento contrafactual; mide de nuevo, también con pares reservados.</li>
+          <li><strong>Explica y decide:</strong> clasifica tu caso de uso (Reglamento de IA de la UE y marco colombiano), propone controles y una mini <em>model card</em>.</li>
+          <li><strong>Crítica a la IA:</strong> encuentra, explica y corrige 3 errores de una declaración ética.</li>
+        </ol>
+        <ul class="small">
+          <li><strong>Rúbrica:</strong> ejecución 40% · análisis 40% · reflexión y registro de IA 20%.</li>
+          <li><strong>IA permitida</strong> con registro; <strong>micro-sustentaciones</strong>: si no explicas tu entrega, máximo 3.0.</li>
+          <li><strong>Entrega:</strong> Archivo → Descargar notebook → e-Aulas como <code>S10_&lt;codigo&gt;.ipynb</code>, 23:59.</li>
+        </ul>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="40" data-label="Challenge"></div>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/10-ethics-and-sustainability/challenge.ipynb" target="_blank" rel="noopener">Abrir en Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/10-ethics-and-sustainability/challenge.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:20 · 38 min] This briefing slide is in Spanish by course convention. Read the rules aloud, remind students
+      to type their STUDENT_ID in the first cell (their attribute, templates, model and use case depend on it), then
+      start the 40' timer. Run 3–4 random micro-vivas (2–3 minutes each, screen shared, no AI help).
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WRAP-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 43 · Wrap-up -->
+  <section>
+    <p class="kicker">Wrap-up</p>
+    <h2>Key takeaways</h2>
+    <div class="cols">
+      <ul class="small">
+        <li>Risks are specific: name them, give each an owner and a measurable control.</li>
+        <li>Bias can be measured: counterfactual pairs, DP and EO; the threshold is a fairness decision too.</li>
+        <li>Removing names is pseudonymisation, not anonymisation: Ley 1581 still applies.</li>
+        <li>The risk tier follows the <em>use</em>, not the technology; check current regulatory dates.</li>
+        <li>Energy = power × time × PUE; emissions depend on the grid. Measure, report and document it in a model card.</li>
+      </ul>
+      <div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">Which single control would you add to your final project this week, and which metric will tell you it works?</p>
+        </div>
+        <p class="small"><strong>Next session:</strong> Evaluation and continuous model improvement (error analysis, robustness, quantisation, monitoring).
+          <span class="muted">Pre-work: submit the challenge by 23:59; draft your project's ethics and sustainability analysis and model card.</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:58 · 2 min] Collect exit answers in the chat. Readings for this week: HLEG (2019), Bender et al. (2021),
+      Mitchell et al. (2019). Remind them of the deadline and the file name S10_codigo.ipynb.
+    </aside>
+  </section>
+
+  <!-- 44 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Sources for this session</h2>
+    <div class="cols refs">
+      <ul>
+        <li>Bender, E. M., Gebru, T., McMillan-Major, A., &amp; Shmitchell, S. (2021). On the dangers of stochastic parrots: Can language models be too big? <em>FAccT</em>.</li>
+        <li>Weidinger, L., et al. (2021). Ethical and social risks of harm from language models. arXiv:2112.04359.</li>
+        <li>Buolamwini, J., &amp; Gebru, T. (2018). Gender shades: Intersectional accuracy disparities in commercial gender classification. <em>FAT*</em>, PMLR 81.</li>
+        <li>Suresh, H., &amp; Guttag, J. (2021). A framework for understanding sources of harm throughout the machine learning life cycle. <em>EAAMO</em>.</li>
+        <li>Hardt, M., Price, E., &amp; Srebro, N. (2016). Equality of opportunity in supervised learning. <em>NeurIPS</em>.</li>
+        <li>Barocas, S., Hardt, M., &amp; Narayanan, A. <em>Fairness and machine learning: Limitations and opportunities</em>. MIT Press (2023) · fairmlbook.org.</li>
+        <li>Kiritchenko, S., &amp; Mohammad, S. M. (2018). Examining gender and race bias in two hundred sentiment analysis systems. <em>*SEM</em>.</li>
+        <li>Kurita, K., et al. (2019). Measuring bias in contextualized word representations. <em>Workshop on Gender Bias in NLP</em>.</li>
+        <li>Mitchell, M., et al. (2019). Model cards for model reporting. <em>FAT*</em>.</li>
+        <li>Gebru, T., et al. (2021). Datasheets for datasets. <em>Communications of the ACM, 64</em>(12).</li>
+        <li>Carlini, N., et al. (2021). Extracting training data from large language models. <em>USENIX Security</em>.</li>
+        <li>Greshake, K., et al. (2023). Not what you've signed up for: Compromising real-world LLM-integrated applications with indirect prompt injection. <em>AISec</em>.</li>
+      </ul>
+      <ul>
+        <li>Strubell, E., Ganesh, A., &amp; McCallum, A. (2019). Energy and policy considerations for deep learning in NLP. <em>ACL</em>.</li>
+        <li>Luccioni, A. S., Jernite, Y., &amp; Strubell, E. (2024). Power hungry processing: Watts driving the cost of AI deployment? <em>FAccT</em>.</li>
+        <li>Schwartz, R., Dodge, J., Smith, N. A., &amp; Etzioni, O. (2020). Green AI. <em>Communications of the ACM, 63</em>(12).</li>
+        <li>Sweeney, L. (2000). Simple demographics often identify people uniquely. Carnegie Mellon University.</li>
+        <li>High-Level Expert Group on AI (2019). <em>Ethics guidelines for trustworthy AI</em>. European Commission.</li>
+        <li>Regulation (EU) 2024/1689 (Artificial Intelligence Act), and its 2026 amendment, Regulation (EU) 2026/1744 ("Digital Omnibus on AI").</li>
+        <li>NIST (2023). <em>AI Risk Management Framework (AI RMF 1.0)</em>. NIST AI 100-1.</li>
+        <li>UNESCO (2021). <em>Recommendation on the ethics of artificial intelligence</em>.</li>
+        <li>OECD (2019, updated 2024). <em>Recommendation of the Council on Artificial Intelligence</em>.</li>
+        <li>DNP (2025). <em>Documento CONPES 4144: Política Nacional de Inteligencia Artificial</em>.</li>
+        <li>Congreso de Colombia. <em>Ley 1581 de 2012</em> · SIC (2024). <em>Circular Externa 002 de 2024</em>.</li>
+        <li>Dell'Acqua, F., et al. (2023). Navigating the jagged technological frontier. HBS Working Paper 24-013.</li>
+      </ul>
+    </div>
+    <aside class="notes">
+      Primary sources for every claim in the deck. Other works cited on the slides: Kleinberg, Mullainathan &amp;
+      Raghavan (2017), ITCS; Chouldechova (2017), Big Data; Garg et al. (2019), AIES; Zmigrod et al. (2019), ACL;
+      Zhang, Lemoine &amp; Mitchell (2018), AIES; Carlini et al. (2024), IEEE S&amp;P; OWASP Top 10 for LLM
+      Applications; Moffatt v. Air Canada, 2024 BCCRT 149.
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "10" });
+  Course.onReady(() => {
+    const f2 = (v) => v.toFixed(2);
+
+    // --- Static chart: BERT he-share by occupation (real outputs, precomputed) ---------------
+    const HE_SHARE = {"nurse": [0.007, 0.266], "receptionist": [0.014, 0.225], "secretary": [0.304, 0.746], "teacher": [0.411, 0.545], "cashier": [0.346, 0.547], "doctor": [0.896, 0.531], "lawyer": [0.93, 0.625], "programmer": [0.814, 0.844], "engineer": [0.952, 0.89], "banker": [0.98, 0.829]};
+    const occs = Object.keys(HE_SHARE).sort((a, b) => avg(HE_SHARE[a]) - avg(HE_SHARE[b]));
+    function avg(xs) { return xs.reduce((s, x) => s + x, 0) / xs.length; }
+    Course.barChart(document.getElementById("he-chart"), occs, occs.map((o) => avg(HE_SHARE[o])),
+      { max: 1, format: f2, rowHeight: 33, title: "he-share by occupation (bert-base-uncased)" });
+
+    // --- Simulator 1: counterfactual bias ---------------------------------------------------
+    // P(positive) from distilbert-base-uncased-finetuned-sst-2-english, computed once for the course.
+    const CF_TEMPLATES = [
+      "X finished the assignment ahead of schedule.",
+      "X helped a colleague with a difficult client.",
+      "X forgot the meeting with the client.",
+      "X is a new customer of the bank.",
+      "X is going to the office tomorrow.",
+      "X asked the assistant for the account balance."
+    ];
+    const CF_FILLERS = {
+      gender: [["John", "Mary"], ["Carlos", "María"], ["my brother", "my sister"], ["the man", "the woman"]],
+      age: [["a young customer", "an old customer"], ["a 20-year-old customer", "a 70-year-old customer"],
+            ["a student", "a pensioner"], ["a young woman", "an elderly woman"]],
+      nationality: [["an American", "a Colombian"], ["a Canadian", "a Peruvian"], ["a Spaniard", "a Venezuelan"],
+                    ["an Italian", "a Mexican"]]
+    };
+    const CF_GROUPS = { gender: ["male terms", "female terms"], age: ["younger", "older"],
+                        nationality: ["US / Europe", "Latin America"] };
+    const CF_SCORES = {"gender":[{"A":[0.534,0.946,0.022,0.584],"B":[0.418,0.325,0.027,0.384]},{"A":[0.992,0.986,0.969,0.985],"B":[0.987,0.982,0.966,0.989]},{"A":[0.0,0.0,0.0,0.0],"B":[0.0,0.0,0.0,0.0]},{"A":[0.989,0.993,0.958,0.909],"B":[0.991,0.986,0.943,0.673]},{"A":[0.998,0.998,0.992,0.989],"B":[0.996,0.997,0.987,0.99]},{"A":[0.039,0.094,0.019,0.016],"B":[0.027,0.031,0.018,0.021]}],"age":[{"A":[0.635,0.195,0.186,0.806],"B":[0.009,0.789,0.018,0.006]},{"A":[0.985,0.646,0.913,0.994],"B":[0.52,0.969,0.122,0.593]},{"A":[0.0,0.0,0.0,0.0],"B":[0.0,0.0,0.0,0.0]},{"A":[0.993,0.623,0.247,0.965],"B":[0.113,0.929,0.041,0.076]},{"A":[0.997,0.95,0.967,0.997],"B":[0.803,0.984,0.56,0.735]},{"A":[0.188,0.022,0.022,0.149],"B":[0.011,0.039,0.009,0.018]}],"nationality":[{"A":[0.933,0.835,0.872,0.959],"B":[0.916,0.83,0.691,0.948]},{"A":[0.988,0.99,0.989,0.994],"B":[0.956,0.964,0.923,0.977]},{"A":[0.0,0.0,0.0,0.0],"B":[0.0,0.0,0.0,0.0]},{"A":[0.95,0.973,0.904,0.975],"B":[0.926,0.915,0.849,0.939]},{"A":[0.998,0.997,0.994,0.997],"B":[0.995,0.994,0.995,0.996]},{"A":[0.033,0.066,0.025,0.061],"B":[0.062,0.059,0.034,0.051]}]};
+
+    const cfAttr = document.getElementById("cf-attr");
+    const cfTmpl = document.getElementById("cf-tmpl");
+    const cfThr = document.getElementById("cf-thr");
+    CF_TEMPLATES.forEach((t, i) => {
+      const o = document.createElement("option");
+      o.value = String(i);
+      o.textContent = t;
+      cfTmpl.appendChild(o);
+    });
+    cfTmpl.value = "3";
+    const mean = (xs) => xs.reduce((s, x) => s + x, 0) / xs.length;
+    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+    function updateCF() {
+      const attr = cfAttr.value;
+      const ti = Number(cfTmpl.value);
+      const thr = Number(cfThr.value);
+      const row = CF_SCORES[attr][ti];
+      const pairs = CF_FILLERS[attr];
+      const [ga, gb] = CF_GROUPS[attr];
+      Course.barChart(document.getElementById("cf-chart-a"), pairs.map((p) => p[0]), row.A,
+        { max: 1, format: f2, color: "#0D9488", rowHeight: 34, title: "Group A scores" });
+      Course.barChart(document.getElementById("cf-chart-b"), pairs.map((p) => p[1]), row.B,
+        { max: 1, format: f2, color: "#9E1B32", rowHeight: 34, title: "Group B scores" });
+      document.getElementById("cf-title-a").textContent = "Group A · " + ga + " · P(positive)";
+      document.getElementById("cf-title-b").textContent = "Group B · " + gb + " · P(positive)";
+      const ma = mean(row.A), mb = mean(row.B);
+      const posA = row.A.filter((v) => v >= thr).length, posB = row.B.filter((v) => v >= thr).length;
+      const flips = row.A.filter((v, i) => (v >= thr) !== (row.B[i] >= thr)).length;
+      document.getElementById("cf-ma").textContent = f2(ma);
+      document.getElementById("cf-mb").textContent = f2(mb);
+      document.getElementById("cf-gap").textContent = (ma - mb >= 0 ? "+" : "") + f2(ma - mb);
+      document.getElementById("cf-flips").textContent = flips + " / " + row.A.length;
+      document.getElementById("cf-pr").textContent = posA + "/4 vs " + posB + "/4";
+      let k = 0;
+      row.A.forEach((v, i) => { if (Math.abs(v - row.B[i]) > Math.abs(row.A[k] - row.B[k])) k = i; });
+      const tmpl = CF_TEMPLATES[ti];
+      document.getElementById("cf-sentence").innerHTML = "Largest change: <em>" +
+        tmpl.replace("X", cap(pairs[k][0])) + "</em> " + f2(row.A[k]) + " vs <em>" +
+        tmpl.replace("X", cap(pairs[k][1])) + "</em> " + f2(row.B[k]);
+    }
+    cfAttr.addEventListener("change", updateCF);
+    cfTmpl.addEventListener("change", updateCF);
+    Course.bindRange(cfThr, document.getElementById("cf-thr-out"), f2, updateCF);
+
+    // --- Simulator 2: carbon calculator ------------------------------------------------------
+    // E = power (kW) × devices × hours × PUE; CO2e = E × grid intensity. Illustrative values only.
+    const GRIDS = [["Hydro-heavy ~0.15", 0.15], ["Mixed ~0.4", 0.4], ["Coal-heavy ~0.8", 0.8]];
+    const KG_PER_KM_CAR = 0.2;   // illustrative gasoline car
+    const LED_KW = 0.01;         // 10 W LED bulb
+    const ccGpu = document.getElementById("cc-gpu");
+    const ccIn = {
+      n: document.getElementById("cc-n"), h: document.getElementById("cc-h"),
+      pue: document.getElementById("cc-pue"), ci: document.getElementById("cc-ci")
+    };
+    const hoursOf = (v) => Math.round(Math.pow(10, v));
+    const nice = (x) => x >= 100 ? Math.round(x).toLocaleString("en-US")
+      : x >= 10 ? x.toFixed(1) : x >= 1 ? x.toFixed(2) : x.toFixed(3);
+
+    function updateCC() {
+      const kw = Number(ccGpu.value) / 1000;
+      const n = Number(ccIn.n.value), h = hoursOf(Number(ccIn.h.value));
+      const pue = Number(ccIn.pue.value), ci = Number(ccIn.ci.value);
+      const kwh = kw * n * h * pue;
+      const kg = kwh * ci;
+      document.getElementById("cc-kwh").textContent = nice(kwh) + " kWh";
+      document.getElementById("cc-kg").textContent = nice(kg) + " kg CO₂e";
+      document.getElementById("cc-km").textContent = nice(kg / KG_PER_KM_CAR);
+      document.getElementById("cc-led").textContent = nice(kwh / LED_KW);
+      const labels = GRIDS.map((g) => g[0]).concat(["Your setting " + ci.toFixed(2)]);
+      const values = GRIDS.map((g) => kwh * g[1]).concat([kg]);
+      Course.barChart(document.getElementById("cc-chart"), labels, values,
+        { format: (v) => nice(v) + " kg", highlight: 3, rowHeight: 34, title: "Same job, different grids (kg CO2e)" });
+    }
+    ccGpu.addEventListener("change", updateCC);
+    Course.bindRange(ccIn.n, document.getElementById("cc-n-out"), String, updateCC);
+    Course.bindRange(ccIn.h, document.getElementById("cc-h-out"), (v) => String(hoursOf(v)), updateCC);
+    Course.bindRange(ccIn.pue, document.getElementById("cc-pue-out"), f2, updateCC);
+    Course.bindRange(ccIn.ci, document.getElementById("cc-ci-out"), f2, updateCC);
+    document.querySelectorAll("[data-ci]").forEach((b) => b.addEventListener("click", () => {
+      ccIn.ci.value = b.getAttribute("data-ci");
+      ccIn.ci.dispatchEvent(new Event("input", { bubbles: true }));
+    }));
+  });
+</script>
+</body>
+</html>
