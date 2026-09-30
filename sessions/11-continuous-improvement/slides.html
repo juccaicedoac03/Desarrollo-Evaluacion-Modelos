@@ -1,0 +1,1245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S11 · Evaluation and Continuous Model Improvement</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link rel="stylesheet" href="../../assets/css/course.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ===================================================================== -->
+  <!-- OPENING                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 1 · Title -->
+  <section class="title-slide" data-session="11">
+    <div class="title-main">
+      <h1>Evaluation and Continuous Model Improvement</h1>
+      <p class="subtitle">Evaluación y mejora continua de modelos</p>
+    </div>
+    <div class="title-meta">
+      <p class="course">Desarrollo y Evaluación de Modelos Propios</p>
+      <p class="program">Especialización en IA Generativa y Desarrollo de Negocios</p>
+    </div>
+    <p class="title-footer">Universidad del Rosario · Rosario GSB</p>
+    <aside class="notes">
+      [0:00 · 1 min] Welcome to the last regular session before the project showcase. Today's
+      message: a model is never finished. We learn a disciplined loop to make it better, and to
+      prove that it got better. Today is also milestone H4 for the final project, so everything we
+      practise applies directly to your group's model. Keys: S speaker view, F fullscreen, Esc overview.
+    </aside>
+  </section>
+
+  <!-- 2 · Agenda -->
+  <section>
+    <p class="kicker">Today</p>
+    <h2>Agenda · 3 hours</h2>
+    <ol class="agenda" data-current="warmup">
+      <li data-block="warmup">Warm-up: three questions on ethics and sustainability (S10) <span class="time">10'</span></li>
+      <li data-block="theory">Theory: the improvement loop, trustworthy experiments, robustness &amp; efficiency, production <span class="time">60'</span></li>
+      <li data-block="break">Break <span class="time">10'</span></li>
+      <li data-block="lab">Guided lab: one full turn of the loop on Banking77 <span class="time">60'</span></li>
+      <li data-block="challenge">Session challenge (graded, individual) <span class="time">40'</span></li>
+    </ol>
+    <p class="small muted" style="margin-top: 18px">Project milestone H4 (improvement iteration) is due tonight at 23:59.</p>
+    <aside class="notes">
+      [0:01 · 1 min] Walk through the blocks. The theory has four parts; the breakout at the end
+      of the theory block is where groups plan the H4 iteration of their project.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WARM-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 3 · Warm-up divider -->
+  <section class="section-slide" data-block="warmup">
+    <h2>Warm-up</h2>
+    <p>Three questions on last session: fairness metrics, carbon footprint and counterfactual tests.</p>
+    <span class="block-tag" data-block="warmup">Warm-up · 10'</span>
+    <aside class="notes">
+      [0:02] Retrieval practice on Session 10. The third question is a bridge to today's
+      behavioural tests.
+    </aside>
+  </section>
+
+  <!-- 4 · Warm-up Q1 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q1</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">A credit model has the same true positive rate for men and women among applicants who repay, but approves women less often overall. Which criterion does it satisfy?</p>
+      <button class="quiz-opt" data-key="a">Demographic parity</button>
+      <button class="quiz-opt" data-key="b">Equal opportunity</button>
+      <button class="quiz-opt" data-key="c">Both criteria</button>
+      <button class="quiz-opt" data-key="d">Neither criterion</button>
+      <div class="quiz-explain">Equal opportunity asks for equal true positive rates among the people who deserve the positive
+        outcome (Hardt, Price &amp; Srebro, 2016). Demographic parity asks for equal approval rates overall, which fails here.
+        When base rates differ between groups, the two criteria can conflict.</div>
+    </div>
+    <aside class="notes">
+      [0:02 · 3 min] Launch the Zoom poll, wait about 45 seconds, then click the majority answer.
+      If many chose "both", draw the 2×2 table: parity looks at all applicants, equal opportunity
+      only at those with y = 1.
+    </aside>
+  </section>
+
+  <!-- 5 · Warm-up Q2 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q2</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">The same fine-tuning job (same GPU, hours and PUE) runs in two regions. Region A's grid emits 4× more CO₂ per kWh than region B's. Emissions in A are…</p>
+      <button class="quiz-opt" data-key="a">The same: the energy used is identical</button>
+      <button class="quiz-opt" data-key="b">About 4× those in region B</button>
+      <button class="quiz-opt" data-key="c">4× lower, because the grid is larger</button>
+      <button class="quiz-opt" data-key="d">Impossible to compare without CodeCarbon</button>
+      <div class="quiz-explain">Emissions ≈ energy (kWh) × PUE × grid carbon intensity (kg CO₂e/kWh). Same energy and PUE,
+        4× the intensity → about 4× the emissions. That is why a hydro-heavy grid such as Colombia's changes the footprint
+        of the same job.</div>
+    </div>
+    <aside class="notes">
+      [0:05 · 2 min] Quick one. Remind them that efficiency (Part 3 today) is also a sustainability
+      lever: a quantized or distilled model uses less energy per prediction.
+    </aside>
+  </section>
+
+  <!-- 6 · Warm-up Q3 -->
+  <section>
+    <span class="block-tag" data-block="warmup">Warm-up · Q3</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">In S10 you swapped names (“María” ↔ “Juan”) in otherwise identical sentences and compared sentiment scores. In testing vocabulary, that is…</p>
+      <button class="quiz-opt" data-key="a">A minimum functionality test with a known answer</button>
+      <button class="quiz-opt" data-key="b">An invariance test: a change that should not change the output</button>
+      <button class="quiz-opt" data-key="c">A directional test: the score must go up</button>
+      <button class="quiz-opt" data-key="d">A data drift monitor</button>
+      <div class="quiz-explain">Counterfactual fairness tests are invariance (INV) tests in CheckList terms (Ribeiro et al., 2020).
+        Today we apply the same idea to typos, casing and irrelevant sentences, and report pass rates.</div>
+    </div>
+    <aside class="notes">
+      [0:07 · 2 min] This is the bridge: last week's bias audit was already a behavioural test.
+      Today it becomes one tool in a larger testing and improvement toolbox.
+    </aside>
+  </section>
+
+  <!-- 7 · Learning objectives -->
+  <section>
+    <p class="kicker">Learning objectives</p>
+    <h2>By the end of this session you can…</h2>
+    <ol>
+      <li>Run an improvement loop: error analysis → hypothesis → targeted fix → decision, with an experiment log <span class="pill">RAE 2</span></li>
+      <li>Find likely label errors and choose between data-centric and model-centric fixes <span class="pill">RAE 2</span></li>
+      <li>Tune hyperparameters with Optuna without leaking the test set <span class="pill">RAE 2</span></li>
+      <li>Design behavioural tests and recognise distribution shift <span class="pill">RAE 2</span> <span class="pill">RAE 6</span></li>
+      <li>Trade accuracy for size and latency (quantization, distillation) and decide under constraints <span class="pill">RAE 6</span></li>
+      <li>Plan monitoring and safe rollout for models and LLM applications <span class="pill">RAE 6</span></li>
+    </ol>
+    <aside class="notes">
+      [0:08 · 2 min] RAE 2 is evaluation (accuracy, efficiency, robustness); RAE 6 is managing risk
+      and quality in production. The challenge assesses objectives 1, 4 and 5 directly.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 1 · THE IMPROVEMENT LOOP                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 8 · Part 1 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 1</p>
+    <h2>The improvement loop</h2>
+    <p>Models are never done: from errors to hypotheses to targeted fixes.</p>
+    <span class="block-tag" data-block="theory">Theory · 60'</span>
+    <aside class="notes">
+      [0:10] Part 1: about 17 minutes, including the loop simulator and a quiz.
+    </aside>
+  </section>
+
+  <!-- 9 · Hidden technical debt + workflow -->
+  <section>
+    <p class="kicker">Why models decay</p>
+    <h2>The model is the small box</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)">
+      <div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 18px; text-align: center">
+          <div class="card" style="padding: 10px">Configuration</div>
+          <div class="card" style="padding: 10px">Data collection</div>
+          <div class="card" style="padding: 10px">Data verification</div>
+          <div class="card" style="padding: 10px">Feature extraction</div>
+          <div class="card" style="padding: 10px; background: var(--brand); color: #fff; font-weight: 700">ML code</div>
+          <div class="card" style="padding: 10px">Serving infrastructure</div>
+          <div class="card" style="padding: 10px">Resource management</div>
+          <div class="card" style="padding: 10px">Analysis tools</div>
+          <div class="card" style="padding: 10px">Monitoring</div>
+        </div>
+        <p class="small" style="margin-top: 12px">“Only a small fraction of real-world ML systems is composed of the ML code” (Sculley et al., 2015).
+          Debt hides around it: <strong>CACE</strong> (changing anything changes everything), hidden feedback loops, undeclared consumers, unstable data dependencies.</p>
+      </div>
+      <div class="card">
+        <h4>Nine stages, with loops back</h4>
+        <p class="small" style="margin-bottom: 6px">Microsoft's ML workflow (Amershi et al., 2019):</p>
+        <p class="small" style="line-height: 1.7">
+          <span class="tag">requirements</span> <span class="tag">collection</span> <span class="tag">cleaning</span>
+          <span class="tag">labelling</span> <span class="tag">features</span> <span class="tag">training</span>
+          <span class="tag">evaluation</span> <span class="tag">deployment</span> <span class="tag">monitoring</span> ↺</p>
+        <p class="small">The data stages and the feedback loops are what make ML different from classic software. Huyen (2022) calls ML systems <em>iterative by nature</em>.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:10 · 3 min] The Sculley figure: the black box in the middle is the model; everything else
+      is what breaks in production. Ask in the chat: "Which of these boxes has hurt you most in a
+      real project?" Amershi et al. interviewed and surveyed Microsoft teams; their nine-stage
+      workflow has feedback loops (e.g., evaluation sends you back to data collection). That loop
+      is today's topic.
+    </aside>
+  </section>
+
+  <!-- 10 · Simulator: the improvement loop -->
+  <section>
+    <p class="kicker">Simulator · the improvement loop</p>
+    <h2>Click a stage to see what good practice looks like</h2>
+    <div class="sim" style="grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr)">
+      <div class="sim-controls" style="gap: 10px">
+        <div id="loop-diagram"></div>
+        <div>
+          <button class="btn btn-sm" id="loop-next" type="button">Next stage ▶</button>
+          <span class="small muted" style="margin-left: 8px">or click / Tab + Enter on a stage</span>
+        </div>
+      </div>
+      <div class="sim-output" id="loop-detail" aria-live="polite" style="font-size: 21px"></div>
+    </div>
+    <aside class="notes">
+      [0:13 · 6 min] Interaction. Start at Monitor and press "Next stage" around the loop, spending
+      about 45 seconds per stage. For each stage ask the room for one example from their own work
+      before revealing the pitfall. Emphasise stage 3: write the decision rule before running the
+      experiment. The Andes Bank lines are a fictional running example that matches the lab.
+    </aside>
+  </section>
+
+  <!-- 11 · Error analysis -->
+  <section>
+    <p class="kicker">Error analysis</p>
+    <h2>From 100 errors to a ranked list of hypotheses</h2>
+    <table class="compact" style="font-size: 20px">
+      <thead>
+        <tr><th>Category (Andes Bank, 100 misrouted messages)</th><th class="num">Count</th><th>Example</th><th>Hypothesis</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Confused pair: card arrival vs delivery estimate</td><td class="num">34</td><td>“Is my card on its way?”</td><td>Too few distinguishing examples</td></tr>
+        <tr><td>Wrong label in the training data</td><td class="num">22</td><td>“My top-up failed” → <em>cancel_transfer</em></td><td>Vendor labelling errors</td></tr>
+        <tr><td>New product, no intent for it yet</td><td class="num">18</td><td>“How do savings pockets work?”</td><td>Distribution shift: new intent</td></tr>
+        <tr><td>Typos and slang</td><td class="num">15</td><td>“wheres my crad”</td><td>Word features miss misspellings</td></tr>
+        <tr><td>Two intents in one message</td><td class="num">11</td><td>“Cancel it and block my card”</td><td>Task definition (one label only)</td></tr>
+      </tbody>
+      <caption>Illustrative counts. A category's share of the errors is the ceiling of its fix.</caption>
+    </table>
+    <div class="callout tip small"><strong>Method:</strong> sample errors from validation, tag and count them, estimate each fix's ceiling and cost, then attack the best ratio.</div>
+    <aside class="notes">
+      [0:19 · 3 min] This is the "look at the data" habit promoted by Andrew Ng in the data-centric
+      AI movement. Averages hide everything: slices (by intent, length, channel, product) point to
+      causes. The ceiling logic: if typos cause 15% of errors, a perfect typo fix can remove at most
+      15% of the errors. Counts are illustrative, not from a real bank.
+    </aside>
+  </section>
+
+  <!-- 12 · Quiz: prioritise -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · prioritisation</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">One sprint left. Confused pair: 34% of errors, 2 days to write 200 targeted examples. Typos: 15%, 1 day to try character n-grams. Two-intent messages: 11%, 3 weeks for a new architecture. What goes first?</p>
+      <button class="quiz-opt" data-key="a">The new architecture: it is the most innovative</button>
+      <button class="quiz-opt" data-key="b">Targeted examples, then character n-grams: biggest ceiling per day of effort</button>
+      <button class="quiz-opt" data-key="c">Hyperparameter tuning first, always</button>
+      <button class="quiz-opt" data-key="d">Collect ten times more random data</button>
+      <div class="quiz-explain">Rank fixes by expected gain (at most the category's share of errors) per unit of effort.
+        Random extra data mostly repeats what the model already knows; targeted data attacks the confusion directly.</div>
+    </div>
+    <aside class="notes">
+      [0:22 · 1 min] Poll, then click. Point out that option c is the reflex of many teams:
+      tuning is easy to automate but rarely fixes a data problem.
+    </aside>
+  </section>
+
+  <!-- 13 · Data-centric vs model-centric -->
+  <section>
+    <p class="kicker">Two ways to improve</p>
+    <h2>Data-centric vs model-centric</h2>
+    <div class="cols">
+      <div class="card">
+        <span class="icon">🧠</span>
+        <h3>Model-centric</h3>
+        <p class="small">Hold the data fixed, iterate on the model: features, architecture, hyperparameters, loss.</p>
+        <p class="small muted">Easy to automate; limited by the quality of the labels.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🗂️</span>
+        <h3>Data-centric</h3>
+        <p class="small">Hold the model fixed, iterate on the data: consistent labels and guidelines, targeted collection, removing duplicates and leakage, augmentation.</p>
+        <p class="small muted">Often the bigger lever for small teams (Ng, data-centric AI).</p>
+      </div>
+    </div>
+    <div class="cols" style="margin-top: 14px">
+      <div class="callout"><strong>Data cascades:</strong> 92% of the 53 AI practitioners interviewed by Sambasivan et al. (2021) reported at least one compounding data problem.</div>
+      <div class="prompt-card" data-kind="poll">
+        <h4>Where is your bottleneck?</h4>
+        <p class="small">In your organisation: the data or the model?</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:23 · 2 min] The two are complementary; the point is where to look first. The Sambasivan
+      et al. CHI 2021 paper ("Everyone wants to do the model work, not the data work") studied
+      high-stakes AI in several countries; data cascades were pervasive, invisible and delayed.
+      Quick Zoom poll: data or model?
+    </aside>
+  </section>
+
+  <!-- 14 · Label noise and confident learning -->
+  <section>
+    <p class="kicker">Label noise</p>
+    <h2>Let the model point at suspicious labels</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr)">
+      <div>
+        <ol class="small">
+          <li>Get <strong>out-of-sample</strong> probabilities \(\hat{p}(x_i)\) with k-fold cross-validation: the model never scores an example it trained on.</li>
+          <li><strong>Self-confidence</strong> of the received label \(\tilde{y}_i\): \(s_i = \hat{p}(\tilde{y}_i \mid x_i)\).</li>
+          <li>Per-class threshold \(t_j\) = mean self-confidence of the examples labelled \(j\).</li>
+          <li>Flag \(i\) when another class clears its threshold with more probability than the received one.</li>
+        </ol>
+        <p class="small muted">This simplifies <em>confident learning</em> (Northcutt, Jiang &amp; Chuang, 2021); their open-source library is <span class="tag">cleanlab</span>.</p>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom: 12px">
+          <h4>Even benchmarks have wrong labels</h4>
+          <p class="small">Northcutt, Athalye &amp; Mueller (2021) estimated an average of at least 3.3% label errors across the test sets of 10 popular datasets.</p>
+        </div>
+        <div class="callout warn"><strong>Review, don't auto-delete:</strong> a flagged example may be a rare but correct case.</div>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:25 · 2 min] This is exactly what the lab does with cross_val_predict(method="predict_proba").
+      Stress out-of-sample: in-sample probabilities of a model that memorised a wrong label look
+      confident. Per-class thresholds matter because some intents are simply harder. We implement a
+      simplified version for teaching; in a real project use cleanlab and a human review queue.
+    </aside>
+  </section>
+
+  <!-- 15 · Business lens 1 -->
+  <section>
+    <p class="kicker">Labelling is a supply chain</p>
+    <h2>Put quality control in the vendor contract</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">1 in 10</span>
+        <p class="caption muted">wrong labels in the vendor batch of today's lab scenario (a simulation we control, not a market statistic).</p>
+      </div>
+      <div class="callout business">
+        <p><strong>Andes Bank</strong> (fictional) pays a vendor per label. Before accepting a batch:</p>
+        <ul class="small">
+          <li>Double-label a random sample and measure agreement.</li>
+          <li>Write guidelines with examples of the confusable intents.</li>
+          <li>Run a CL-style audit and send the flagged items back for review.</li>
+          <li>Keep a small gold set, labelled in-house, only for evaluation.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:27 · 1 min] Business lens for Part 1. Label quality is a procurement issue, not only a
+      data-science issue. Acceptance criteria for a labelled batch belong in the contract.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 2 · EXPERIMENTS YOU CAN TRUST                             -->
+  <!-- ===================================================================== -->
+
+  <!-- 16 · Part 2 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 2</p>
+    <h2>Experiments you can trust</h2>
+    <p>Tracking, honest splits and hyperparameter search.</p>
+    <aside class="notes">
+      [0:28] Part 2: about 12 minutes.
+    </aside>
+  </section>
+
+  <!-- 17 · Experiment tracking -->
+  <section>
+    <p class="kicker">Reproducibility</p>
+    <h2>If it isn't logged, it didn't happen</h2>
+    <div class="cols">
+      <div>
+        <h4>Log every run</h4>
+        <ul class="small">
+          <li><strong>Code</strong> version (git commit) and <strong>data</strong> version (snapshot or hash)</li>
+          <li>Configuration, hyperparameters and <strong>seeds</strong></li>
+          <li>Environment: library versions, hardware</li>
+          <li>Metrics on validation, overall and by slice</li>
+          <li>Artefacts: model file, plots, predictions</li>
+          <li>Hypothesis, decision and notes (the human part)</li>
+        </ul>
+      </div>
+      <div>
+        <pre><code class="language-python" data-trim data-noescape>
+import mlflow
+
+with mlflow.start_run(run_name="E1-drop-flagged"):
+    mlflow.log_params({"C": 10, "ngram_max": 1,
+                       "data": "vendor-v2-cleaned", "seed": 42})
+    mlflow.log_metric("val_macro_f1", val_f1)
+    mlflow.log_artifact("confusion_matrix.png")
+        </code></pre>
+        <p class="small">MLflow (open source) and Weights &amp; Biases (hosted) store runs, compare them and register models. A pandas DataFrame, as in today's lab, is the minimum.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:28 · 3 min] Tools matter less than the habit. The model registry idea: every deployed
+      model points back to the exact code, data and config that produced it, so you can reproduce
+      or roll back. The final project's experiment log (report §5) follows this list.
+    </aside>
+  </section>
+
+  <!-- 18 · Validation vs test, seeds -->
+  <section>
+    <p class="kicker">Honest numbers</p>
+    <h2>Decide on validation, report on test once</h2>
+    <div class="cols-3">
+      <div class="card"><h4>Train</h4><p class="small">The model learns here. It may be noisy.</p></div>
+      <div class="card"><h4>Validation</h4><p class="small">Every decision: keep or discard a change, pick hyperparameters, choose a threshold.</p></div>
+      <div class="card"><h4>Test</h4><p class="small">Touched once, at the end, to report all versions. Nothing is tuned on it.</p></div>
+    </div>
+    <div class="cols" style="margin-top: 14px">
+      <div class="callout warn"><strong>Best of 20 seeds is not a result.</strong> Run several seeds and report mean ± standard deviation; fix the seed before you start.</div>
+      <div class="callout tip"><strong>Is the gain real?</strong> With ~300 validation messages, one message ≈ 0.3 points of accuracy. Use a paired bootstrap or a decision threshold written in advance.</div>
+    </div>
+    <aside class="notes">
+      [0:31 · 2 min] Two classic sources of optimism: tuning on the test set (leakage) and picking
+      the best of many noisy runs. Both appear in today's Crítica a la IA task. The paired bootstrap
+      resamples the same messages for both models, so it measures the difference, not two separate
+      noisy numbers.
+    </aside>
+  </section>
+
+  <!-- 19 · HPO strategies -->
+  <section>
+    <p class="kicker">Hyperparameter optimisation</p>
+    <h2>Grid, random or Bayesian?</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>Grid search</h4>
+        <svg viewBox="0 0 200 170" width="100%" role="img" aria-label="Grid search: 9 trials test only 3 values of the important parameter">
+          <rect x="20" y="10" width="160" height="130" fill="none" style="stroke: var(--line-strong)"/>
+          <g style="fill: var(--block-theory)">
+            <circle cx="47" cy="32" r="6"/><circle cx="100" cy="32" r="6"/><circle cx="153" cy="32" r="6"/>
+            <circle cx="47" cy="75" r="6"/><circle cx="100" cy="75" r="6"/><circle cx="153" cy="75" r="6"/>
+            <circle cx="47" cy="118" r="6"/><circle cx="100" cy="118" r="6"/><circle cx="153" cy="118" r="6"/>
+          </g>
+          <g style="stroke: var(--brand); stroke-width: 3"><line x1="47" y1="146" x2="47" y2="160"/><line x1="100" y1="146" x2="100" y2="160"/><line x1="153" y1="146" x2="153" y2="160"/></g>
+        </svg>
+        <p class="small">9 trials, but only <strong>3</strong> distinct values of the parameter that matters.</p>
+      </div>
+      <div class="card">
+        <h4>Random search</h4>
+        <svg viewBox="0 0 200 170" width="100%" role="img" aria-label="Random search: 9 trials test 9 values of the important parameter">
+          <rect x="20" y="10" width="160" height="130" fill="none" style="stroke: var(--line-strong)"/>
+          <g style="fill: var(--block-theory)">
+            <circle cx="33" cy="95" r="6"/><circle cx="52" cy="30" r="6"/><circle cx="71" cy="120" r="6"/>
+            <circle cx="88" cy="58" r="6"/><circle cx="104" cy="104" r="6"/><circle cx="121" cy="24" r="6"/>
+            <circle cx="138" cy="80" r="6"/><circle cx="155" cy="128" r="6"/><circle cx="170" cy="46" r="6"/>
+          </g>
+          <g style="stroke: var(--brand); stroke-width: 3"><line x1="33" y1="146" x2="33" y2="160"/><line x1="52" y1="146" x2="52" y2="160"/><line x1="71" y1="146" x2="71" y2="160"/><line x1="88" y1="146" x2="88" y2="160"/><line x1="104" y1="146" x2="104" y2="160"/><line x1="121" y1="146" x2="121" y2="160"/><line x1="138" y1="146" x2="138" y2="160"/><line x1="155" y1="146" x2="155" y2="160"/><line x1="170" y1="146" x2="170" y2="160"/></g>
+        </svg>
+        <p class="small">Same budget, <strong>9</strong> distinct values: better when few parameters matter (Bergstra &amp; Bengio, 2012).</p>
+      </div>
+      <div class="card">
+        <h4>Bayesian (TPE)</h4>
+        <p class="small">Uses past trials to model where good scores are and samples there next. Optuna's default sampler is TPE (Tree-structured Parzen Estimator).</p>
+        <p class="small muted">Horizontal axis: the important hyperparameter; red ticks: the values actually tested.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:33 · 2 min] The Bergstra and Bengio argument: in most problems only a few hyperparameters
+      matter, and grid search wastes trials repeating the same values of the important one. Random
+      search explores more values for the same budget. Bayesian methods add memory: they learn from
+      earlier trials.
+    </aside>
+  </section>
+
+  <!-- 20 · Optuna -->
+  <section>
+    <p class="kicker">Optuna · define-by-run</p>
+    <h2>The search space is written as code</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr)">
+      <pre><code class="language-python" data-trim data-noescape data-line-numbers="4-8|10-11|13-14">
+import optuna
+
+def objective(trial):
+    analyzer = trial.suggest_categorical("analyzer", ["word", "char_wb"])
+    if analyzer == "word":
+        n = trial.suggest_int("word_ngram_max", 1, 3)
+    else:
+        n = trial.suggest_int("char_ngram_max", 3, 5)
+    C = trial.suggest_float("C", 0.1, 100, log=True)
+    model = make_model(C, n, analyzer).fit(X_train, y_train)
+    return macro_f1(model, X_valid, y_valid)   # never the test set
+
+sampler = optuna.samplers.TPESampler(seed=42)
+study = optuna.create_study(direction="maximize", sampler=sampler)
+study.optimize(objective, n_trials=20)
+      </code></pre>
+      <div>
+        <ul class="small">
+          <li><strong>Define-by-run</strong> (Akiba et al., 2019): the space can branch (word vs character n-grams).</li>
+          <li><strong>Seeded sampler</strong>: the search is reproducible.</li>
+          <li><strong>Pruning</strong> is early stopping for trials: report intermediate scores with <code>trial.report</code> and stop when <code>trial.should_prune()</code> says the trial is hopeless.</li>
+          <li>Inside one training run, early stopping watches the validation loss with some patience.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:35 · 2 min] Step through the highlighted lines with the arrow key. This is almost exactly
+      the lab's code. Pruners (median, successive halving, Hyperband) matter when each trial is
+      expensive, like fine-tuning a transformer for several epochs.
+    </aside>
+  </section>
+
+  <!-- 21 · Quiz: winner's curse -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · selection</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">After 200 Optuna trials, the best trial scores 0.912 macro-F1 on validation; the next ten are around 0.900. On test it scores 0.899. Most likely explanation?</p>
+      <button class="quiz-opt" data-key="a">The test set is broken</button>
+      <button class="quiz-opt" data-key="b">Winner's curse: the maximum of many noisy validation scores is optimistic</button>
+      <button class="quiz-opt" data-key="c">Optuna has a bug</button>
+      <button class="quiz-opt" data-key="d">200 trials were not enough</button>
+      <div class="quiz-explain">Selecting the best of many trials on the same validation set rewards lucky noise. The honest
+        estimate is the untouched test set, or a nested cross-validation.</div>
+    </div>
+    <aside class="notes">
+      [0:37 · 1 min] You will see a small version of this in the lab: compare the validation and
+      test columns of the Optuna row at the end.
+    </aside>
+  </section>
+
+  <!-- 22 · Business lens 2 -->
+  <section>
+    <p class="kicker">Experiments cost money</p>
+    <h2>What is one point of accuracy worth?</h2>
+    <div class="cols">
+      <div>
+        <span class="big-number">≈ 100 h</span>
+        <p class="caption muted">of agent time per month saved by one point of routing accuracy, if 200,000 messages a month
+          are routed and each misroute costs 3 minutes (illustrative arithmetic: 2,000 × 3 min).</p>
+      </div>
+      <div class="callout business">
+        <p>Before the sprint, <strong>Andes Bank</strong> (fictional) fixes:</p>
+        <ul class="small">
+          <li>the budget: number of trials × cost of one trial;</li>
+          <li>the stopping rule: when is "no gain" an answer?</li>
+          <li>the gain that justifies a release, in business units.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:38 · 2 min] Business lens for Part 2. The challenge gives each student a budget of Optuna
+      trials: the question is not "can we get better?" but "is the gain worth the cost and the risk
+      of change?"
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 3 · ROBUST AND EFFICIENT                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 23 · Part 3 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 3</p>
+    <h2>Robust and efficient</h2>
+    <p>Behavioural tests, distribution shift, and making models smaller and faster.</p>
+    <aside class="notes">
+      [0:40] Part 3: about 15 minutes, with the quantization simulator.
+    </aside>
+  </section>
+
+  <!-- 24 · CheckList -->
+  <section>
+    <p class="kicker">Behavioural testing · CheckList</p>
+    <h2>Test capabilities, not only accuracy</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>MFT · minimum functionality</h4>
+        <p class="small">Simple cases with a known answer, like unit tests.</p>
+        <p class="small muted">“The app is not good.” → NEGATIVE</p>
+      </div>
+      <div class="card">
+        <h4>INV · invariance</h4>
+        <p class="small">A label-preserving change must not change the prediction.</p>
+        <p class="small muted">“Where is my card?” → “Where is my crad? Thanks!” → same intent</p>
+      </div>
+      <div class="card">
+        <h4>DIR · directional</h4>
+        <p class="small">A change must move the output in a known direction.</p>
+        <p class="small muted">Adding “and nobody answered my calls” must not make a complaint less negative.</p>
+      </div>
+    </div>
+    <p style="margin-top: 16px"><strong>Pass rate</strong> = share of test cases that behave as expected. Ribeiro et al. (2020) found actionable failures this way even in extensively tested commercial models.</p>
+    <aside class="notes">
+      [0:40 · 3 min] CheckList crosses capabilities (vocabulary, negation, robustness, fairness…)
+      with these three test types. For INV the pass rate ignores whether the original prediction
+      was correct: it measures stability. The lab implements typos, casing, irrelevant sentences
+      and removed punctuation in plain Python.
+    </aside>
+  </section>
+
+  <!-- 25 · Flip cards: test types -->
+  <section>
+    <p class="kicker">Self-check · name the test</p>
+    <h2>MFT, INV or DIR?</h2>
+    <div class="cols-3">
+      <div class="flip-card"><div class="front">Replace “Bogotá” with “Medellín” in a complaint: the queue must not change.</div><div class="back"><strong>INV</strong>: a label-preserving change</div></div>
+      <div class="flip-card"><div class="front">“The transfer was not fast” must be classified as negative.</div><div class="back"><strong>MFT</strong>: a simple case with a known answer (negation)</div></div>
+      <div class="flip-card"><div class="front">Adding “This is urgent!” must not lower the priority score.</div><div class="back"><strong>DIR</strong>: a known direction of change</div></div>
+      <div class="flip-card"><div class="front">Swap two letters in one word: the intent must stay the same.</div><div class="back"><strong>INV</strong>: robustness to typos</div></div>
+      <div class="flip-card"><div class="front">“How do I cancel a transfer?” must go to <em>cancel_transfer</em>.</div><div class="back"><strong>MFT</strong>: a unit test for one intent</div></div>
+      <div class="flip-card"><div class="front">Adding “I was charged twice” must raise the probability of a billing complaint.</div><div class="back"><strong>DIR</strong>: the output must move up</div></div>
+    </div>
+    <aside class="notes">
+      [0:43 · 2 min] Read each card, get answers in the chat, then flip (click or Tab + Enter).
+      About 20 seconds per card.
+    </aside>
+  </section>
+
+  <!-- 26 · Distribution shift -->
+  <section>
+    <p class="kicker">Distribution shift</p>
+    <h2>The world moves after deployment</h2>
+    <div class="cols-3">
+      <div class="card">
+        <h4>Covariate shift</h4>
+        <p class="small">\(p(x)\) changes, \(p(y \mid x)\) stays.</p>
+        <p class="small muted">A new mobile app sends shorter messages with emojis.</p>
+      </div>
+      <div class="card">
+        <h4>Label shift</h4>
+        <p class="small">\(p(y)\) changes.</p>
+        <p class="small muted">A mass card reissue triples “where is my card?” messages.</p>
+      </div>
+      <div class="card">
+        <h4>Concept drift</h4>
+        <p class="small">\(p(y \mid x)\) changes: the same input now needs a different answer.</p>
+        <p class="small muted">A new policy moves pending transfers to the fraud team.</p>
+      </div>
+    </div>
+    <div class="callout tip" style="margin-top: 16px"><strong>Detect:</strong> monitor input statistics and the distribution of predictions (fast, no labels needed), and performance on a labelled sample (slow, but the real signal). Huyen (2022, ch. 8); Gama et al. (2014).</div>
+    <aside class="notes">
+      [0:44 · 2 min] Ask: "Which of these has happened in your organisation?" Emphasise that the
+      real world usually mixes the three. Behavioural tests prepare for some shifts (typos,
+      phrasing); monitoring catches the rest.
+    </aside>
+  </section>
+
+  <!-- 27 · Efficiency toolbox -->
+  <section>
+    <p class="kicker">Efficiency</p>
+    <h2>Four ways to make a model cheaper to run</h2>
+    <div class="cols" style="gap: 16px">
+      <div class="card"><h4>Quantization</h4><p class="small">Store weights (and sometimes activations) with fewer bits: int8, int4. Integer-arithmetic inference: Jacob et al. (2018); 8-bit inference for large LLMs: Dettmers et al. (2022).</p></div>
+      <div class="card"><h4>Distillation</h4><p class="small">A small student learns to imitate a large teacher's softened outputs (Hinton, Vinyals &amp; Dean, 2015). DistilBERT: 40% smaller and 60% faster than BERT, keeping 97% of its language understanding (Sanh et al., 2019).</p></div>
+      <div class="card"><h4>Pruning</h4><p class="small">Remove weights, attention heads or layers that contribute little, then fine-tune to recover (e.g., Han, Mao &amp; Dally, 2016).</p></div>
+      <div class="card"><h4>Batching</h4><p class="small">Process several requests together: more throughput, but each request may wait longer. Live chat cares about latency; nightly jobs about throughput.</p></div>
+    </div>
+    <aside class="notes">
+      [0:46 · 2 min] Quantization needs no retraining (dynamic or post-training), distillation and
+      pruning need training. The DistilBERT figures are the paper's own claims on GLUE; today's
+      sentiment model in the lab is a DistilBERT fine-tuned on SST-2.
+    </aside>
+  </section>
+
+  <!-- 28 · Quantization math -->
+  <section>
+    <p class="kicker">Quantization in one formula</p>
+    <h2>Round weights to a few integer levels</h2>
+    <p>Symmetric \(b\)-bit quantization of a weight tensor \(w\):</p>
+    $$ s = \frac{\max_i |w_i|}{2^{b-1}-1}, \qquad q_i = \operatorname{round}\!\left(\frac{w_i}{s}\right), \qquad \hat{w}_i = s \, q_i $$
+    <div class="cols">
+      <div class="card">
+        <h4>Memory of the weights</h4>
+        <p class="small">parameters × bits ÷ 8 bytes. A 7B model: 14 GB in 16-bit, 7 GB in int8, 3.5 GB in 4-bit, plus activations and cache.</p>
+      </div>
+      <div class="card">
+        <h4>When it hurts</h4>
+        <p class="small">One large outlier inflates \(s\), so small weights round to zero. LLM.int8() keeps outlier features in 16-bit (Dettmers et al., 2022); per-channel or per-group scales help too.</p>
+      </div>
+    </div>
+    <p class="small muted">Dynamic quantization (today's lab) converts weights ahead of time and activations on the fly; static quantization calibrates activations; quantization-aware training learns with the rounding.</p>
+    <aside class="notes">
+      [0:48 · 1 min] One scale factor per tensor, integer codes, and a dequantized approximation.
+      The simulator on the next slide makes the rounding error and the outlier effect visible.
+    </aside>
+  </section>
+
+  <!-- 29 · Simulator: quantization -->
+  <section>
+    <p class="kicker">Simulator · quantization</p>
+    <h2>Bits, memory and rounding error</h2>
+    <div class="sim">
+      <div class="sim-controls" style="gap: 12px">
+        <div class="control">
+          <label for="q-bits">Integer bits <output id="q-bits-out">8</output></label>
+          <input type="range" id="q-bits" min="2" max="8" step="1" value="8">
+        </div>
+        <label style="font-weight: 600; font-size: 20px"><input type="checkbox" id="q-outlier"> Add one outlier weight</label>
+        <div><button class="btn btn-sm btn-ghost" id="q-new" type="button">🎲 New weights</button></div>
+        <table class="compact" style="margin: 0; font-size: 19px">
+          <thead><tr><th>Weights only</th><th class="num">16-bit</th><th class="num" id="q-head">int8</th></tr></thead>
+          <tbody>
+            <tr><td>0.5B params</td><td class="num">1.00 GB</td><td class="num" id="q-m05">–</td></tr>
+            <tr><td>7B params</td><td class="num">14.0 GB</td><td class="num" id="q-m7">–</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sim-output">
+        <div id="q-chart"></div>
+        <p class="stat">Levels: <strong id="q-levels">–</strong> · mean |error|: <strong id="q-mae">–</strong> (<strong id="q-rel">–</strong> of mean |w|) · rounded to zero: <strong id="q-zero">–</strong></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:49 · 5 min] Interaction. 1) At 8 bits the dashed line hides the original: error is tiny.
+      2) Slide to 4, then 2 bits: the staircase appears and many weights round to zero. 3) Back to
+      8 bits, tick "Add one outlier": the scale grows and small weights lose precision; at 4 bits
+      most of them collapse to zero. That is the LLM.int8() motivation. Memory: weights only, 1 GB =
+      10⁹ bytes. The weights are 16 synthetic Gaussian values, not a real model.
+    </aside>
+  </section>
+
+  <!-- 30 · Business lens 3 -->
+  <section>
+    <p class="kicker">Latency is a contract</p>
+    <h2>Measure on the hardware you will deploy on</h2>
+    <div class="cols">
+      <div class="callout business">
+        <p><strong>Andes Bank's</strong> (fictional) live router must answer within 50 ms on shared CPUs. Before choosing a model, the team measures:</p>
+        <ul class="small">
+          <li>latency percentiles (p95, p99), not only the average;</li>
+          <li>size in memory: how many replicas fit per server;</li>
+          <li>accuracy and pass rates after compression, on the same evaluation set.</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Why not trust the brochure?</h4>
+        <ul class="small">
+          <li>int8 speed-ups depend on the CPU's integer kernels: on some ARM laptops dynamic int8 can even be slower.</li>
+          <li>Only some layers get quantized: size falls by less than 4×.</li>
+          <li>A smaller model can fail different behavioural tests.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:54 · 1 min] Business lens for Part 3. The challenge gives each student a deployment
+      scenario with maximum latency, minimum accuracy and maximum size: the decision must cite
+      measured numbers, not vendor claims.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- THEORY · PART 4 · IMPROVING IN PRODUCTION                               -->
+  <!-- ===================================================================== -->
+
+  <!-- 31 · Part 4 divider -->
+  <section class="section-slide" data-block="theory">
+    <p class="kicker">Part 4</p>
+    <h2>Improving in production</h2>
+    <p>Monitoring, safe rollouts and LLMOps, then your project's roadmap.</p>
+    <aside class="notes">
+      [0:55] Part 4: about 6 minutes of content, then the breakout.
+    </aside>
+  </section>
+
+  <!-- 32 · Monitoring -->
+  <section>
+    <p class="kicker">Monitoring</p>
+    <h2>Watch four layers, not only accuracy</h2>
+    <table class="compact">
+      <thead><tr><th>Layer</th><th>Examples for an intent router</th><th>Labels needed?</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Inputs</strong></td><td>Volume, message length, language, unseen words, drift score (e.g., PSI, KS test)</td><td>No</td></tr>
+        <tr><td><strong>Outputs</strong></td><td>Share of each intent, mean confidence, “other” rate</td><td>No</td></tr>
+        <tr><td><strong>Outcomes</strong></td><td>Messages re-routed by agents, escalations, satisfaction</td><td>Delayed</td></tr>
+        <tr><td><strong>System</strong></td><td>Latency p95, errors, cost per 1,000 messages</td><td>No</td></tr>
+      </tbody>
+    </table>
+    <div class="cols" style="margin-top: 12px">
+      <div class="callout warn"><strong>Feedback loops:</strong> if agents only label what the model routed to them, the model's mistakes shape its own future training data (Sculley et al., 2015).</div>
+      <div class="prompt-card" data-kind="chat">
+        <h4>One signal</h4>
+        <p class="small">Which single signal would you watch first for your project's model?</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [0:55 · 2 min] Labels in production arrive late or never, so the first alarms come from
+      inputs and outputs. PSI (population stability index) compares binned distributions; teams
+      calibrate alert thresholds on their own history. Read two or three chat answers.
+    </aside>
+  </section>
+
+  <!-- 33 · Rollout -->
+  <section>
+    <p class="kicker">Safe rollouts</p>
+    <h2>Shadow → canary → A/B test</h2>
+    <div class="cols-3">
+      <div class="card"><h4>1 · Shadow</h4><p class="small">The new model sees live traffic; its predictions are logged, not used. Compare with the old one at zero customer risk.</p></div>
+      <div class="card"><h4>2 · Canary</h4><p class="small">A small share of traffic uses the new model; watch errors and latency, with a rollback ready.</p></div>
+      <div class="card"><h4>3 · A/B test</h4><p class="small">Random split, one primary metric, guardrail metrics, duration and sample size fixed in advance (Kohavi, Tang &amp; Xu, 2020).</p></div>
+    </div>
+    <div class="callout business" style="margin-top: 16px">
+      <p><strong>Andes Bank</strong> (fictional) A/B test for the new router. Primary: share of messages resolved without re-routing.
+        Guardrails: satisfaction, latency p95, complaints. Version the model, data and config so a rollback takes minutes.</p>
+    </div>
+    <aside class="notes">
+      [0:57 · 2 min] Huyen (2022, ch. 9) covers testing in production: shadow deployment, A/B tests,
+      canary releases, interleaving and bandits. The business lens: offline gains are a hypothesis;
+      the A/B test is the evidence.
+    </aside>
+  </section>
+
+  <!-- 34 · Quiz: first step in production -->
+  <section>
+    <span class="block-tag" data-block="theory">Check · rollout</span>
+    <div class="quiz" data-correct="b" style="margin-top: 18px">
+      <p class="quiz-q">The new router is 2 points better offline. What is the safest first step in production?</p>
+      <button class="quiz-opt" data-key="a">Replace the old model for all customers tonight</button>
+      <button class="quiz-opt" data-key="b">Shadow mode: run it on live traffic without acting and compare</button>
+      <button class="quiz-opt" data-key="c">Ask the labelling vendor to confirm the gain</button>
+      <button class="quiz-opt" data-key="d">Release it only on weekends</button>
+      <div class="quiz-explain">Shadow mode tests the new model on real inputs (and real latency) with no customer impact.
+        Then a canary, then an A/B test with guardrails.</div>
+    </div>
+    <aside class="notes">
+      [0:59 · 1 min] Quick poll. If time is short, click and read the explanation.
+    </aside>
+  </section>
+
+  <!-- 35 · LLMOps -->
+  <section>
+    <p class="kicker">LLMOps</p>
+    <h2>Every prompt change is a release</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)">
+      <div>
+        <ul class="small">
+          <li><strong>Eval suite:</strong> a versioned golden set of inputs with expected behaviour: exact checks, rubrics, LLM-as-judge calibrated against humans.</li>
+          <li><strong>Regression tests</strong> run on every change of prompt, model version, tool or retrieval index.</li>
+          <li><strong>Safety tests</strong> from S10: prompt injection, PII leaks.</li>
+          <li><strong>Track</strong> cost, tokens and latency per request; pin provider model versions.</li>
+          <li><strong>Monitor</strong> traces and user feedback; failures become new test cases.</li>
+        </ul>
+      </div>
+      <div>
+        <pre><code class="language-python" data-trim data-noescape>
+CASES = [
+    ("How do I block my card?", "lost_or_stolen_card"),
+    ("Cancel my last transfer", "cancel_transfer"),
+    # ... every past incident becomes a case
+]
+
+def test_router_does_not_regress():
+    hits = [route(q) == expected for q, expected in CASES]
+    assert sum(hits) / len(hits) >= 0.95  # last release's bar
+        </code></pre>
+        <p class="small muted">A pytest-style regression test for an agent or a prompt-based router (S07).</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:00 · 1 min] The same loop applies to LLM applications and Startti agents: the "model" is
+      prompt + model version + tools + knowledge base. Without an eval suite, nobody knows whether
+      yesterday's prompt tweak broke something.
+    </aside>
+  </section>
+
+  <!-- 36 · Breakout: project roadmap -->
+  <section>
+    <p class="kicker">Your project</p>
+    <h2>Plan your improvement roadmap</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr)">
+      <div class="prompt-card" data-kind="breakout">
+        <h4>Project groups · 8 min</h4>
+        <ol class="small" style="margin-bottom: 8px">
+          <li>Your model's largest error category, with a count from your baseline.</li>
+          <li>One hypothesis and <strong>one</strong> change: data-centric or model-centric?</li>
+          <li>Metric and decision rule, written now (e.g., keep if validation macro-F1 +1 point).</li>
+          <li>One behavioural test and one efficiency constraint for your demo.</li>
+          <li>One signal you would monitor after launch.</li>
+        </ol>
+        <p class="small muted" style="margin: 0">This is the first row of your H4 experiment log.</p>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="8" data-label="Breakout rooms"></div>
+        <p class="small">Rooms = project groups. Two groups share in 30 seconds.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:01 · 8 min] Open breakout rooms by project group, then press Start. Visit two or three
+      rooms. Common problems: hypotheses without evidence ("more data will help"), changing several
+      things at once, or deciding on the test set. Debrief with two groups if time allows.
+    </aside>
+  </section>
+
+  <!-- 37 · H4 milestone -->
+  <section>
+    <p class="kicker">Final project · milestone H4</p>
+    <h2>Document one improvement iteration</h2>
+    <div class="cols">
+      <div>
+        <ul class="small">
+          <li><strong>What:</strong> draft of §5 of the technical report: an experiment log with at least one iteration (hypothesis → change → result → decision) and a link to the code.</li>
+          <li><strong>Rule:</strong> decide with validation; at the end, report every version on the same test set without tuning anything on it.</li>
+          <li><strong>When:</strong> today, 23:59, uploaded to e-Aulas as <code>PF_G&lt;NN&gt;_H4</code> (e.g., <code>PF_G03_H4_bitacora.pdf</code>).</li>
+          <li><strong>Why it matters:</strong> formative, but a missing milestone subtracts 0.3 from the technical deliverable.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Log columns (report template §5)</h4>
+        <p class="small" style="line-height: 1.8"><span class="tag">#</span> <span class="tag">date</span> <span class="tag">hypothesis</span> <span class="tag">change</span> <span class="tag">metric 1 (val.)</span> <span class="tag">metric 2 (val.)</span> <span class="tag">decision</span> <span class="tag">commit</span></p>
+        <p class="small muted">Feedback before Session 12.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:09 · 1 min] Details are in proyecto-final/README.md and the informe-tecnico template. The
+      lab's experiment log DataFrame has the same columns, so groups can reuse its code.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- BREAK                                                                  -->
+  <!-- ===================================================================== -->
+
+  <!-- 38 · Break -->
+  <section class="section-slide" data-block="break">
+    <h2>Break</h2>
+    <p>Stretch, refill your coffee, and open Kaggle for the lab.</p>
+    <div class="timer" data-minutes="10" data-label="Break"></div>
+    <aside class="notes">
+      [1:10 · 10 min] Press Start before you mute.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- LAB                                                                    -->
+  <!-- ===================================================================== -->
+
+  <!-- 39 · Lab divider -->
+  <section class="section-slide" data-block="lab">
+    <p class="kicker">Hands-on</p>
+    <h2>Guided lab</h2>
+    <p>One full turn of the improvement loop on a noisy intent classifier, plus quantization.</p>
+    <span class="block-tag" data-block="lab">Lab · 60'</span>
+    <aside class="notes">
+      [1:20] Lab block. Share your screen and code along.
+    </aside>
+  </section>
+
+  <!-- 40 · Lab bridge -->
+  <section>
+    <p class="kicker">Lab bridge</p>
+    <h2>What we will build</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <table class="compact" style="font-size: 20px">
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Banking77 baseline with 10% wrong labels + experiment log</td><td class="num">8'</td></tr>
+          <tr><td><strong>2</strong></td><td>Error analysis by intent, confused pair and length</td><td class="num">9'</td></tr>
+          <tr><td><strong>3</strong></td><td>Suspicious labels (drop / relabel) and augmentation</td><td class="num">12'</td></tr>
+          <tr><td><strong>4</strong></td><td>Optuna search on validation</td><td class="num">8'</td></tr>
+          <tr><td><strong>5</strong></td><td>CheckList-style tests: typos, casing, negation</td><td class="num">8'</td></tr>
+          <tr><td><strong>6</strong></td><td>DistilBERT int8: size, latency, accuracy</td><td class="num">9'</td></tr>
+          <tr><td><strong>7</strong></td><td>Bootstrap check and final test report</td><td class="num">6'</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h4>Open the notebook</h4>
+        <p class="small">Kaggle checklist: Internet on · Accelerator none (CPU is the point today).</p>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/lab.ipynb" target="_blank" rel="noopener">Open in Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/lab.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [1:20 · 3 min] Everyone opens the notebook. Timing: Part 1 until 1:28, Part 2 until 1:37,
+      Part 3 until 1:49, Part 4 until 1:57, Part 5 until 2:05, Part 6 until 2:14, Part 7 until 2:20.
+      If Kaggle is slow, skip the 🧪 exercises.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CHALLENGE                                                              -->
+  <!-- ===================================================================== -->
+
+  <!-- 41 · Challenge divider -->
+  <section class="section-slide" data-block="challenge">
+    <h2>Session challenge</h2>
+    <p>Individual, graded, 40 minutes in class. Submit by 23:59 today.</p>
+    <aside class="notes">
+      [2:20] Challenge block. The next slide is in Spanish.
+    </aside>
+  </section>
+
+  <!-- 42 · Challenge briefing (Spanish) -->
+  <section lang="es">
+    <p class="kicker">Challenge de la sesión · evaluado</p>
+    <h2>Challenge S11: mejora, prueba y decide</h2>
+    <div class="cols" style="grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr)">
+      <div>
+        <p class="small" style="margin-bottom: 6px">Tu configuración personal: tasa de ruido de etiquetas, grupo de intenciones, presupuesto de Optuna y restricciones de despliegue.</p>
+        <ol class="small">
+          <li><strong>Ejecución:</strong> mejora tu línea base con al menos 2 iteraciones documentadas en una bitácora.</li>
+          <li><strong>Robustez:</strong> reporta tus tasas de aprobación (typos, mayúsculas, texto irrelevante).</li>
+          <li><strong>Explica y decide:</strong> qué versión despliegas con tus restricciones de latencia, exactitud y tamaño.</li>
+          <li><strong>Crítica a la IA:</strong> un plan de mejora con 3 pasos equivocados.</li>
+        </ol>
+        <ul class="small">
+          <li><strong>Rúbrica:</strong> ejecución 40% · análisis 40% · reflexión y registro de IA 20%.</li>
+          <li><strong>IA permitida</strong> con registro; <strong>micro-sustentaciones</strong>: si no explicas tu entrega, máximo 3.0.</li>
+          <li><strong>Entrega:</strong> Archivo → Descargar notebook → e-Aulas como <code>S11_&lt;codigo&gt;.ipynb</code>, 23:59.</li>
+        </ul>
+      </div>
+      <div class="center">
+        <div class="timer" data-minutes="40" data-label="Challenge"></div>
+        <p>
+          <a class="btn btn-kaggle" href="https://kaggle.com/kernels/welcome?src=https://github.com/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/challenge.ipynb" target="_blank" rel="noopener">Abrir en Kaggle</a>
+          <a class="btn btn-colab" href="https://colab.research.google.com/github/juccaicedoac03/Desarrollo-Evaluacion-Modelos/blob/main/sessions/11-continuous-improvement/challenge.ipynb" target="_blank" rel="noopener">Colab</a>
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:20 · 38 min] This briefing slide is in Spanish by course convention. Remind students to
+      type their STUDENT_ID in the first cell, then start the 40' timer. Run 3–4 random micro-vivas
+      (2–3 minutes each, screen shared, no AI help). Remind groups that H4 is also due at 23:59.
+    </aside>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- WRAP-UP                                                                -->
+  <!-- ===================================================================== -->
+
+  <!-- 43 · Wrap-up -->
+  <section>
+    <p class="kicker">Wrap-up</p>
+    <h2>Key takeaways</h2>
+    <div class="cols">
+      <ul>
+        <li>Improvement is a loop with a log: hypothesis → one change → validation → decision.</li>
+        <li>Look at the errors first; with noisy labels, data fixes often beat tuning.</li>
+        <li>Decide on validation, report on test once, and check that gains exceed the noise.</li>
+        <li>“Better” includes robustness, size, latency and a safe rollout.</li>
+      </ul>
+      <div>
+        <div class="prompt-card" data-kind="think">
+          <h4>Exit question</h4>
+          <p class="small">What is the one change you will try on your project model this week, and what result would make you discard it?</p>
+        </div>
+        <p class="small"><strong>Next session:</strong> Integrative project: pitches (8'), demos (3') and questions (4').
+          <span class="muted">Pre-work: final deliverables by 23:59 the day before S12; rehearse the pitch and the demo.</span></p>
+      </div>
+    </div>
+    <aside class="notes">
+      [2:58 · 2 min] Collect exit answers in the chat. Remind: challenge S11_codigo.ipynb and H4
+      by 23:59 today; final deliverables are due the day before Session 12.
+    </aside>
+  </section>
+
+  <!-- 44 · References -->
+  <section>
+    <p class="kicker">References</p>
+    <h2>Sources for this session</h2>
+    <div class="cols" style="font-size: 16px; line-height: 1.3">
+      <ul>
+        <li>Sculley, D., et al. (2015). Hidden technical debt in machine learning systems. <em>NeurIPS</em>.</li>
+        <li>Amershi, S., et al. (2019). Software engineering for machine learning: A case study. <em>ICSE-SEIP</em>.</li>
+        <li>Huyen, C. (2022). <em>Designing machine learning systems</em>. O'Reilly.</li>
+        <li>Ng, A. Data-centric AI resources. DeepLearning.AI: <a href="https://www.deeplearning.ai" target="_blank" rel="noopener">deeplearning.ai</a></li>
+        <li>Sambasivan, N., et al. (2021). “Everyone wants to do the model work, not the data work”: Data cascades in high-stakes AI. <em>CHI</em>.</li>
+        <li>Northcutt, C., Jiang, L., &amp; Chuang, I. (2021). Confident learning: Estimating uncertainty in dataset labels. <em>JAIR</em>, 70.</li>
+        <li>Northcutt, C., Athalye, A., &amp; Mueller, J. (2021). Pervasive label errors in test sets destabilize machine learning benchmarks. <em>NeurIPS Datasets and Benchmarks</em>.</li>
+        <li>Akiba, T., et al. (2019). Optuna: A next-generation hyperparameter optimization framework. <em>KDD</em>.</li>
+        <li>Bergstra, J., &amp; Bengio, Y. (2012). Random search for hyper-parameter optimization. <em>JMLR</em>, 13.</li>
+        <li>Casanueva, I., et al. (2020). Efficient intent detection with dual sentence encoders. <em>NLP4ConvAI workshop, ACL</em> (Banking77).</li>
+      </ul>
+      <ul>
+        <li>Ribeiro, M. T., Wu, T., Guestrin, C., &amp; Singh, S. (2020). Beyond accuracy: Behavioral testing of NLP models with CheckList. <em>ACL</em>.</li>
+        <li>Gama, J., Žliobaitė, I., Bifet, A., Pechenizkiy, M., &amp; Bouchachia, A. (2014). A survey on concept drift adaptation. <em>ACM Computing Surveys</em>, 46(4).</li>
+        <li>Hinton, G., Vinyals, O., &amp; Dean, J. (2015). Distilling the knowledge in a neural network. arXiv:1503.02531.</li>
+        <li>Sanh, V., Debut, L., Chaumond, J., &amp; Wolf, T. (2019). DistilBERT, a distilled version of BERT. arXiv:1910.01108.</li>
+        <li>Jacob, B., et al. (2018). Quantization and training of neural networks for efficient integer-arithmetic-only inference. <em>CVPR</em>.</li>
+        <li>Dettmers, T., Lewis, M., Belkada, Y., &amp; Zettlemoyer, L. (2022). LLM.int8(): 8-bit matrix multiplication for transformers at scale. <em>NeurIPS</em>.</li>
+        <li>Han, S., Mao, H., &amp; Dally, W. J. (2016). Deep compression. <em>ICLR</em>.</li>
+        <li>Kohavi, R., Tang, D., &amp; Xu, Y. (2020). <em>Trustworthy online controlled experiments</em>. Cambridge University Press.</li>
+        <li>Hardt, M., Price, E., &amp; Srebro, N. (2016). Equality of opportunity in supervised learning. <em>NeurIPS</em>.</li>
+        <li>Wei, J., &amp; Zou, K. (2019). EDA: Easy data augmentation techniques for boosting performance on text classification tasks. <em>EMNLP-IJCNLP</em>.</li>
+      </ul>
+    </div>
+    <aside class="notes">
+      Primary sources for every claim in the deck. Women-authored work includes Amershi et al.,
+      Huyen, Sambasivan et al., Žliobaitė (Gama et al.) and Tang (Kohavi et al.).
+    </aside>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="../../assets/js/course.js"></script>
+<script>
+  Course.init({ session: "11" });
+  Course.onReady(() => {
+    // --- Simulator 1: the improvement loop ------------------------------------------------
+    const STAGES = [
+      { name: "Monitor", lines: ["Monitor"],
+        what: "Watch inputs, outputs, outcomes and the system in production.",
+        practices: ["Input drift and prediction mix, weekly", "Delayed labels: re-routes, escalations", "Latency p95 and cost per request"],
+        pitfall: "Waiting for accuracy numbers that arrive weeks later, or never.",
+        example: "Share of messages that agents re-route, per intent and per week." },
+      { name: "Analyse errors", lines: ["Analyse", "errors"],
+        what: "Sample errors, tag them in categories and count them; slice by segment.",
+        practices: ["Review 50–100 validation errors", "Slices: intent, length, channel, new products", "Confused pairs from the confusion matrix"],
+        pitfall: "Looking only at the average, or reasoning from two anecdotes.",
+        example: "34 of 100 errors mix up card arrival and delivery estimate (illustrative)." },
+      { name: "Hypothesise & prioritise", lines: ["Hypothesise", "& prioritise"],
+        what: "Turn each category into a testable hypothesis; rank by ceiling × cost.",
+        practices: ["“Errors in X happen because Y, so Z should help”", "Ceiling = the category's share of errors", "Write the decision rule before experimenting"],
+        pitfall: "Hyperparameter roulette: trying things with no hypothesis.",
+        example: "Keep a change only if validation macro-F1 improves by ≥ 1 point." },
+      { name: "Fix", lines: ["Fix: data", "or model"],
+        what: "Apply one targeted change, data-centric or model-centric.",
+        practices: ["Relabel or review suspicious labels", "Targeted examples for confused intents", "Features, architecture or tuning (Optuna)"],
+        pitfall: "Changing three things at once: you cannot attribute the gain.",
+        example: "Drop the labels flagged by cross-validated probabilities, then retrain." },
+      { name: "Evaluate offline", lines: ["Evaluate", "offline"],
+        what: "Decide on validation; test once; look beyond accuracy.",
+        practices: ["Slices and a paired bootstrap for the gain", "Behavioural tests: INV, MFT, DIR", "Size, latency, regression suite"],
+        pitfall: "Tuning on the test set, or reporting the best of 20 seeds.",
+        example: "Typo pass rate and p95 latency sit next to macro-F1 in the log." },
+      { name: "Deploy safely", lines: ["Deploy", "safely"],
+        what: "Release gradually with a rollback plan; the new model is a hypothesis.",
+        practices: ["Shadow → canary → A/B test", "Guardrail metrics fixed in advance", "Version model, data and configuration"],
+        pitfall: "A big-bang release with no way back.",
+        example: "One week in shadow mode, then 5% canary, then an A/B test." }
+    ];
+    const NS = "http://www.w3.org/2000/svg";
+    const diagram = document.getElementById("loop-diagram");
+    const detail = document.getElementById("loop-detail");
+    const svgEl = document.createElementNS(NS, "svg");
+    svgEl.setAttribute("viewBox", "0 0 420 420");
+    svgEl.setAttribute("width", "100%");
+    svgEl.setAttribute("role", "group");
+    svgEl.setAttribute("aria-label", "Improvement loop with six stages");
+    svgEl.style.maxHeight = "430px";
+    const mk = (tag, attrs, parent) => {
+      const n = document.createElementNS(NS, tag);
+      Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
+      (parent || svgEl).appendChild(n);
+      return n;
+    };
+    const defs = mk("defs", {});
+    const marker = mk("marker", { id: "loop-arrow", viewBox: "0 0 10 10", refX: "8", refY: "5",
+      markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" }, defs);
+    mk("path", { d: "M0,0 L10,5 L0,10 z", style: "fill: var(--muted)" }, marker);
+    const C = 210, R = 150, NODE_R = 52, GAP = 23 * Math.PI / 180;
+    const ang = (i) => -Math.PI / 2 + i * 2 * Math.PI / STAGES.length;
+    const pt = (a, r) => [C + r * Math.cos(a), C + r * Math.sin(a)];
+    STAGES.forEach((_, i) => {
+      const [x1, y1] = pt(ang(i) + GAP, R);
+      const [x2, y2] = pt(ang(i + 1) - GAP, R);
+      mk("path", { d: `M${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 0 1 ${x2.toFixed(1)},${y2.toFixed(1)}`,
+        fill: "none", style: "stroke: var(--muted); stroke-width: 2.5", "marker-end": "url(#loop-arrow)" });
+    });
+    const centre = mk("text", { x: C, y: C - 6, "text-anchor": "middle", style: "fill: var(--muted); font-size: 17px; font-weight: 600" });
+    centre.textContent = "Andes Bank";
+    const centre2 = mk("text", { x: C, y: C + 16, "text-anchor": "middle", style: "fill: var(--muted); font-size: 17px" });
+    centre2.textContent = "intent router";
+    const nodes = STAGES.map((s, i) => {
+      const [x, y] = pt(ang(i), R);
+      const g = mk("g", { tabindex: "0", role: "button", "aria-label": `Stage ${i + 1}: ${s.name}`, style: "cursor: pointer" });
+      const circle = mk("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: NODE_R, style: "stroke-width: 3" }, g);
+      s.lines.forEach((line, k) => {
+        const t = mk("text", { x: x.toFixed(1), y: (y + (k - (s.lines.length - 1) / 2) * 19 + 6).toFixed(1),
+          "text-anchor": "middle", style: "font-size: 17px; font-weight: 700; pointer-events: none" }, g);
+        t.textContent = line;
+      });
+      g.addEventListener("click", () => show(i));
+      g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(i); } });
+      return { g, circle };
+    });
+    diagram.appendChild(svgEl);
+    let current = 0;
+    function show(i) {
+      current = i;
+      nodes.forEach(({ g, circle }, k) => {
+        const on = k === i;
+        circle.style.fill = on ? "var(--block-theory)" : "#fff";
+        circle.style.stroke = on ? "var(--block-theory)" : "var(--line-strong)";
+        g.querySelectorAll("text").forEach((t) => { t.style.fill = on ? "#fff" : "var(--ink)"; });
+      });
+      const s = STAGES[i];
+      detail.innerHTML =
+        `<p class="kicker" style="margin:0">Stage ${i + 1} of ${STAGES.length}</p>` +
+        `<h3 style="margin: 2px 0 8px">${s.name}</h3>` +
+        `<p style="margin: 0 0 8px">${s.what}</p>` +
+        `<ul style="margin: 0 0 10px">${s.practices.map((p) => `<li>${p}</li>`).join("")}</ul>` +
+        `<div class="callout warn" style="margin: 0 0 8px; font-size: 19px"><strong>Pitfall:</strong> ${s.pitfall}</div>` +
+        `<p class="small" style="margin:0"><strong>At Andes Bank:</strong> ${s.example}</p>`;
+    }
+    document.getElementById("loop-next").addEventListener("click", () => show((current + 1) % STAGES.length));
+    show(0);
+
+    // --- Simulator 2: quantization -------------------------------------------------------
+    // 16 synthetic Gaussian weights (seeded); symmetric per-tensor b-bit quantization.
+    const qBits = document.getElementById("q-bits");
+    const qOutlier = document.getElementById("q-outlier");
+    let qSeed = 7;
+    function gaussianWeights(seed, n) {
+      const rnd = Course.seededRandom(seed);
+      const w = [];
+      for (let i = 0; i < n; i++) {
+        const u = Math.max(rnd(), 1e-9), v = rnd();
+        w.push(0.05 * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v));
+      }
+      return w;
+    }
+    function quantize(w, bits) {
+      const qmax = Math.pow(2, bits - 1) - 1;
+      const s = Math.max(...w.map(Math.abs)) / qmax;
+      return w.map((x) => s * Math.max(-qmax, Math.min(qmax, Math.round(x / s))));
+    }
+    const gb = (params, bits) => params * bits / 8 / 1e9;
+    function updateQuant() {
+      const bits = Number(qBits.value);
+      const w = gaussianWeights(qSeed, 16);
+      if (qOutlier.checked) w[5] = 0.6;
+      const wq = quantize(w, bits);
+      const err = w.map((x, i) => Math.abs(x - wq[i]));
+      const mae = err.reduce((a, b) => a + b, 0) / err.length;
+      const meanAbs = w.reduce((a, b) => a + Math.abs(b), 0) / w.length;
+      const zeros = wq.filter((x, i) => x === 0 && w[i] !== 0).length;
+      const lim = Math.max(...w.map(Math.abs)) * 1.1;
+      Course.lineChart(document.getElementById("q-chart"), [
+        { name: "Original", points: w.map((x, i) => [i + 1, +x.toFixed(4)]) },
+        { name: `int${bits} (dequantized)`, points: wq.map((x, i) => [i + 1, +x.toFixed(4)]), dashed: true }
+      ], { xLabel: "Weight index", yLabel: "Value", yMin: -lim, yMax: lim, width: 640, height: 360,
+           title: "Original vs quantized weights", yFormat: (v) => v.toFixed(2) });
+      document.getElementById("q-head").textContent = `int${bits}`;
+      document.getElementById("q-m05").textContent = gb(0.5e9, bits).toFixed(2) + " GB";
+      document.getElementById("q-m7").textContent = gb(7e9, bits).toFixed(2) + " GB";
+      document.getElementById("q-levels").textContent = String(2 * (Math.pow(2, bits - 1) - 1) + 1);
+      document.getElementById("q-mae").textContent = mae.toFixed(4);
+      document.getElementById("q-rel").textContent = (100 * mae / meanAbs).toFixed(1) + "%";
+      document.getElementById("q-zero").textContent = `${zeros} of 16`;
+    }
+    Course.bindRange(qBits, document.getElementById("q-bits-out"), (v) => `${v} · int${v}`, updateQuant);
+    qOutlier.addEventListener("change", updateQuant);
+    document.getElementById("q-new").addEventListener("click", () => { qSeed += 1; updateQuant(); });
+  });
+</script>
+</body>
+</html>
